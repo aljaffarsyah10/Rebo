@@ -30,19 +30,19 @@ export const navItems: NavItem[] = [
     items: [
       {
         title: 'Pilar',
-        url: '/dashboard/profile',
+        url: '/rebo/product',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
         title: 'Subpilar',
-        url: '/dashboard/profile',
+        url: '/dashboard/overview',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
         title: 'Pertanyaan',
-        url: '/dashboard/profile',
+        url: '/dashboard/overview',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },

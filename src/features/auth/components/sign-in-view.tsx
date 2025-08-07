@@ -53,9 +53,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
         <div className='relative z-20 mt-auto'>
           <blockquote className='space-y-2'>
             <p className='text-lg'>
-              &ldquo;This starter template has saved me countless hours of work
-              and helped me deliver projects to my clients faster than ever
-              before.&rdquo;
+              &ldquo;Rebo - Zona Integritas Reformasi Birokrasi&rdquo;
             </p>
             <footer className='text-sm'>Random Dude</footer>
           </blockquote>
