@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect, useState } from 'react';
 
-export default function manejemenPerubahan() {
+export default function ManajemenPerubahan() {
   const [subpilarjoinpertanyaan, setSubpilarjoinpertanyaan] = useState<any[]>(
     []
   );

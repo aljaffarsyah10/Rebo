@@ -173,32 +173,6 @@ export default function Overview() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card className='border-slate-200/60 dark:border-slate-700/60'>
-        <CardHeader>
-          <CardTitle className='flex items-center space-x-2 text-slate-800 dark:text-slate-200'>
-            <CheckCircle className='h-5 w-5' />
-            <span>Aksi Cepat</span>
-          </CardTitle>
-          <CardDescription>Akses fitur utama dengan satu klik</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='grid gap-4 md:grid-cols-2'>
-            <Button className='justify-start bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'>
-              <FileText className='mr-2 h-4 w-4' />
-              Input Bukti Dukung Baru
-            </Button>
-            <Button
-              variant='outline'
-              className='justify-start border-slate-300/60 text-slate-700 hover:border-blue-300/60 hover:bg-blue-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-blue-600/60 dark:hover:bg-blue-900/20'
-            >
-              <Target className='mr-2 h-4 w-4' />
-              Lihat Dashboard RB
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Info Footer */}
       <div className='rounded-xl border border-blue-200/40 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 p-6 dark:border-slate-600/40 dark:from-slate-800/50 dark:to-slate-700/30'>
         <div className='flex items-center space-x-3'>
