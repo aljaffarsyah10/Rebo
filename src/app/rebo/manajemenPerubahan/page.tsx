@@ -1,22 +1,60 @@
 // app/features/products/components/product-listing.tsx
-import { createClient } from '@/lib/supabase/server';
+'use client';
 
-export default async function manejemenPerubahan() {
-  const supabase = await createClient();
+import { createClient } from '@/lib/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEffect, useState } from 'react';
 
-  const { data: subpilarjoinpertanyaan, error } = await supabase
-    .from('subpilar')
-    .select(
-      `
-      *,
-      pertanyaan (
-        *,
-        kategoriPenilaian (*)
-      )
-    `
-    )
-    .eq('id_pilar', 1)
-    .order('id_subpilar', { ascending: true });
+export default function manejemenPerubahan() {
+  const [subpilarjoinpertanyaan, setSubpilarjoinpertanyaan] = useState<any[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('subpilar')
+          .select(
+            `
+            *,
+            pertanyaan (
+              *,
+              kategoriPenilaian (*)
+            )
+          `
+          )
+          .eq('id_pilar', 1)
+          .order('id_subpilar', { ascending: true });
+
+        if (error) {
+          throw error;
+        }
+
+        setSubpilarjoinpertanyaan(data || []);
+      } catch (err) {
+        setError(err);
+        console.error('Error fetching subpilar:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className='container mx-auto max-w-4xl p-6'>
+        <div className='flex h-64 items-center justify-center'>
+          <div className='text-lg text-gray-600'>Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     console.error('Error fetching subpilar:', error.message);
@@ -61,109 +99,147 @@ export default async function manejemenPerubahan() {
   }
 
   return (
-    <div className='container mx-auto max-w-4xl p-6'>
+    <div className='container mx-auto max-w-6xl p-6'>
       <div className='mb-8'>
         <h1 className='text-3xl font-bold text-gray-900'>
           Subpilar Manajemen Perubahan
         </h1>
       </div>
 
-      <div className='space-y-8'>
-        {subpilarjoinpertanyaan.map((subpilar) => (
-          <div
+      <Tabs
+        defaultValue={subpilarjoinpertanyaan[0]?.id_subpilar?.toString()}
+        className='w-full'
+      >
+        <TabsList className='grid h-auto w-full grid-cols-1 gap-1 border border-gray-200 bg-gray-50/50 p-1 lg:grid-cols-4'>
+          {subpilarjoinpertanyaan.map((subpilar: any) => (
+            <TabsTrigger
+              key={subpilar.id_subpilar}
+              value={subpilar.id_subpilar.toString()}
+              className='flex h-auto flex-col items-start justify-start p-3 text-left whitespace-normal transition-all duration-200 hover:bg-gray-50 data-[state=active]:border data-[state=active]:border-blue-200 data-[state=active]:bg-white data-[state=active]:shadow-sm'
+            >
+              <span className='mb-1 text-xs font-medium text-gray-600'>
+                Subpilar {subpilar.id_subpilar}
+              </span>
+              <span className='text-sm leading-tight font-semibold text-gray-800'>
+                {subpilar.nama_subpilar}
+              </span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {subpilarjoinpertanyaan.map((subpilar: any) => (
+          <TabsContent
             key={subpilar.id_subpilar}
-            className='rounded-lg border border-gray-200 bg-white p-6 shadow-sm'
+            value={subpilar.id_subpilar.toString()}
           >
-            <div className='mb-4'>
-              <h3 className='text-xl font-bold text-gray-800'>
-                {subpilar.id_subpilar}. {subpilar.nama_subpilar}
-              </h3>
-              <p className='mt-2 leading-relaxed text-gray-600'>
-                {subpilar.deskripsi_subpilar}
-              </p>
-            </div>
-
-            {/* Tampilkan pertanyaan-pertanyaan */}
-            {subpilar.pertanyaan && subpilar.pertanyaan.length > 0 && (
-              <div className='mt-6 border-l-4 border-blue-200 pl-4'>
-                <h4 className='mb-4 text-lg font-semibold text-gray-700'>
-                  Pertanyaan:
-                </h4>
-                <div className='space-y-3'>
-                  {subpilar.pertanyaan.map((pertanyaan, index) => (
-                    <div
-                      key={pertanyaan.id_pertanyaan}
-                      className='rounded-md border border-gray-100 bg-gray-50 p-4'
-                    >
-                      <p className='mb-2 font-medium text-gray-800'>
-                        {index + 1}. {pertanyaan.pertanyaan}
-                      </p>
-                      {pertanyaan.deskripsi_pertanyaan && (
-                        <p className='mb-3 text-sm leading-relaxed text-gray-600'>
-                          {pertanyaan.deskripsi_pertanyaan}
-                        </p>
-                      )}
-
-                      {/* Dropdown Kategori Penilaian */}
-                      {pertanyaan.kategoriPenilaian &&
-                        pertanyaan.kategoriPenilaian.length > 0 && (
-                          <div className='mt-4 border-t border-gray-200 pt-4'>
-                            <label
-                              htmlFor={`kategori-${pertanyaan.id_pertanyaan}`}
-                              className='mb-2 block text-sm font-medium text-gray-700'
-                            >
-                              Kategori Penilaian:
-                            </label>
-                            <select
-                              id={`kategori-${pertanyaan.id_pertanyaan}`}
-                              className='w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none'
-                            >
-                              <option value=''>
-                                Pilih kategori penilaian...
-                              </option>
-                              {pertanyaan.kategoriPenilaian.map((kategori) => (
-                                <option
-                                  key={kategori.id_kategori}
-                                  value={kategori.id_kategori}
-                                >
-                                  {kategori.uraian_kategori}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        )}
-
-                      {/* Form untuk submit link bukti dukung */}
-                      <div className='mt-4 border-t border-gray-200 pt-4'>
-                        <label
-                          htmlFor={`bukti-${pertanyaan.id_pertanyaan}`}
-                          className='mb-2 block text-sm font-medium text-gray-700'
-                        >
-                          Link Bukti Dukung:
-                        </label>
-                        <div className='flex gap-2'>
-                          <input
-                            type='url'
-                            id={`bukti-${pertanyaan.id_pertanyaan}`}
-                            placeholder='https://contoh.com/dokumen-bukti'
-                            className='flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none'
-                          />
-                          <button
-                            type='button'
-                            className='rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
-                          >
-                            Submit
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+            <div className='mt-4 rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
+              <div className='mb-8'>
+                <div className='mb-4 flex items-center gap-3'>
+                  <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600'>
+                    {subpilar.id_subpilar}
+                  </div>
+                  <h2 className='text-2xl font-bold text-gray-800'>
+                    {subpilar.nama_subpilar}
+                  </h2>
                 </div>
+                <p className='ml-11 leading-relaxed text-gray-600'>
+                  {subpilar.deskripsi_subpilar}
+                </p>
               </div>
-            )}
-          </div>
+
+              {/* Tampilkan pertanyaan-pertanyaan */}
+              {subpilar.pertanyaan && subpilar.pertanyaan.length > 0 && (
+                <div className='relative'>
+                  <div className='absolute top-8 bottom-0 left-4 w-0.5 bg-gradient-to-b from-blue-300 to-blue-100'></div>
+                  <h3 className='mb-8 flex items-center gap-3 text-xl font-semibold text-gray-700'>
+                    <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs text-white'>
+                      Q
+                    </div>
+                    Pertanyaan
+                  </h3>
+                  <div className='ml-9 space-y-8'>
+                    {subpilar.pertanyaan.map(
+                      (pertanyaan: any, index: number) => (
+                        <div
+                          key={pertanyaan.id_pertanyaan}
+                          className='relative rounded-xl border border-gray-100 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm transition-shadow duration-200 hover:shadow-md'
+                        >
+                          <div className='absolute top-6 -left-9 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white'>
+                            {index + 1}
+                          </div>
+                          <p className='mb-4 text-lg leading-relaxed font-medium text-gray-800'>
+                            {pertanyaan.pertanyaan}
+                          </p>
+                          {pertanyaan.deskripsi_pertanyaan && (
+                            <p className='mb-6 rounded-lg border-l-4 border-blue-200 bg-blue-50 p-3 text-sm leading-relaxed text-gray-600'>
+                              {pertanyaan.deskripsi_pertanyaan}
+                            </p>
+                          )}
+
+                          {/* Dropdown Kategori Penilaian */}
+                          {pertanyaan.kategoriPenilaian &&
+                            pertanyaan.kategoriPenilaian.length > 0 && (
+                              <div className='mb-6 space-y-2'>
+                                <label
+                                  htmlFor={`kategori-${pertanyaan.id_pertanyaan}`}
+                                  className='block text-sm font-semibold text-gray-700'
+                                >
+                                  Kategori Penilaian
+                                </label>
+                                <select
+                                  id={`kategori-${pertanyaan.id_pertanyaan}`}
+                                  className='focus:ring-opacity-50 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none'
+                                >
+                                  <option value=''>
+                                    Pilih kategori penilaian...
+                                  </option>
+                                  {pertanyaan.kategoriPenilaian.map(
+                                    (kategori: any) => (
+                                      <option
+                                        key={kategori.id_kategori}
+                                        value={kategori.id_kategori}
+                                      >
+                                        {kategori.uraian_kategori}
+                                      </option>
+                                    )
+                                  )}
+                                </select>
+                              </div>
+                            )}
+
+                          {/* Form untuk submit link bukti dukung */}
+                          <div className='space-y-2'>
+                            <label
+                              htmlFor={`bukti-${pertanyaan.id_pertanyaan}`}
+                              className='block text-sm font-semibold text-gray-700'
+                            >
+                              Link Bukti Dukung
+                            </label>
+                            <div className='flex gap-3'>
+                              <input
+                                type='url'
+                                id={`bukti-${pertanyaan.id_pertanyaan}`}
+                                placeholder='https://contoh.com/dokumen-bukti'
+                                className='focus:ring-opacity-50 flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none'
+                              />
+                              <button
+                                type='button'
+                                className='rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
+                              >
+                                Submit
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         ))}
-      </div>
+      </Tabs>
     </div>
   );
 }
