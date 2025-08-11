@@ -23,13 +23,25 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'Form Bukti Dukung RB',
-    url: '#',
+    url: '/rebo/formRB',
     icon: 'post',
     isActive: true,
     items: [
       {
         title: 'Manajemen Perubahan',
         url: '/rebo/manajemenPerubahan',
+        icon: 'userPen',
+        shortcut: ['m', 'm']
+      },
+      {
+        title: 'Pengungkit',
+        url: '/rebo/formRB/pengungkit',
+        icon: 'userPen',
+        shortcut: ['m', 'm']
+      },
+      {
+        title: 'Reform',
+        url: '/rebo/formRB/reform',
         icon: 'userPen',
         shortcut: ['m', 'm']
       }
@@ -44,7 +56,7 @@ export const navItems: NavItem[] = [
     items: [
       {
         title: 'Pilar',
-        url: '/rebo/pilar',
+        url: '/rebo/data_rb/pilar',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },

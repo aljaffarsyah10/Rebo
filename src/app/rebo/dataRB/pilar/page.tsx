@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Edit, Eye, Settings } from 'lucide-react';
 
-export default async function ProductListingPage() {
+export default async function Pilar() {
   const supabase = await createClient();
 
   const { data: pilarsData, error } = await supabase
