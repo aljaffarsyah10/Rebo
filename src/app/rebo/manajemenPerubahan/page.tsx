@@ -37,7 +37,11 @@ export default function manejemenPerubahan() {
         setSubpilarjoinpertanyaan(data || []);
       } catch (err) {
         setError(err);
-        console.error('Error fetching subpilar:', err.message);
+        if (err instanceof Error) {
+          console.error('Error fetching subpilar:', err.message);
+        } else {
+          console.error('Error fetching subpilar:', err);
+        }
       } finally {
         setLoading(false);
       }

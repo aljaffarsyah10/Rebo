@@ -14,9 +14,17 @@ export type Product = {
 //Info: The following data is used for the sidebar navigation and Cmd K bar.
 export const navItems: NavItem[] = [
   {
+    title: 'Beranda',
+    url: '/rebo/overview',
+    icon: 'dashboard',
+    isActive: false,
+    shortcut: ['d', 'd'],
+    items: [] // Empty array as there are no child items for Dashboard
+  },
+  {
     title: 'Form Bukti Dukung RB',
     url: '#',
-    icon: 'dashboard',
+    icon: 'post',
     isActive: true,
     items: [
       {
