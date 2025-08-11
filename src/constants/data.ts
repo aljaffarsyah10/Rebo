@@ -28,8 +28,8 @@ export const navItems: NavItem[] = [
     isActive: true,
     items: [
       {
-        title: 'Manajemen Perubahan',
-        url: '/rebo/manajemenPerubahan',
+        title: 'Area',
+        url: '/rebo/formRB/area',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
