@@ -176,6 +176,18 @@ export default function manejemenPerubahan() {
                             </p>
                           )}
 
+                          {/* Uraian Bukti Dukung */}
+                          {pertanyaan.uraian_buktidukung && (
+                            <div className='mb-6 rounded-lg border-l-4 border-green-200 bg-green-50 p-4'>
+                              <h4 className='mb-2 text-sm font-semibold text-green-800'>
+                                Uraian Bukti Dukung:
+                              </h4>
+                              <p className='text-sm leading-relaxed text-green-700'>
+                                {pertanyaan.uraian_buktidukung}
+                              </p>
+                            </div>
+                          )}
+
                           {/* Dropdown Kategori Penilaian */}
                           {pertanyaan.kategoriPenilaian &&
                             pertanyaan.kategoriPenilaian.length > 0 && (

@@ -10,7 +10,7 @@ import CtaGithub from './cta-github';
 
 export default function Header() {
   return (
-    <header className='flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12'>
+    <header className='sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-white/95 backdrop-blur transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 supports-[backdrop-filter]:bg-white/60 dark:border-gray-800 dark:bg-gray-950/95 dark:supports-[backdrop-filter]:bg-gray-950/60'>
       <div className='flex items-center gap-2 px-4'>
         <SidebarTrigger className='-ml-1' />
         <Separator orientation='vertical' className='mr-2 h-4' />
