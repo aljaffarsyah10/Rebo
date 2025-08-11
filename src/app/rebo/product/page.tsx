@@ -1,57 +1,29 @@
-import PageContainer from '@/components/layout/page-container';
-import { buttonVariants } from '@/components/ui/button';
-import { Heading } from '@/components/ui/heading';
-import { Separator } from '@/components/ui/separator';
-import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
-import ProductListingPage from '@/features/products/components/product-listing';
-import { searchParamsCache, serialize } from '@/lib/searchparams';
-import { cn } from '@/lib/utils';
-import { IconPlus } from '@tabler/icons-react';
-import Link from 'next/link';
-import { SearchParams } from 'nuqs/server';
-import { Suspense } from 'react';
+// app/features/products/components/product-listing.tsx
+import { createClient } from '@/lib/supabase/server';
 
-export const metadata = {
-  title: 'Dashboard: Products'
-};
+export default async function ProductListingPage() {
+  const supabase = await createClient();
 
-type pageProps = {
-  searchParams: Promise<SearchParams>;
-};
+  const { data: pilars, error } = await supabase
+    .from('pilar')
+    .select('*')
+    .order('id_pilar', { ascending: true });
 
-export default async function Page(props: pageProps) {
-  const searchParams = await props.searchParams;
-  // Allow nested RSCs to access the search params (in a type-safe way)
-  searchParamsCache.parse(searchParams);
-
-  // This key is used for invoke suspense if any of the search params changed (used for filters).
-  // const key = serialize({ ...searchParams });
+  if (error) {
+    console.error('Error fetching products:', error.message);
+    return <div>Error loading products</div>;
+  }
 
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading
-            title='Products'
-            description='Manage products (Server side table functionalities.)'
-          />
-          <Link
-            href='/dashboard/product/new'
-            className={cn(buttonVariants(), 'text-xs md:text-sm')}
-          >
-            <IconPlus className='mr-2 h-4 w-4' /> Add New
-          </Link>
+    <div className='grid gap-4'>
+      <h1>Pilar Reformasi Birokrasi</h1>
+      {pilars.map((pilar) => (
+        <div key={pilar.id_pilar} className='rounded-md border p-4'>
+          <h3 className='font-bold'>
+            {pilar.id_pilar} {pilar.nama_pilar}
+          </h3>
         </div>
-        <Separator />
-        <Suspense
-          // key={key}
-          fallback={
-            <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
-          }
-        >
-          <ProductListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      ))}
+    </div>
   );
 }

@@ -15,11 +15,17 @@ export type Product = {
 export const navItems: NavItem[] = [
   {
     title: 'Form Bukti Dukung RB',
-    url: '/dashboard/overview',
+    url: '#',
     icon: 'dashboard',
-    isActive: false,
-    shortcut: ['d', 'd'],
-    items: [] // Empty array as there are no child items for Dashboard
+    isActive: true,
+    items: [
+      {
+        title: 'Manajemen Perubahan',
+        url: '/rebo/manajemenPerubahan',
+        icon: 'userPen',
+        shortcut: ['m', 'm']
+      }
+    ]
   },
   {
     title: 'Data RB',
