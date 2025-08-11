@@ -15,6 +15,7 @@ import {
   ArrowRight,
   CheckCircle
 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Overview() {
   const currentTime = new Date().getHours();
@@ -104,13 +105,15 @@ export default function Overview() {
               Sistem pengumpulan dokumen bukti dukung yang terorganisir untuk
               mendukung implementasi reformasi birokrasi.
             </p>
-            <Button
-              variant='outline'
-              size='sm'
-              className='w-full border-slate-300/60 text-slate-700 hover:border-blue-300/60 hover:bg-blue-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-blue-600/60 dark:hover:bg-blue-900/20'
-            >
-              Mulai Input <ArrowRight className='ml-2 h-4 w-4' />
-            </Button>
+            <Link href='/rebo/formRB/'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='w-full border-slate-300/60 text-slate-700 hover:border-blue-300/60 hover:bg-blue-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-blue-600/60 dark:hover:bg-blue-900/20'
+              >
+                Mulai Input <ArrowRight className='ml-2 h-4 w-4' />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
@@ -184,10 +187,12 @@ export default function Overview() {
         </CardHeader>
         <CardContent>
           <div className='grid gap-4 md:grid-cols-2'>
-            <Button className='justify-start bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'>
-              <FileText className='mr-2 h-4 w-4' />
-              Input Bukti Dukung Baru
-            </Button>
+            <Link href='/rebo/formRB/'>
+              <Button className='w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'>
+                <FileText className='mr-2 h-4 w-4' />
+                Input Bukti Dukung Baru
+              </Button>
+            </Link>
             <Button
               variant='outline'
               className='justify-start border-slate-300/60 text-slate-700 hover:border-blue-300/60 hover:bg-blue-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-blue-600/60 dark:hover:bg-blue-900/20'
