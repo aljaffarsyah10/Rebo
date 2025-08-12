@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="/public/assets/Homepage_rebo.png" alt="REBO Homepage" style="max-width: 600px; border-radius: 16px; box-shadow: 0 4px 24px #0001; margin-bottom: 16px;" />
+  <img src="/public/Homepage_rebo.png" alt="REBO Homepage" style="max-width: 600px; border-radius: 16px; box-shadow: 0 4px 24px #0001; margin-bottom: 16px;" />
 </div>
 
 <div align="center">
