@@ -56,7 +56,7 @@ export const navItems: NavItem[] = [
     items: [
       {
         title: 'Pilar',
-        url: '/rebo/data_rb/pilar',
+        url: '/rebo/dataRB/pilar',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },

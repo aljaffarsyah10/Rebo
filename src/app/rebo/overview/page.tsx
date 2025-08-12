@@ -103,9 +103,9 @@ export default function Overview() {
           <CardContent>
             <p className='text-muted-foreground mb-4 text-sm'>
               Sistem pengumpulan dokumen bukti dukung yang terorganisir untuk
-              mendukung implementasi reformasi birokrasi.
+              mendukung implementasi zona integritas reformasi birokrasi.
             </p>
-            <Link href='/rebo/formRB/'>
+            <Link href='/rebo/formRB/area'>
               <Button
                 variant='outline'
                 size='sm'

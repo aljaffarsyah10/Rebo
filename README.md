@@ -1,115 +1,115 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/9113740/201498864-2a900c64-d88f-4ed4-b5cf-770bcb57e1f5.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/9113740/201498152-b171abb8-9225-487a-821c-6ff49ee48579.png">
-</picture>
-
-<div align="center"><strong>Next.js Admin Dashboard Starter Template With Shadcn-ui</strong></div>
-<div align="center">Built with the Next.js 15 App Router</div>
-<br />
 <div align="center">
-<a href="https://dub.sh/shadcn-dashboard">View Demo</a>
-<span>
+  <img src="/public/assets/hompage_rebo.png" alt="REBO Homepage" style="max-width: 600px; border-radius: 16px; box-shadow: 0 4px 24px #0001; margin-bottom: 16px;" />
 </div>
 
-## Overview
+<div align="center">
+  <h1><strong>REBO - Reformasi Birokrasi Platform</strong></h1>
+  <div>Mengelola, memantau, dan memvalidasi bukti dukung Reformasi Birokrasi secara digital</div>
+  <div><em>Built for BPS Siau Tagulandang Biaro</em></div>
+  <br />
+  <a href="/rebo">Lihat Demo Lokal</a>
+</div>
 
-This is a starter template using the following stack:
+## 🚀 Tentang REBO
 
-- Framework - [Next.js 15](https://nextjs.org/13)
-- Language - [TypeScript](https://www.typescriptlang.org)
-- Auth - [Clerk](https://go.clerk.com/ILdYhn7)
-- Error tracking - [<picture><img alt="Sentry" src="public/assets/sentry.svg">
-        </picture>](https://sentry.io/for/nextjs/?utm_source=github&utm_medium=paid-community&utm_campaign=general-fy26q2-nextjs&utm_content=github-banner-project-tryfree)
-- Styling - [Tailwind CSS v4](https://tailwindcss.com)
-- Components - [Shadcn-ui](https://ui.shadcn.com)
-- Schema Validations - [Zod](https://zod.dev)
-- State Management - [Zustand](https://zustand-demo.pmnd.rs)
-- Search params state manager - [Nuqs](https://nuqs.47ng.com/)
-- Tables - [Tanstack Data Tables](https://ui.shadcn.com/docs/components/data-table) • [Dice table](https://www.diceui.com/docs/components/data-table)
-- Forms - [React Hook Form](https://ui.shadcn.com/docs/components/form)
-- Command+k interface - [kbar](https://kbar.vercel.app/)
-- Linting - [ESLint](https://eslint.org)
-- Pre-commit Hooks - [Husky](https://typicode.github.io/husky/)
-- Formatting - [Prettier](https://prettier.io)
+**REBO** (Reformasi Birokrasi) adalah platform digital modern untuk mengelola, mengumpulkan, dan memvalidasi bukti dukung Reformasi Birokrasi (RB) di lingkungan BPS Siau Tagulandang Biaro. Platform ini dirancang untuk memudahkan proses dokumentasi, monitoring, dan kolaborasi tim dalam rangka mewujudkan Zona Integritas menuju Wilayah Bebas dari Korupsi (WBK) dan Wilayah Birokrasi Bersih dan Melayani (WBBM).
 
-_If you are looking for a Tanstack start dashboard template, here is the [repo](https://git.new/tanstack-start-dashboard)._
+<div align="center">
+  <img src="/public/assets/rebo.png" alt="Logo REBO" width="120" />
+</div>
 
-## Pages
+### Fitur Utama
 
-| Pages                                                                                 | Specifications                                                                                                                                                                                                                                                          |
-| :------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Signup / Signin](https://go.clerk.com/ILdYhn7)      | Authentication with **Clerk** provides secure authentication and user management with multiple sign-in options including passwordless authentication, social logins, and enterprise SSO - all designed to enhance security while delivering a seamless user experience. |
-| [Dashboard (Overview)](https://shadcn-dashboard.kiranism.dev/dashboard)    | Cards with Recharts graphs for analytics. Parallel routes in the overview sections feature independent loading, error handling, and isolated component rendering. |
-| [Product](https://shadcn-dashboard.kiranism.dev/dashboard/product)         | Tanstack tables with server side searching, filter, pagination by Nuqs which is a Type-safe search params state manager in nextjs                                                                                                                                       |
-| [Product/new](https://shadcn-dashboard.kiranism.dev/dashboard/product/new) | A Product Form with shadcn form (react-hook-form + zod).                                                                                                                                                                                                                |
-| [Profile](https://shadcn-dashboard.kiranism.dev/dashboard/profile)         | Clerk's full-featured account management UI that allows users to manage their profile and security settings                                                                                                                                                             |
-| [Kanban Board](https://shadcn-dashboard.kiranism.dev/dashboard/kanban)     | A Drag n Drop task management board with dnd-kit and zustand to persist state locally.                                                                                                                                                                                  |
-| [Not Found](https://shadcn-dashboard.kiranism.dev/dashboard/notfound)      | Not Found Page Added in the root level                                                                                                                                                                                                                                  |
-| [Global Error](https://sentry.io/for/nextjs/?utm_source=github&utm_medium=paid-community&utm_campaign=general-fy26q2-nextjs&utm_content=github-banner-project-tryfree)           | A centralized error page that captures and displays errors across the application. Integrated with **Sentry** to log errors, provide detailed reports, and enable replay functionality for better debugging. |
+- **Input & Validasi Link Bukti Dukung**: Form digital untuk mengumpulkan dan memvalidasi dokumen RB secara terstruktur.
+- **Monitoring**: Pantau progres dan status implementasi RB secara real-time.
+- **Manajemen Pilar & Area**: Kelola pilar pengungkit dan reformasi sesuai struktur nasional.
+- **Keamanan & Audit**: Otentikasi Clerk, pelacakan aktivitas, dan integrasi Sentry untuk error monitoring.
 
-## Feature based organization
+### Stack Teknologi
+
+- **Framework**: [Next.js 15](https://nextjs.org/13) (App Router)
+- **Bahasa**: [TypeScript](https://www.typescriptlang.org)
+- **UI**: [Tailwind CSS v4](https://tailwindcss.com), [Shadcn-ui](https://ui.shadcn.com)
+- **Auth**: [Clerk](https://clerk.com/)
+- **Database**: [Supabase](https://supabase.com/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs)
+- **Validasi**: [Zod](https://zod.dev)
+- **Tabel**: [Tanstack Data Tables](https://ui.shadcn.com/docs/components/data-table)
+- **Lint & Format**: [ESLint](https://eslint.org), [Prettier](https://prettier.io)
+- **Error Tracking**: [Sentry](https://sentry.io/)
+
+---
+
+## 📚 Halaman Utama
+
+| Halaman                     | Deskripsi                                                              |
+| --------------------------- | ---------------------------------------------------------------------- |
+| **/auth/signin**            | Login aman dengan Clerk, mendukung passwordless, SSO, dan social login |
+| **/dashboard**              | Dashboard overview, monitoring progres RB, dan quick actions           |
+| **/rebo/formRB/area**       | Pilih area Pengungkit atau Reform untuk input bukti dukung             |
+| **/rebo/formRB/pengungkit** | Daftar pilar pengungkit, input & validasi dokumen                      |
+| **/rebo/formRB/reform**     | Daftar pilar reformasi, input & validasi dokumen                       |
+| **/dashboard/profile**      | Manajemen akun dan pengaturan profil user                              |
+| **/dashboard/kanban**       | Kanban board untuk manajemen tugas RB                                  |
+| **/dashboard/notfound**     | Halaman not found custom                                               |
+| **/dashboard/global-error** | Halaman error terpusat, terintegrasi Sentry                            |
+
+---
+
+## 🗂️ Struktur Proyek
 
 ```plaintext
 src/
-├── app/ # Next.js App Router directory
-│ ├── (auth)/ # Auth route group
-│ │ ├── (signin)/
-│ ├── (dashboard)/ # Dashboard route group
-│ │ ├── layout.tsx
-│ │ ├── loading.tsx
-│ │ └── page.tsx
-│ └── api/ # API routes
-│
-├── components/ # Shared components
-│ ├── ui/ # UI components (buttons, inputs, etc.)
-│ └── layout/ # Layout components (header, sidebar, etc.)
-│
-├── features/ # Feature-based modules
-│ ├── feature/
-│ │ ├── components/ # Feature-specific components
-│ │ ├── actions/ # Server actions
-│ │ ├── schemas/ # Form validation schemas
-│ │ └── utils/ # Feature-specific utilities
-│ │
-├── lib/ # Core utilities and configurations
-│ ├── auth/ # Auth configuration
-│ ├── db/ # Database utilities
-│ └── utils/ # Shared utilities
-│
-├── hooks/ # Custom hooks
-│ └── use-debounce.ts
-│
-├── stores/ # Zustand stores
-│ └── dashboard-store.ts
-│
-└── types/ # TypeScript types
-└── index.ts
+├── app/           # Next.js App Router (routing, API, pages)
+│   ├── auth/      # Halaman autentikasi
+│   ├── dashboard/ # Dashboard, overview, kanban, profile, dsb
+│   └── rebo/      # Fitur utama REBO (formRB, area, pilar, dsb)
+├── components/    # Komponen UI & layout global
+│   ├── ui/        # Komponen UI (button, input, dsb)
+│   └── layout/    # Komponen layout (header, sidebar)
+├── features/      # Modul fitur berbasis domain
+├── lib/           # Utilitas inti & konfigurasi
+├── hooks/         # Custom React hooks
+├── stores/        # Zustand stores (state management)
+└── types/         # TypeScript types
 ```
 
-## Getting Started
+## 🚦 Cara Memulai
 
-> [!NOTE]  
-> We are using **Next 15** with **React 19**, follow these steps:
+> **Note:** Project ini menggunakan **Next.js 15** & **React 19**
 
-Clone the repo:
+1. Clone repo ini:
+   ```bash
+   git clone https://github.com/aljaffarsyah10/rebo.git
+   ```
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+3. Copy file environment:
+   ```bash
+   cp env.example.txt .env.local
+   ```
+4. Isi variabel environment di `.env.local` sesuai kebutuhan (lihat `env.example.txt`)
+5. Jalankan development server:
+   ```bash
+   pnpm run dev
+   ```
 
-```
-git clone https://github.com/Kiranism/next-shadcn-dashboard-starter.git
-```
+Setelah itu, akses aplikasi di [http://localhost:3000](http://localhost:3000)
 
-- `pnpm install` ( we have legacy-peer-deps=true added in the .npmrc)
-- Create a `.env.local` file by copying the example environment file:
-  `cp env.example.txt .env.local`
-- Add the required environment variables to the `.env.local` file.
-- `pnpm run dev`
+---
 
-##### Environment Configuration Setup
+## ⚙️ Konfigurasi Lingkungan
 
-To configure the environment for this project, refer to the `env.example.txt` file. This file contains the necessary environment variables required for authentication and error tracking.
+Lihat file `env.example.txt` untuk daftar environment variable yang dibutuhkan (auth, supabase, sentry, dsb).
 
-You should now be able to access the application at http://localhost:3000.
+---
 
-> [!WARNING]
-> After cloning or forking the repository, be cautious when pulling or syncing with the latest changes, as this may result in breaking conflicts.
+## ⚠️ Catatan
 
-Cheers! 🥂
+Setelah clone/fork repo, pastikan untuk selalu cek perubahan terbaru sebelum melakukan pull agar terhindar dari konflik breaking changes.
+
+---
+
+Selamat menggunakan REBO! 🚀
