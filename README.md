@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="/public/assets/hompage_rebo.png" alt="REBO Homepage" style="max-width: 600px; border-radius: 16px; box-shadow: 0 4px 24px #0001; margin-bottom: 16px;" />
+  <img src="/public/assets/Homepage_rebo.png" alt="REBO Homepage" style="max-width: 600px; border-radius: 16px; box-shadow: 0 4px 24px #0001; margin-bottom: 16px;" />
 </div>
 
 <div align="center">
@@ -15,7 +15,7 @@
 **REBO** (Reformasi Birokrasi) adalah platform digital modern untuk mengelola, mengumpulkan, dan memvalidasi bukti dukung Reformasi Birokrasi (RB) di lingkungan BPS Siau Tagulandang Biaro. Platform ini dirancang untuk memudahkan proses dokumentasi, monitoring, dan kolaborasi tim dalam rangka mewujudkan Zona Integritas menuju Wilayah Bebas dari Korupsi (WBK) dan Wilayah Birokrasi Bersih dan Melayani (WBBM).
 
 <div align="center">
-  <img src="/public/assets/rebo.png" alt="Logo REBO" width="120" />
+  <img src="/public/assets/logo_rebo.png" alt="Logo REBO" width="120" />
 </div>
 
 ### Fitur Utama
@@ -100,7 +100,7 @@ Setelah itu, akses aplikasi di [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## ⚙️ Konfigurasi Lingkungan
+## ⚙️ Environment Configuration
 
 Lihat file `env.example.txt` untuk daftar environment variable yang dibutuhkan (auth, supabase, sentry, dsb).
 
