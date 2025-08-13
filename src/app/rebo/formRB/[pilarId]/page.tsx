@@ -234,7 +234,7 @@ export default function Page(props: PageProps) {
                             </div>
                           )}
 
-                          {/* Dropdown Kategori Penilaian */}
+                          {/* Dropdown Kategori Penilaian & Link Bukti Dukung */}
                           <form
                             className={`flex flex-col gap-3 space-y-2 rounded-lg border p-4 ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/10' : 'border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10'}`}
                             onSubmit={async (e) => {
@@ -354,15 +354,100 @@ export default function Page(props: PageProps) {
                               }
                               className={`focus:ring-opacity-50 flex-1 rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
                             />
-                            <div className='flex justify-end'>
-                              <button
-                                type='submit'
-                                className={`rounded-lg px-4 py-2 text-xs font-semibold shadow-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 dark:from-green-700 dark:to-green-800 dark:hover:from-green-800 dark:hover:to-green-900 dark:focus:ring-offset-gray-900' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'}`}
-                              >
-                                {buktiDukungMap[pertanyaan.id_pertanyaan]
-                                  ? 'Update'
-                                  : 'Submit'}
-                              </button>
+                            {/* Dropdown Status Lengkap/Belum Lengkap & Button Finalisasi di bawah, hanya aktif jika sudah update */}
+                            <div className='mt-4 flex flex-col'>
+                              <div className='mb-2 flex-1'>
+                                <label
+                                  htmlFor={`status-${pertanyaan.id_pertanyaan}`}
+                                  className='mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300'
+                                >
+                                  Status Bukti Dukung
+                                </label>
+                                <select
+                                  id={`status-${pertanyaan.id_pertanyaan}`}
+                                  name={`status-${pertanyaan.id_pertanyaan}`}
+                                  defaultValue={
+                                    buktiDukungMap[pertanyaan.id_pertanyaan]
+                                      ?.status || ''
+                                  }
+                                  className='w-full rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
+                                  disabled={
+                                    !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                  }
+                                >
+                                  <option value=''>Pilih status...</option>
+                                  <option value='Lengkap'>Lengkap</option>
+                                  <option value='Belum Lengkap'>
+                                    Belum Lengkap
+                                  </option>
+                                </select>
+                              </div>
+                              <div className='flex justify-end gap-4'>
+                                <button
+                                  type='submit'
+                                  className={`rounded-lg px-4 py-2 text-xs font-semibold shadow-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 dark:from-green-700 dark:to-green-800 dark:hover:from-green-800 dark:hover:to-green-900 dark:focus:ring-offset-gray-900' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'}`}
+                                  style={{ minWidth: '110px' }}
+                                >
+                                  {buktiDukungMap[pertanyaan.id_pertanyaan]
+                                    ? 'Update'
+                                    : 'Submit'}
+                                </button>
+                                <button
+                                  type='button'
+                                  className='rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-purple-700 hover:to-purple-800 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none dark:from-purple-700 dark:to-purple-800 dark:hover:from-purple-800 dark:hover:to-purple-900 dark:focus:ring-offset-gray-900'
+                                  style={{ minWidth: '110px' }}
+                                  disabled={
+                                    !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                  }
+                                  onClick={async () => {
+                                    if (
+                                      !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                    )
+                                      return;
+                                    const statusSelect =
+                                      document.getElementById(
+                                        `status-${pertanyaan.id_pertanyaan}`
+                                      ) as HTMLSelectElement;
+                                    const status = statusSelect?.value;
+                                    if (!status) {
+                                      setModalMsg(
+                                        'Status bukti dukung wajib dipilih!'
+                                      );
+                                      setModalOpen(true);
+                                      return;
+                                    }
+                                    // Simpan status ke database (PUT jika sudah ada, POST jika belum)
+                                    const existing =
+                                      buktiDukungMap[pertanyaan.id_pertanyaan];
+                                    const method = existing ? 'PUT' : 'POST';
+                                    const res = await fetch('/api', {
+                                      method,
+                                      headers: {
+                                        'Content-Type': 'application/json'
+                                      },
+                                      body: JSON.stringify({
+                                        id_pertanyaan: pertanyaan.id_pertanyaan,
+                                        status
+                                      })
+                                    });
+                                    const result = await res.json();
+                                    if (result.success) {
+                                      setModalMsg(
+                                        'Status berhasil difinalisasi!'
+                                      );
+                                      setModalOpen(true);
+                                    } else {
+                                      setModalMsg(
+                                        'Gagal finalisasi status: ' +
+                                          (result.error || 'Unknown error')
+                                      );
+                                      setModalOpen(true);
+                                    }
+                                  }}
+                                >
+                                  Finalisasi
+                                </button>
+                              </div>
                             </div>
                           </form>
                         </div>
