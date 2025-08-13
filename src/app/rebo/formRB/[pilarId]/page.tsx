@@ -11,6 +11,7 @@ export default function Page(props: PageProps) {
   const [subpilarjoinpertanyaan, setSubpilarjoinpertanyaan] = useState<any[]>(
     []
   );
+  const [buktiDukungMap, setBuktiDukungMap] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
   const [pilarId, setPilarId] = useState<string>('');
@@ -33,30 +34,35 @@ export default function Page(props: PageProps) {
         const { data, error } = await supabase
           .from('subpilar')
           .select(
-            `
-            *,
-            pilar (
-              id_pilar,
-              nama_pilar
-            ),
-            pertanyaan (
-              *,
-              kategoriPenilaian (*)
-            )
-          `
+            `*, pilar (id_pilar, nama_pilar), pertanyaan (*, kategoriPenilaian (*))`
           )
           .eq('id_pilar', pilarId)
           .order('id_subpilar', { ascending: true });
 
-        if (error) {
-          throw error;
-        }
-
+        if (error) throw error;
         setSubpilarjoinpertanyaan(data || []);
-
-        // Ambil nama pilar dari data pertama (karena semua subpilar akan memiliki pilar yang sama)
         if (data && data.length > 0 && data[0].pilar) {
           setNamaPilar(data[0].pilar.nama_pilar);
+        }
+
+        // Ambil semua id_pertanyaan
+        const pertanyaanIds = (data || []).flatMap(
+          (subpilar: any) =>
+            subpilar.pertanyaan?.map((p: any) => p.id_pertanyaan) || []
+        );
+        if (pertanyaanIds.length > 0) {
+          const { data: buktiData, error: buktiError } = await supabase
+            .from('buktiDukung')
+            .select('*')
+            .in('id_pertanyaan', pertanyaanIds);
+          if (!buktiError && buktiData) {
+            // Map id_pertanyaan ke data
+            const map: Record<string, any> = {};
+            buktiData.forEach((row: any) => {
+              map[row.id_pertanyaan] = row;
+            });
+            setBuktiDukungMap(map);
+          }
         }
       } catch (err) {
         setError(err);
@@ -221,59 +227,133 @@ export default function Page(props: PageProps) {
                           )}
 
                           {/* Dropdown Kategori Penilaian */}
-                          {pertanyaan.kategoriPenilaian &&
-                            pertanyaan.kategoriPenilaian.length > 0 && (
-                              <div className='mb-6 space-y-2'>
-                                <label
-                                  htmlFor={`kategori-${pertanyaan.id_pertanyaan}`}
-                                  className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
-                                >
-                                  Kategori Penilaian
-                                </label>
-                                <select
-                                  id={`kategori-${pertanyaan.id_pertanyaan}`}
-                                  className='focus:ring-opacity-50 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-800'
-                                >
-                                  <option value=''>
-                                    Pilih kategori penilaian...
-                                  </option>
-                                  {pertanyaan.kategoriPenilaian.map(
-                                    (kategori: any) => (
-                                      <option
-                                        key={kategori.id_kategori}
-                                        value={kategori.id_kategori}
-                                      >
-                                        {kategori.uraian_kategori}
-                                      </option>
-                                    )
-                                  )}
-                                </select>
-                              </div>
-                            )}
-
-                          {/* Form untuk submit link bukti dukung */}
-                          <div className='space-y-2'>
+                          <form
+                            className='flex flex-col gap-3 space-y-2'
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              const form = e.currentTarget;
+                              const formData = new FormData(form);
+                              const link_bukti = formData.get(
+                                `bukti-${pertanyaan.id_pertanyaan}`
+                              );
+                              const id_kategori = formData.get(
+                                `kategori-${pertanyaan.id_pertanyaan}`
+                              );
+                              if (!link_bukti || !id_kategori) {
+                                alert(
+                                  'Link bukti dan kategori penilaian wajib diisi!'
+                                );
+                                return;
+                              }
+                              let nilai_akhir = null;
+                              if (
+                                pertanyaan.kategoriPenilaian &&
+                                pertanyaan.kategoriPenilaian.length > 0
+                              ) {
+                                const kategoriObj =
+                                  pertanyaan.kategoriPenilaian.find(
+                                    (k: any) =>
+                                      k.id_kategori?.toString() ===
+                                      id_kategori?.toString()
+                                  );
+                                nilai_akhir = kategoriObj
+                                  ? kategoriObj.nilai
+                                  : null;
+                              }
+                              // Cek apakah sudah ada data
+                              const existing =
+                                buktiDukungMap[pertanyaan.id_pertanyaan];
+                              const method = existing ? 'PUT' : 'POST';
+                              const res = await fetch('/api', {
+                                method,
+                                headers: {
+                                  'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                  link_bukti,
+                                  id_kategori,
+                                  id_pertanyaan: pertanyaan.id_pertanyaan,
+                                  nilai_akhir
+                                })
+                              });
+                              const result = await res.json();
+                              if (result.success) {
+                                alert(
+                                  existing
+                                    ? 'Bukti dukung berhasil diupdate!'
+                                    : 'Bukti dukung berhasil disimpan!'
+                                );
+                                form.reset();
+                              } else {
+                                alert(
+                                  'Gagal menyimpan: ' +
+                                    (result.error || 'Unknown error')
+                                );
+                              }
+                            }}
+                          >
+                            {pertanyaan.kategoriPenilaian &&
+                              pertanyaan.kategoriPenilaian.length > 0 && (
+                                <div className='mb-6 space-y-2'>
+                                  <label
+                                    htmlFor={`kategori-${pertanyaan.id_pertanyaan}`}
+                                    className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
+                                  >
+                                    Kategori Penilaian
+                                  </label>
+                                  <select
+                                    id={`kategori-${pertanyaan.id_pertanyaan}`}
+                                    name={`kategori-${pertanyaan.id_pertanyaan}`}
+                                    defaultValue={
+                                      buktiDukungMap[pertanyaan.id_pertanyaan]
+                                        ?.id_kategori || ''
+                                    }
+                                    className='focus:ring-opacity-50 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-800'
+                                  >
+                                    <option value=''>
+                                      Pilih kategori penilaian...
+                                    </option>
+                                    {pertanyaan.kategoriPenilaian.map(
+                                      (kategori: any) => (
+                                        <option
+                                          key={kategori.id_kategori}
+                                          value={kategori.id_kategori}
+                                        >
+                                          {kategori.uraian_kategori}
+                                        </option>
+                                      )
+                                    )}
+                                  </select>
+                                </div>
+                              )}
                             <label
                               htmlFor={`bukti-${pertanyaan.id_pertanyaan}`}
                               className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
                             >
                               Link Bukti Dukung
                             </label>
-                            <div className='flex gap-3'>
-                              <input
-                                type='url'
-                                id={`bukti-${pertanyaan.id_pertanyaan}`}
-                                placeholder='https://contoh.com/dokumen-bukti'
-                                className='focus:ring-opacity-50 flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-800'
-                              />
+                            <input
+                              type='url'
+                              id={`bukti-${pertanyaan.id_pertanyaan}`}
+                              name={`bukti-${pertanyaan.id_pertanyaan}`}
+                              placeholder='https://contoh.com/dokumen-bukti'
+                              defaultValue={
+                                buktiDukungMap[pertanyaan.id_pertanyaan]
+                                  ?.link_bukti || ''
+                              }
+                              className='focus:ring-opacity-50 flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-800'
+                            />
+                            <div className='flex justify-end'>
                               <button
-                                type='button'
-                                className='rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
+                                type='submit'
+                                className='rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
                               >
-                                Submit
+                                {buktiDukungMap[pertanyaan.id_pertanyaan]
+                                  ? 'Update'
+                                  : 'Submit'}
                               </button>
                             </div>
-                          </div>
+                          </form>
                         </div>
                       )
                     )}

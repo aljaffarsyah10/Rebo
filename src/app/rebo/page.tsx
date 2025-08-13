@@ -7,6 +7,6 @@ export default async function Dashboard() {
   // if (!userId) {
   // return redirect('/auth/sign-in');
   // } else {
-  return redirect('/rebo/product');
+  return redirect('/rebo/overview');
   // }
 }
