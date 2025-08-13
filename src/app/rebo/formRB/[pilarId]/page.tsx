@@ -236,7 +236,7 @@ export default function Page(props: PageProps) {
 
                           {/* Dropdown Kategori Penilaian */}
                           <form
-                            className='flex flex-col gap-3 space-y-2'
+                            className={`flex flex-col gap-3 space-y-2 rounded-lg border p-4 ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/10' : 'border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10'}`}
                             onSubmit={async (e) => {
                               e.preventDefault();
                               const form = e.currentTarget;
@@ -308,7 +308,7 @@ export default function Page(props: PageProps) {
                                 <div className='mb-6 space-y-2'>
                                   <label
                                     htmlFor={`kategori-${pertanyaan.id_pertanyaan}`}
-                                    className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
+                                    className={`block text-sm font-semibold ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300'}`}
                                   >
                                     Kategori Penilaian
                                   </label>
@@ -319,7 +319,7 @@ export default function Page(props: PageProps) {
                                       buktiDukungMap[pertanyaan.id_pertanyaan]
                                         ?.id_kategori || ''
                                     }
-                                    className='focus:ring-opacity-50 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-800'
+                                    className={`focus:ring-opacity-50 w-full rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
                                   >
                                     <option value=''>
                                       Pilih kategori penilaian...
@@ -339,7 +339,7 @@ export default function Page(props: PageProps) {
                               )}
                             <label
                               htmlFor={`bukti-${pertanyaan.id_pertanyaan}`}
-                              className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
+                              className={`block text-sm font-semibold ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300'}`}
                             >
                               Link Bukti Dukung
                             </label>
@@ -352,12 +352,12 @@ export default function Page(props: PageProps) {
                                 buktiDukungMap[pertanyaan.id_pertanyaan]
                                   ?.link_bukti || ''
                               }
-                              className='focus:ring-opacity-50 flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-800'
+                              className={`focus:ring-opacity-50 flex-1 rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
                             />
                             <div className='flex justify-end'>
                               <button
                                 type='submit'
-                                className='rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
+                                className={`rounded-lg px-4 py-2 text-xs font-semibold shadow-sm transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 dark:from-green-700 dark:to-green-800 dark:hover:from-green-800 dark:hover:to-green-900 dark:focus:ring-offset-gray-900' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'}`}
                               >
                                 {buktiDukungMap[pertanyaan.id_pertanyaan]
                                   ? 'Update'
