@@ -4,6 +4,7 @@
 import { createClient } from '@/lib/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect, useState } from 'react';
+import SubmitModal from '@/components/modal/submit-modal';
 
 type PageProps = { params: Promise<{ pilarId: string }> };
 
@@ -16,6 +17,8 @@ export default function Page(props: PageProps) {
   const [error, setError] = useState<any>(null);
   const [pilarId, setPilarId] = useState<string>('');
   const [namaPilar, setNamaPilar] = useState<string>('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMsg, setModalMsg] = useState('');
 
   useEffect(() => {
     async function getParams() {
@@ -135,6 +138,11 @@ export default function Page(props: PageProps) {
 
   return (
     <div className='container mx-auto max-w-6xl p-6'>
+      <SubmitModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        message={modalMsg}
+      />
       <div className='mb-8'>
         <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
           {namaPilar ? `Pilar ${pilarId}: ${namaPilar}` : `Pilar ${pilarId}`}
@@ -240,9 +248,10 @@ export default function Page(props: PageProps) {
                                 `kategori-${pertanyaan.id_pertanyaan}`
                               );
                               if (!link_bukti || !id_kategori) {
-                                alert(
+                                setModalMsg(
                                   'Link bukti dan kategori penilaian wajib diisi!'
                                 );
+                                setModalOpen(true);
                                 return;
                               }
                               let nilai_akhir = null;
@@ -278,17 +287,19 @@ export default function Page(props: PageProps) {
                               });
                               const result = await res.json();
                               if (result.success) {
-                                alert(
+                                setModalMsg(
                                   existing
                                     ? 'Bukti dukung berhasil diupdate!'
                                     : 'Bukti dukung berhasil disimpan!'
                                 );
+                                setModalOpen(true);
                                 form.reset();
                               } else {
-                                alert(
+                                setModalMsg(
                                   'Gagal menyimpan: ' +
                                     (result.error || 'Unknown error')
                                 );
+                                setModalOpen(true);
                               }
                             }}
                           >
