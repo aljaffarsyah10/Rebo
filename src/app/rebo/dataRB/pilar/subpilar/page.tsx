@@ -2,34 +2,15 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-const columns = [
-  {
-    accessorKey: 'id_subpilar',
-    header: 'ID',
-    cell: (info: any) => info.getValue(),
-    enableSorting: true,
-    enableColumnFilter: true
-  },
-  {
-    accessorKey: 'nama_subpilar',
-    header: 'Nama Subpilar',
-    cell: (info: any) => info.getValue(),
-    enableSorting: true,
-    enableColumnFilter: true
-  },
-  {
-    accessorKey: 'deskripsi_subpilar',
-    header: 'Deskripsi',
-    cell: (info: any) => info.getValue(),
-    enableSorting: false,
-    enableColumnFilter: true
-  }
-];
-
 export default function SubpilarPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState('id_subpilar');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     async function fetchData() {
@@ -49,15 +30,9 @@ export default function SubpilarPage() {
     fetchData();
   }, []);
 
-  const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState('id_subpilar');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
-
   // Filter
   const filteredData = data.filter(
-    (row) =>
+    (row: any) =>
       row.nama_subpilar?.toLowerCase().includes(search.toLowerCase()) ||
       row.deskripsi_subpilar?.toLowerCase().includes(search.toLowerCase()) ||
       String(row.id_subpilar).includes(search)
@@ -82,6 +57,44 @@ export default function SubpilarPage() {
       <h1 className='mb-6 text-2xl font-bold text-gray-800 dark:text-gray-100'>
         Tabel Subpilar
       </h1>
+      <div className='mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+        <input
+          type='text'
+          className='w-full rounded border px-3 py-2 text-sm focus:ring focus:ring-blue-300 focus:outline-none sm:w-64 dark:bg-gray-800 dark:text-gray-100'
+          placeholder='Cari subpilar...'
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
+        <div className='flex gap-2'>
+          <button
+            className={`rounded border px-3 py-2 text-sm font-medium ${sortKey === 'id_subpilar' ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
+            onClick={() => setSortKey('id_subpilar')}
+          >
+            Sort by ID
+          </button>
+          <button
+            className={`rounded border px-3 py-2 text-sm font-medium ${sortKey === 'nama_subpilar' ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
+            onClick={() => setSortKey('nama_subpilar')}
+          >
+            Sort by Nama
+          </button>
+          <button
+            className={`rounded border px-3 py-2 text-sm font-medium ${sortKey === 'deskripsi_subpilar' ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
+            onClick={() => setSortKey('deskripsi_subpilar')}
+          >
+            Sort by Deskripsi
+          </button>
+          <button
+            className='rounded border px-3 py-2 text-sm font-medium'
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'asc' ? 'Asc' : 'Desc'}
+          </button>
+        </div>
+      </div>
       {loading ? (
         <div className='flex h-32 items-center justify-center text-gray-500'>
           Loading...
