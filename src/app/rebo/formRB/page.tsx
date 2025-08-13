@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Edit, Eye, Settings } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function FormRB() {
   const supabase = await createClient();
@@ -131,14 +132,16 @@ export default async function FormRB() {
 
                   {/* Right Side - Action Buttons */}
                   <div className='ml-4 flex gap-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-600 dark:hover:bg-blue-900/20'
-                    >
-                      <Eye className='mr-2 h-4 w-4' />
-                      Detail
-                    </Button>
+                    <Link href={`/rebo/formRB/${pilar.id_pilar}`}>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-600 dark:hover:bg-blue-900/20'
+                      >
+                        <Eye className='mr-2 h-4 w-4' />
+                        Detail
+                      </Button>
+                    </Link>
                     <Button
                       variant='outline'
                       size='sm'
@@ -209,14 +212,16 @@ export default async function FormRB() {
 
                   {/* Right Side - Action Buttons */}
                   <div className='ml-4 flex gap-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='hover:border-purple-300 hover:bg-purple-50 dark:hover:border-purple-600 dark:hover:bg-purple-900/20'
-                    >
-                      <Eye className='mr-2 h-4 w-4' />
-                      Detail
-                    </Button>
+                    <Link href={`/rebo/formRB/${pilar.id_pilar}`}>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='hover:border-purple-300 hover:bg-purple-50 dark:hover:border-purple-600 dark:hover:bg-purple-900/20'
+                      >
+                        <Eye className='mr-2 h-4 w-4' />
+                        Detail
+                      </Button>
+                    </Link>
                     <Button
                       variant='outline'
                       size='sm'

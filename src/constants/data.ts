@@ -62,13 +62,13 @@ export const navItems: NavItem[] = [
       },
       {
         title: 'Subpilar',
-        url: '/dashboard/overview',
+        url: '/rebo/dataRB/pilar/subpilar',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
         title: 'Pertanyaan',
-        url: '/dashboard/overview',
+        url: '/rebo/dataRB/pilar/pertanyaan',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
