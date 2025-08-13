@@ -81,6 +81,14 @@ export const navItems: NavItem[] = [
     ]
   },
   {
+    title: 'Arsip',
+    url: '/rebo/arsip',
+    icon: 'page',
+    isActive: false,
+    shortcut: ['d', 'd'],
+    items: [] // Empty array as there are no child items for Dashboard
+  },
+  {
     title: 'Dashboard',
     url: '/dashboard/overview',
     icon: 'dashboard',
