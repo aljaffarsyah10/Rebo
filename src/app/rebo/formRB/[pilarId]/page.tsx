@@ -236,7 +236,7 @@ export default function Page(props: PageProps) {
 
                           {/* Dropdown Kategori Penilaian & Link Bukti Dukung */}
                           <form
-                            className={`flex flex-col gap-3 space-y-2 rounded-lg border p-4 ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/10' : 'border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10'}`}
+                            className={`flex flex-col gap-3 space-y-2 rounded-lg border p-4 ${buktiDukungMap[pertanyaan.id_pertanyaan]?.link_bukti ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/10' : 'border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10'}`}
                             onSubmit={async (e) => {
                               e.preventDefault();
                               const form = e.currentTarget;
@@ -350,7 +350,7 @@ export default function Page(props: PageProps) {
                               placeholder='https://contoh.com/dokumen-bukti'
                               defaultValue={
                                 buktiDukungMap[pertanyaan.id_pertanyaan]
-                                  ?.link_bukti || ''
+                                  ?.link_bukti?.link_bukti || ''
                               }
                               className={`focus:ring-opacity-50 flex-1 rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
                             />
@@ -373,6 +373,7 @@ export default function Page(props: PageProps) {
                                   className='w-full rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
                                   disabled={
                                     !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                      ?.link_bukti
                                   }
                                 >
                                   <option value=''>Pilih status...</option>
@@ -389,6 +390,7 @@ export default function Page(props: PageProps) {
                                   style={{ minWidth: '110px' }}
                                 >
                                   {buktiDukungMap[pertanyaan.id_pertanyaan]
+                                    ?.link_bukti
                                     ? 'Update'
                                     : 'Submit'}
                                 </button>
@@ -398,6 +400,7 @@ export default function Page(props: PageProps) {
                                   style={{ minWidth: '110px' }}
                                   disabled={
                                     !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                      ?.link_bukti
                                   }
                                   onClick={async () => {
                                     if (
