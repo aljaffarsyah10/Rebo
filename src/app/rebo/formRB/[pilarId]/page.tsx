@@ -160,19 +160,19 @@ export default function Page(props: PageProps) {
               return (
                 total +
                 (subpilar.pertanyaan?.reduce(
-                  (t, p) =>
+                  (t: number, p: any) =>
                     t + (buktiDukungMap[p.id_pertanyaan]?.nilai_akhir || 0),
                   0
                 ) || 0)
               );
             }, 0)
-          ).toFixed(2)}
+          )}
           nilaiMaks={Number(
             subpilarjoinpertanyaan.reduce((total, subpilar) => {
               return (
                 total +
                 (subpilar.pertanyaan?.reduce(
-                  (t, p) =>
+                  (t: number, p: any) =>
                     t +
                     (p.kategoriPenilaian?.length
                       ? Math.max(
@@ -183,7 +183,7 @@ export default function Page(props: PageProps) {
                 ) || 0)
               );
             }, 0)
-          ).toFixed(2)}
+          )}
           className='relative static top-0 right-0 ml-4'
         />
       </div>
