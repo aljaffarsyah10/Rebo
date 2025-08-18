@@ -217,12 +217,32 @@ export default function Page(props: PageProps) {
                                 ?.nilai_akhir
                             }
                           />
-                          <div className='absolute top-6 -left-9 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white dark:bg-blue-600'>
-                            {index + 1}
+                          <div className='mb-4 flex items-start justify-between gap-4'>
+                            <div className='flex items-center gap-2'>
+                              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white dark:bg-blue-600'>
+                                {index + 1}
+                              </div>
+                              <p className='m-0 text-lg leading-relaxed font-medium text-gray-800 dark:text-gray-100'>
+                                {pertanyaan.pertanyaan}
+                              </p>
+                            </div>
+                            <SkorBox
+                              nilaiAkhir={
+                                buktiDukungMap[pertanyaan.id_pertanyaan]
+                                  ?.nilai_akhir
+                              }
+                              nilaiMaks={
+                                pertanyaan.kategoriPenilaian?.length
+                                  ? Math.max(
+                                      ...pertanyaan.kategoriPenilaian.map(
+                                        (k: any) => k.nilai
+                                      )
+                                    )
+                                  : undefined
+                              }
+                              className='relative static top-0 right-0'
+                            />
                           </div>
-                          <p className='mb-4 text-lg leading-relaxed font-medium text-gray-800 dark:text-gray-100'>
-                            {pertanyaan.pertanyaan}
-                          </p>
                           {pertanyaan.deskripsi_pertanyaan && (
                             <p className='mb-6 rounded-lg border-l-4 border-blue-200 bg-blue-50 p-3 text-sm leading-relaxed text-gray-600 dark:border-blue-500 dark:bg-blue-900/30 dark:text-gray-300'>
                               {pertanyaan.deskripsi_pertanyaan}

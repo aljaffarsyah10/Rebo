@@ -13,12 +13,12 @@ const SkorBox: React.FC<SkorBoxProps> = ({
 }) => {
   return (
     <div
-      className={`absolute top-4 right-4 flex items-center gap-3 rounded-xl border-2 border-yellow-400 bg-yellow-50 px-4 py-2 shadow-lg dark:border-yellow-600 dark:bg-yellow-900/30 ${className || ''}`}
-      style={{ zIndex: 10 }}
+      className={`absolute top-4 right-4 flex items-center gap-1 rounded-lg border border-yellow-300 bg-yellow-50 px-2 py-1 shadow dark:border-yellow-600 dark:bg-yellow-900/30 ${className || ''}`}
+      style={{ zIndex: 10, fontSize: '0.85rem', minWidth: 'auto' }}
     >
-      <span className='mr-2 flex items-center justify-center rounded-full bg-yellow-400 p-1 text-white'>
+      <span className='mr-1 flex items-center justify-center rounded-full bg-yellow-400 p-0.5 text-white'>
         <svg
-          className='h-5 w-5'
+          className='h-3 w-3'
           fill='none'
           stroke='currentColor'
           strokeWidth='2'
@@ -31,11 +31,11 @@ const SkorBox: React.FC<SkorBoxProps> = ({
           />
         </svg>
       </span>
-      <span className='text-base font-bold text-yellow-700 dark:text-yellow-300'>
+      <span className='text-xs font-bold text-yellow-700 dark:text-yellow-300'>
         Skor:
       </span>
       <span
-        className={`rounded-lg px-3 py-1 text-lg font-bold ${nilaiAkhir != null ? 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
+        className={`rounded px-2 py-0.5 text-xs font-bold ${nilaiAkhir != null ? 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
       >
         {nilaiAkhir != null ? nilaiAkhir : '-'}
       </span>
