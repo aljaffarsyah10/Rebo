@@ -144,13 +144,48 @@ export default function Page(props: PageProps) {
         onClose={() => setModalOpen(false)}
         message={modalMsg}
       />
-      <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
-          {namaPilar ? `Pilar ${pilarId}: ${namaPilar}` : `Pilar ${pilarId}`}
-        </h1>
-        <p className='mt-2 text-lg text-gray-600 dark:text-gray-400'>
-          Subpilar dan Pertanyaan Evaluasi
-        </p>
+      <div className='mb-8 flex items-center justify-between'>
+        <div>
+          <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
+            {namaPilar ? `Pilar ${pilarId}: ${namaPilar}` : `Pilar ${pilarId}`}
+          </h1>
+          <p className='mt-2 text-lg text-gray-600 dark:text-gray-400'>
+            Subpilar dan Pertanyaan Evaluasi
+          </p>
+        </div>
+        {/* SkorBox total di samping kanan judul */}
+        <SkorBox
+          nilaiAkhir={Number(
+            subpilarjoinpertanyaan.reduce((total, subpilar) => {
+              return (
+                total +
+                (subpilar.pertanyaan?.reduce(
+                  (t, p) =>
+                    t + (buktiDukungMap[p.id_pertanyaan]?.nilai_akhir || 0),
+                  0
+                ) || 0)
+              );
+            }, 0)
+          ).toFixed(2)}
+          nilaiMaks={Number(
+            subpilarjoinpertanyaan.reduce((total, subpilar) => {
+              return (
+                total +
+                (subpilar.pertanyaan?.reduce(
+                  (t, p) =>
+                    t +
+                    (p.kategoriPenilaian?.length
+                      ? Math.max(
+                          ...p.kategoriPenilaian.map((k: any) => k.nilai)
+                        )
+                      : 0),
+                  0
+                ) || 0)
+              );
+            }, 0)
+          ).toFixed(2)}
+          className='relative static top-0 right-0 ml-4'
+        />
       </div>
 
       <Tabs
