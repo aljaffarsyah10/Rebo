@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect, useState } from 'react';
 import SubmitModal from '@/components/modal/submit-modal';
+import SkorBox from '@/components/rebo/skorBox';
 
 type PageProps = { params: Promise<{ pilarId: string }> };
 
@@ -210,6 +211,12 @@ export default function Page(props: PageProps) {
                           key={pertanyaan.id_pertanyaan}
                           className='relative rounded-xl border border-gray-100 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-gray-700 dark:from-gray-800 dark:to-gray-900 dark:hover:shadow-lg'
                         >
+                          <SkorBox
+                            nilaiAkhir={
+                              buktiDukungMap[pertanyaan.id_pertanyaan]
+                                ?.nilai_akhir
+                            }
+                          />
                           <div className='absolute top-6 -left-9 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white dark:bg-blue-600'>
                             {index + 1}
                           </div>
