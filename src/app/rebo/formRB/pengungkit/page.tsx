@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Eye, Settings } from 'lucide-react';
 import Link from 'next/link';
+import SkorBoxPilar from '@/components/rebo/skorBox-pilar';
 
 export default async function FormRB() {
   const supabase = await createClient();
@@ -128,7 +129,7 @@ export default async function FormRB() {
                 </div>
 
                 {/* Right Side - Action Button */}
-                <div className='ml-4'>
+                <div className='ml-4 flex items-center gap-2'>
                   <Link href={`/rebo/formRB/${pilar.id_pilar}`}>
                     <Button
                       variant='outline'
@@ -139,6 +140,12 @@ export default async function FormRB() {
                       Detail
                     </Button>
                   </Link>
+                  {/* SkorBoxPilar di samping button Detail */}
+                  <SkorBoxPilar
+                    totalNilaiAkhir={pilar.totalNilaiAkhir || 0}
+                    totalNilaiMaks={pilar.totalNilaiMaks || 0}
+                    className='relative static top-0 right-0'
+                  />
                 </div>
               </div>
             ))}
