@@ -1,13 +1,13 @@
 import React from 'react';
 
 export type SkorBoxPilarProps = {
-  totalNilaiAkhir: number;
+  totalSkor: number;
   totalNilaiMaks: number;
   className?: string;
 };
 
 const SkorBoxPilar: React.FC<SkorBoxPilarProps> = ({
-  totalNilaiAkhir,
+  totalSkor,
   totalNilaiMaks,
   className
 }) => {
@@ -35,9 +35,9 @@ const SkorBoxPilar: React.FC<SkorBoxPilarProps> = ({
         Total Skor Pilar:
       </span>
       <span
-        className={`rounded px-2 py-0.5 text-xs font-bold ${totalNilaiAkhir != null ? 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
+        className={`rounded px-2 py-0.5 text-xs font-bold ${totalSkor != null ? 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
       >
-        {totalNilaiAkhir != null ? totalNilaiAkhir.toFixed(2) : '-'}
+        {totalSkor != null ? totalSkor.toFixed(2) : '-'}
       </span>
       <span className='text-xs font-semibold text-gray-600 dark:text-gray-300'>
         / {totalNilaiMaks != null ? totalNilaiMaks.toFixed(2) : '-'}

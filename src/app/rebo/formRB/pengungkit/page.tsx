@@ -18,6 +18,43 @@ export default async function FormRB() {
     )
     .order('id_pilar', { ascending: true });
 
+  // Filter hanya untuk Area 1 (Pengungkit)
+  const pilarsArea1 = pilarsData?.filter((pilar) => pilar.id_area === 1) || [];
+
+  // Ambil totalSkor dan totalNilaiMaks dengan join pilar -> subpilar -> pertanyaan -> buktiDukung
+  for (const pilar of pilarsArea1) {
+    const { data: subpilarData } = await supabase
+      .from('subpilar')
+      .select(
+        'id_subpilar, id_pilar, pertanyaan (id_pertanyaan, kategoriPenilaian (*), buktiDukung (*))'
+      )
+      .eq('id_pilar', pilar.id_pilar);
+    let totalSkor = 0;
+    let totalNilaiMaks = 0;
+    if (subpilarData && subpilarData.length > 0) {
+      for (const subpilar of subpilarData) {
+        if (subpilar.pertanyaan && subpilar.pertanyaan.length > 0) {
+          for (const p of subpilar.pertanyaan) {
+            // Hitung nilai maksimal dari kategoriPenilaian
+            const kategoriMax = p.kategoriPenilaian?.length
+              ? Math.max(...p.kategoriPenilaian.map((k: any) => k.nilai))
+              : 0;
+            totalNilaiMaks += kategoriMax;
+            // Hitung total skor dari buktiDukung
+            if (p.buktiDukung && p.buktiDukung.length > 0) {
+              totalSkor += p.buktiDukung.reduce(
+                (sum: number, b: any) => sum + (b.nilai_akhir || 0),
+                0
+              );
+            }
+          }
+        }
+      }
+    }
+    pilar.totalSkor = totalSkor;
+    pilar.totalNilaiMaks = totalNilaiMaks;
+  }
+
   if (error) {
     console.error('Error fetching pilars:', error.message);
     return (
@@ -58,8 +95,7 @@ export default async function FormRB() {
     );
   }
 
-  // Filter hanya untuk Area 1 (Pengungkit)
-  const pilarsArea1 = pilarsData?.filter((pilar) => pilar.id_area === 1) || [];
+  // ...existing code...
 
   return (
     <div className='container mx-auto max-w-6xl p-6'>
@@ -142,7 +178,7 @@ export default async function FormRB() {
                   </Link>
                   {/* SkorBoxPilar di samping button Detail */}
                   <SkorBoxPilar
-                    totalNilaiAkhir={pilar.totalNilaiAkhir || 0}
+                    totalSkor={pilar.totalSkor || 0}
                     totalNilaiMaks={pilar.totalNilaiMaks || 0}
                     className='relative static top-0 right-0'
                   />
