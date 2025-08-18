@@ -103,10 +103,10 @@ export default async function FormRB() {
       <div className='mb-8'>
         <div className='flex items-center justify-between'>
           <div>
-            <h1 className='text-3xl font-bold text-black dark:text-black'>
+            <h1 className='text-3xl font-bold text-black dark:text-white'>
               Pilar Reformasi Birokrasi
             </h1>
-            <p className='mt-2 text-black dark:text-black'>
+            <p className='mt-2 text-black dark:text-white'>
               Kelola dan pantau pilar reformasi birokrasi
             </p>
           </div>
@@ -123,7 +123,7 @@ export default async function FormRB() {
           <div className='flex h-6 w-6 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white dark:bg-purple-600'>
             2
           </div>
-          <h2 className='text-xl font-bold text-black dark:text-black'>
+          <h2 className='text-xl font-bold text-black dark:text-white'>
             {pilarsArea2[0]?.area?.nama_area || 'Pilar Reformasi'}
           </h2>
           <div className='h-px flex-1 bg-gradient-to-r from-purple-300 to-transparent dark:from-purple-600'></div>
@@ -146,11 +146,11 @@ export default async function FormRB() {
                     {pilar.id_pilar}
                   </div>
                   <div className='flex-1'>
-                    <h3 className='font-semibold text-black dark:text-black'>
+                    <h3 className='font-semibold text-black dark:text-white'>
                       {pilar.nama_pilar}
                     </h3>
                     {pilar.deskripsi_pilar && (
-                      <p className='mt-1 line-clamp-2 text-sm text-black dark:text-black'>
+                      <p className='mt-1 line-clamp-2 text-sm text-black dark:text-white'>
                         {pilar.deskripsi_pilar}
                       </p>
                     )}
@@ -170,7 +170,7 @@ export default async function FormRB() {
                     <Button
                       variant='outline'
                       size='sm'
-                      className='text-black hover:border-purple-300 hover:bg-purple-50 dark:text-black dark:hover:border-purple-600 dark:hover:bg-purple-900/20'
+                      className='text-black hover:border-purple-300 hover:bg-purple-50 dark:text-white dark:hover:border-purple-600 dark:hover:bg-purple-900/20'
                     >
                       <Eye className='mr-2 h-4 w-4' />
                       Detail
@@ -200,10 +200,10 @@ export default async function FormRB() {
           <div className='mb-4 rounded-full bg-purple-100 p-6 dark:bg-purple-800'>
             <Settings className='h-8 w-8 text-purple-400 dark:text-purple-600' />
           </div>
-          <h3 className='mb-2 text-lg font-semibold text-black dark:text-black'>
+          <h3 className='mb-2 text-lg font-semibold text-black dark:text-white'>
             Belum ada data pilar reformasi
           </h3>
-          <p className='max-w-md text-center text-black dark:text-black'>
+          <p className='max-w-md text-center text-black dark:text-white'>
             Data pilar reformasi birokrasi belum tersedia. Silakan tambahkan
             data pilar terlebih dahulu.
           </p>
