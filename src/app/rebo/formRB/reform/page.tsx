@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Eye, Settings } from 'lucide-react';
 import Link from 'next/link';
+import SkorBoxPilar from '@/components/rebo/skorBox-pilar';
 
 export default async function FormRB() {
   const supabase = await createClient();
@@ -16,6 +17,43 @@ export default async function FormRB() {
     `
     )
     .order('id_pilar', { ascending: true });
+
+  // Filter hanya untuk Area 2 (Reform)
+  const pilarsArea2 = pilarsData?.filter((pilar) => pilar.id_area === 2) || [];
+
+  // Ambil totalSkor dan totalNilaiMaks dengan join pilar -> subpilar -> pertanyaan -> buktiDukung
+  for (const pilar of pilarsArea2) {
+    const { data: subpilarData } = await supabase
+      .from('subpilar')
+      .select(
+        'id_subpilar, id_pilar, pertanyaan (id_pertanyaan, kategoriPenilaian (*), buktiDukung (*))'
+      )
+      .eq('id_pilar', pilar.id_pilar);
+    let totalSkor = 0;
+    let totalNilaiMaks = 0;
+    if (subpilarData && subpilarData.length > 0) {
+      for (const subpilar of subpilarData) {
+        if (subpilar.pertanyaan && subpilar.pertanyaan.length > 0) {
+          for (const p of subpilar.pertanyaan) {
+            // Hitung nilai maksimal dari kategoriPenilaian
+            const kategoriMax = p.kategoriPenilaian?.length
+              ? Math.max(...p.kategoriPenilaian.map((k: any) => k.nilai))
+              : 0;
+            totalNilaiMaks += kategoriMax;
+            // Hitung total skor dari buktiDukung
+            if (p.buktiDukung && p.buktiDukung.length > 0) {
+              totalSkor += p.buktiDukung.reduce(
+                (sum: number, b: any) => sum + (b.nilai_akhir || 0),
+                0
+              );
+            }
+          }
+        }
+      }
+    }
+    pilar.totalSkor = totalSkor;
+    pilar.totalNilaiMaks = totalNilaiMaks;
+  }
 
   if (error) {
     console.error('Error fetching pilars:', error.message);
@@ -57,8 +95,7 @@ export default async function FormRB() {
     );
   }
 
-  // Filter hanya untuk Area 2 (Reform)
-  const pilarsArea2 = pilarsData?.filter((pilar) => pilar.id_area === 2) || [];
+  // ...existing code...
 
   return (
     <div className='container mx-auto max-w-6xl p-6'>
@@ -66,10 +103,10 @@ export default async function FormRB() {
       <div className='mb-8'>
         <div className='flex items-center justify-between'>
           <div>
-            <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
+            <h1 className='text-3xl font-bold text-black dark:text-black'>
               Pilar Reformasi Birokrasi
             </h1>
-            <p className='mt-2 text-gray-600 dark:text-gray-400'>
+            <p className='mt-2 text-black dark:text-black'>
               Kelola dan pantau pilar reformasi birokrasi
             </p>
           </div>
@@ -86,7 +123,7 @@ export default async function FormRB() {
           <div className='flex h-6 w-6 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white dark:bg-purple-600'>
             2
           </div>
-          <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+          <h2 className='text-xl font-bold text-black dark:text-black'>
             {pilarsArea2[0]?.area?.nama_area || 'Pilar Reformasi'}
           </h2>
           <div className='h-px flex-1 bg-gradient-to-r from-purple-300 to-transparent dark:from-purple-600'></div>
@@ -97,7 +134,7 @@ export default async function FormRB() {
             {pilarsArea2.map((pilar: any, index: number) => (
               <div
                 key={`area2-${pilar.id_pilar}`}
-                className={`flex items-center justify-between p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                className={`flex items-center justify-between p-4 transition-colors hover:bg-purple-50 dark:hover:bg-purple-800 ${
                   index !== pilarsArea2.length - 1
                     ? 'border-b border-gray-200 dark:border-gray-700'
                     : ''
@@ -109,11 +146,11 @@ export default async function FormRB() {
                     {pilar.id_pilar}
                   </div>
                   <div className='flex-1'>
-                    <h3 className='font-semibold text-gray-900 dark:text-gray-100'>
+                    <h3 className='font-semibold text-black dark:text-black'>
                       {pilar.nama_pilar}
                     </h3>
                     {pilar.deskripsi_pilar && (
-                      <p className='mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-400'>
+                      <p className='mt-1 line-clamp-2 text-sm text-black dark:text-black'>
                         {pilar.deskripsi_pilar}
                       </p>
                     )}
@@ -127,25 +164,30 @@ export default async function FormRB() {
                   </div>
                 </div>
 
-                {/* Right Side - Action Button */}
-                <div className='ml-4'>
+                {/* Right Side - Action Button & SkorBoxPilar */}
+                <div className='ml-4 flex items-center gap-2'>
                   <Link href={`/rebo/formRB/${pilar.id_pilar}`}>
                     <Button
                       variant='outline'
                       size='sm'
-                      className='hover:border-purple-300 hover:bg-purple-50 dark:hover:border-purple-600 dark:hover:bg-purple-900/20'
+                      className='text-black hover:border-purple-300 hover:bg-purple-50 dark:text-black dark:hover:border-purple-600 dark:hover:bg-purple-900/20'
                     >
                       <Eye className='mr-2 h-4 w-4' />
                       Detail
                     </Button>
                   </Link>
+                  <SkorBoxPilar
+                    totalSkor={pilar.totalSkor || 0}
+                    totalNilaiMaks={pilar.totalNilaiMaks || 0}
+                    className='relative static top-0 right-0'
+                  />
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className='rounded-lg border-2 border-dashed border-gray-300 p-6 text-center dark:border-gray-600'>
-            <p className='text-gray-500 dark:text-gray-400'>
+          <div className='rounded-lg border-2 border-dashed border-purple-300 p-6 text-center dark:border-purple-600'>
+            <p className='text-purple-500 dark:text-purple-400'>
               Tidak ada pilar reformasi tersedia
             </p>
           </div>
@@ -155,13 +197,13 @@ export default async function FormRB() {
       {/* Empty State */}
       {pilarsArea2.length === 0 && (
         <div className='flex flex-col items-center justify-center py-12'>
-          <div className='mb-4 rounded-full bg-gray-100 p-6 dark:bg-gray-800'>
-            <Settings className='h-8 w-8 text-gray-400 dark:text-gray-600' />
+          <div className='mb-4 rounded-full bg-purple-100 p-6 dark:bg-purple-800'>
+            <Settings className='h-8 w-8 text-purple-400 dark:text-purple-600' />
           </div>
-          <h3 className='mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100'>
+          <h3 className='mb-2 text-lg font-semibold text-black dark:text-black'>
             Belum ada data pilar reformasi
           </h3>
-          <p className='max-w-md text-center text-gray-600 dark:text-gray-400'>
+          <p className='max-w-md text-center text-black dark:text-black'>
             Data pilar reformasi birokrasi belum tersedia. Silakan tambahkan
             data pilar terlebih dahulu.
           </p>
