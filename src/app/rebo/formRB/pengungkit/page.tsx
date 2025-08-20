@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Settings } from 'lucide-react';
 import Link from 'next/link';
 import SkorBoxPilar from '@/components/rebo/skorBox-pilar';
+import ProgressPilar from '@/components/rebo/progress-pilar';
 
 export default async function FormRB() {
   const supabase = await createClient();
@@ -164,7 +165,7 @@ export default async function FormRB() {
                   </div>
                 </div>
 
-                {/* Right Side - Action Button */}
+                {/* Right Side - Action Button & ProgressPilar */}
                 <div className='ml-4 flex items-center gap-2'>
                   <Link href={`/rebo/formRB/${pilar.id_pilar}`}>
                     <Button
@@ -176,7 +177,11 @@ export default async function FormRB() {
                       Detail
                     </Button>
                   </Link>
-                  {/* SkorBoxPilar di samping button Detail */}
+                  <ProgressPilar
+                    pertanyaanList={
+                      pilar.subpilar?.flatMap((sp: any) => sp.pertanyaan) || []
+                    }
+                  />
                   <SkorBoxPilar
                     totalSkor={pilar.totalSkor || 0}
                     totalNilaiMaks={pilar.totalNilaiMaks || 0}
