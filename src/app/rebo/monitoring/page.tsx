@@ -1,4 +1,6 @@
 'use client';
+
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import ProgressPilar from '@/components/rebo/progress-pilar';
 import SkorBoxPilar from '@/components/rebo/skorBox-pilar';
@@ -13,102 +15,133 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-export default async function MonitoringDashboard() {
-  const supabase = await createClient();
+export default function MonitoringDashboard() {
+  const [pilarProgress, setPilarProgress] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [totalPertanyaan, setTotalPertanyaan] = useState(0);
+  const [totalTerjawab, setTotalTerjawab] = useState(0);
+  const [totalProgressPercent, setTotalProgressPercent] = useState(0);
+  const [totalSkorAll, setTotalSkorAll] = useState(0);
+  const [totalNilaiMaksAllRounded, setTotalNilaiMaksAllRounded] = useState(0);
+  const [totalSkorPercent, setTotalSkorPercent] = useState(0);
 
-  // Ambil semua pilar
-  const { data: pilarsData } = await supabase
-    .from('pilar')
-    .select(
-      'id_pilar, nama_pilar, id_area, area (*), subpilar (id_subpilar, pertanyaan (id_pertanyaan, kategoriPenilaian (*), buktiDukung (*)))'
-    )
-    .order('id_pilar', { ascending: true });
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = await createClient();
+      const { data: pilarsData } = await supabase
+        .from('pilar')
+        .select(
+          'id_pilar, nama_pilar, id_area, area (*), subpilar (id_subpilar, pertanyaan (id_pertanyaan, kategoriPenilaian (*), buktiDukung (*)))'
+        )
+        .order('id_pilar', { ascending: true });
 
-  // Proses data untuk progress dan skor
-  const pilarProgress = (pilarsData || []).map((pilar: any) => {
-    let totalSkor = 0;
-    let totalNilaiMaks = 0;
-    let pertanyaanList: any[] = [];
-    if (pilar.subpilar && pilar.subpilar.length > 0) {
-      for (const subpilar of pilar.subpilar) {
-        if (subpilar.pertanyaan && subpilar.pertanyaan.length > 0) {
-          for (const p of subpilar.pertanyaan) {
-            const kategoriMax = p.kategoriPenilaian?.length
-              ? Math.max(...p.kategoriPenilaian.map((k: any) => k.nilai))
-              : 0;
-            totalNilaiMaks += kategoriMax;
-            if (p.buktiDukung && p.buktiDukung.length > 0) {
-              totalSkor += p.buktiDukung.reduce(
-                (sum: number, b: any) => sum + (b.nilai_akhir || 0),
-                0
-              );
-              for (const b of p.buktiDukung) {
-                pertanyaanList.push({
-                  id_pertanyaan: p.id_pertanyaan,
-                  status_kelengkapan: b.status_kelengkapan
-                });
+      const pilarProgressData = (pilarsData || []).map((pilar: any) => {
+        let totalSkor = 0;
+        let totalNilaiMaks = 0;
+        let pertanyaanList: any[] = [];
+        if (pilar.subpilar && pilar.subpilar.length > 0) {
+          for (const subpilar of pilar.subpilar) {
+            if (subpilar.pertanyaan && subpilar.pertanyaan.length > 0) {
+              for (const p of subpilar.pertanyaan) {
+                const kategoriMax = p.kategoriPenilaian?.length
+                  ? Math.max(...p.kategoriPenilaian.map((k: any) => k.nilai))
+                  : 0;
+                totalNilaiMaks += kategoriMax;
+                if (p.buktiDukung && p.buktiDukung.length > 0) {
+                  totalSkor += p.buktiDukung.reduce(
+                    (sum: number, b: any) => sum + (b.nilai_akhir || 0),
+                    0
+                  );
+                  for (const b of p.buktiDukung) {
+                    pertanyaanList.push({
+                      id_pertanyaan: p.id_pertanyaan,
+                      status_kelengkapan: b.status_kelengkapan
+                    });
+                  }
+                } else {
+                  pertanyaanList.push({
+                    id_pertanyaan: p.id_pertanyaan,
+                    status_kelengkapan: 0
+                  });
+                }
               }
-            } else {
-              pertanyaanList.push({
-                id_pertanyaan: p.id_pertanyaan,
-                status_kelengkapan: 0
-              });
             }
           }
         }
-      }
-    }
-    return {
-      id_pilar: pilar.id_pilar,
-      nama_pilar: pilar.nama_pilar,
-      totalSkor,
-      totalNilaiMaks,
-      pertanyaanList,
-      area: pilar.area?.nama_area || ''
+        return {
+          id_pilar: pilar.id_pilar,
+          nama_pilar: pilar.nama_pilar,
+          totalSkor,
+          totalNilaiMaks,
+          pertanyaanList,
+          area: pilar.area?.nama_area || ''
+        };
+      });
+
+      setPilarProgress(pilarProgressData);
+
+      const chartDataData = pilarProgressData.map((p) => ({
+        nama_pilar: p.nama_pilar,
+        progress:
+          p.pertanyaanList.length > 0
+            ? Math.round(
+                (p.pertanyaanList.filter((q: any) => q.status_kelengkapan === 2)
+                  .length /
+                  p.pertanyaanList.length) *
+                  100
+              )
+            : 0,
+        skor: p.totalSkor,
+        total_terjawab: p.pertanyaanList.filter(
+          (q: any) => q.status_kelengkapan === 1 || q.status_kelengkapan === 2
+        ).length
+      }));
+      setChartData(chartDataData);
+
+      const totalPertanyaanVal = pilarProgressData.reduce(
+        (sum, p) => sum + p.pertanyaanList.length,
+        0
+      );
+      setTotalPertanyaan(totalPertanyaanVal);
+
+      const totalTerjawabVal = pilarProgressData.reduce(
+        (sum, p) =>
+          sum +
+          p.pertanyaanList.filter(
+            (q: any) => q.status_kelengkapan === 1 || q.status_kelengkapan === 2
+          ).length,
+        0
+      );
+      setTotalTerjawab(totalTerjawabVal);
+
+      setTotalProgressPercent(
+        totalPertanyaanVal > 0
+          ? Math.round((totalTerjawabVal / totalPertanyaanVal) * 100)
+          : 0
+      );
+
+      const totalSkorAllVal = pilarProgressData.reduce(
+        (sum, p) => sum + p.totalSkor,
+        0
+      );
+      setTotalSkorAll(totalSkorAllVal);
+
+      const totalNilaiMaksAllVal = pilarProgressData.reduce(
+        (sum, p) => sum + p.totalNilaiMaks,
+        0
+      );
+      setTotalNilaiMaksAllRounded(Math.round(totalNilaiMaksAllVal));
+
+      setTotalSkorPercent(
+        Math.round(
+          totalNilaiMaksAllVal > 0
+            ? (totalSkorAllVal / totalNilaiMaksAllVal) * 100
+            : 0
+        )
+      );
     };
-  });
-
-  // Data untuk chart
-  const chartData = pilarProgress.map((p) => ({
-    nama_pilar: p.nama_pilar,
-    progress:
-      p.pertanyaanList.length > 0
-        ? Math.round(
-            (p.pertanyaanList.filter((q: any) => q.status_kelengkapan === 2)
-              .length /
-              p.pertanyaanList.length) *
-              100
-          )
-        : 0,
-    skor: p.totalSkor,
-    nilai_maks: p.totalNilaiMaks
-  }));
-
-  // Hitung total progress: jumlah pertanyaan terjawab (status_kelengkapan = 1) / total seluruh pertanyaan
-  const totalPertanyaan = pilarProgress.reduce(
-    (sum, p) => sum + p.pertanyaanList.length,
-    0
-  );
-  const totalTerjawab = pilarProgress.reduce(
-    (sum, p) =>
-      sum +
-      p.pertanyaanList.filter((q: any) => q.status_kelengkapan === 1).length,
-    0
-  );
-  const totalProgressPercent =
-    totalPertanyaan > 0
-      ? Math.round((totalTerjawab / totalPertanyaan) * 100)
-      : 0;
-  const totalSkorAll = pilarProgress.reduce((sum, p) => sum + p.totalSkor, 0);
-  const totalNilaiMaksAll = pilarProgress.reduce(
-    (sum, p) => sum + p.totalNilaiMaks,
-    0
-  );
-  const totalNilaiMaksAllRounded = Math.round(totalNilaiMaksAll);
-  const totalSkorPercent =
-    totalNilaiMaksAllRounded > 0
-      ? Math.round((totalSkorAll / totalNilaiMaksAllRounded) * 100)
-      : 0;
+    fetchData();
+  }, []);
 
   return (
     <div className='container mx-auto max-w-6xl p-6'>
@@ -139,20 +172,33 @@ export default async function MonitoringDashboard() {
       </div>
       <div className='mb-8 rounded-lg border bg-white p-6 dark:bg-gray-900'>
         <h2 className='mb-4 text-xl font-semibold'>
-          Grafik Progress & Skor Pilar
+          Grafik Total Pertanyaan Terjawab per Pilar
         </h2>
-        <ResponsiveContainer width='100%' height={350}>
+        <ResponsiveContainer width='100%' height={450}>
           <BarChart
             data={chartData}
-            margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+            layout='vertical'
+            margin={{ top: 20, right: 30, left: 80, bottom: 5 }}
+            barCategoryGap={30}
           >
-            <XAxis dataKey='nama_pilar' />
-            <YAxis />
+            <XAxis
+              type='number'
+              allowDecimals={false}
+              label={{
+                value: 'Total Terjawab',
+                position: 'insideBottomRight',
+                offset: -5
+              }}
+            />
+            <YAxis type='category' dataKey='nama_pilar' width={150} />
             <Tooltip />
             <Legend />
-            <Bar dataKey='progress' fill='#3b82f6' name='Progress (%)' />
-            <Bar dataKey='skor' fill='#10b981' name='Skor' />
-            <Bar dataKey='nilai_maks' fill='#6366f1' name='Nilai Maksimal' />
+            <Bar
+              dataKey='total_terjawab'
+              fill='#f59e42'
+              name='Pertanyaan Terjawab'
+              barSize={30}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
