@@ -84,9 +84,34 @@ export default async function MonitoringDashboard() {
     nilai_maks: p.totalNilaiMaks
   }));
 
+  // Hitung total progress (nilai maksimal seluruh pilar) dan total skor (skor seluruh pilar)
+  const totalNilaiMaksAll = pilarProgress.reduce(
+    (sum, p) => sum + p.totalNilaiMaks,
+    0
+  );
+  const totalSkorAll = pilarProgress.reduce((sum, p) => sum + p.totalSkor, 0);
+
   return (
     <div className='container mx-auto max-w-6xl p-6'>
       <h1 className='mb-6 text-3xl font-bold'>Dashboard Monitoring</h1>
+      <div className='mb-6 grid grid-cols-1 gap-4 md:grid-cols-2'>
+        <div className='flex flex-col items-center justify-center rounded-lg border bg-white p-4 dark:bg-gray-900'>
+          <div className='mb-1 text-xs text-gray-500'>
+            Total Progress (Nilai Maksimal Seluruh Pilar)
+          </div>
+          <div className='text-2xl font-bold text-blue-600 dark:text-blue-400'>
+            {totalNilaiMaksAll}
+          </div>
+        </div>
+        <div className='flex flex-col items-center justify-center rounded-lg border bg-white p-4 dark:bg-gray-900'>
+          <div className='mb-1 text-xs text-gray-500'>
+            Total Skor Seluruh Pilar
+          </div>
+          <div className='text-2xl font-bold text-green-600 dark:text-green-400'>
+            {totalSkorAll}
+          </div>
+        </div>
+      </div>
       <div className='mb-8 rounded-lg border bg-white p-6 dark:bg-gray-900'>
         <h2 className='mb-4 text-xl font-semibold'>
           Grafik Progress & Skor Pilar
