@@ -16,7 +16,7 @@ interface ProgressPilarProps {
 const ProgressPilar: React.FC<ProgressPilarProps> = ({ pertanyaanList }) => {
   const total = pertanyaanList.length;
   const lengkap = pertanyaanList.filter(
-    (q) => q.status_kelengkapan === 2
+    (q) => q.status_kelengkapan === 1
   ).length;
   const percent = total > 0 ? Math.round((lengkap / total) * 100) : 0;
 
