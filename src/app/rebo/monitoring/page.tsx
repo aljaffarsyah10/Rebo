@@ -12,7 +12,8 @@ import {
   YAxis,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  CartesianGrid
 } from 'recharts';
 
 export default function MonitoringDashboard() {
@@ -176,8 +177,8 @@ export default function MonitoringDashboard() {
           <BarChart
             data={chartData}
             layout='vertical'
-            margin={{ top: 20, right: 30, left: 80, bottom: 5 }}
-            barCategoryGap={30}
+            margin={{ top: 40, right: 50, left: 250, bottom: 40 }}
+            barCategoryGap={10}
           >
             <XAxis
               type='number'
@@ -186,22 +187,45 @@ export default function MonitoringDashboard() {
               label={{
                 value: 'Persentase Terjawab (%)',
                 position: 'insideBottomRight',
-                offset: -5
+                offset: 10,
+                style: { fontSize: 14, fontWeight: 600 }
               }}
+              tick={{ fontSize: 12, fontWeight: 500 }}
+              axisLine={{ stroke: '#e5e7eb' }}
+              tickLine={false}
             />
             <YAxis
               type='category'
               dataKey='nama_pilar'
-              width={120}
-              tick={{ fontSize: 10 }}
+              width={260}
+              tick={{ fontSize: 14, fontWeight: 500, width: 260 }}
+              interval={0}
+              tickLine={false}
+              axisLine={{ stroke: '#e5e7eb' }}
             />
-            <Tooltip />
-            <Legend />
+            <Tooltip
+              wrapperStyle={{
+                backgroundColor: '#f9fafb',
+                borderRadius: 8,
+                boxShadow: '0 2px 8px #0001',
+                border: '1px solid #e5e7eb'
+              }}
+              itemStyle={{ fontSize: 13 }}
+              labelStyle={{ fontWeight: 600 }}
+            />
+            <Legend wrapperStyle={{ fontSize: 13, fontWeight: 500 }} />
             <Bar
               dataKey='persentase_terjawab'
-              fill='#3b82f6'
+              fill='#2563eb'
               name='Persentase Terjawab (%)'
-              barSize={30}
+              barSize={40}
+              radius={[10, 10, 10, 10]}
+            />
+            <CartesianGrid
+              strokeDasharray='3 3'
+              horizontal={true}
+              vertical={false}
+              stroke='#e5e7eb'
             />
           </BarChart>
         </ResponsiveContainer>
