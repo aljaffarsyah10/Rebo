@@ -84,12 +84,30 @@ export default async function MonitoringDashboard() {
     nilai_maks: p.totalNilaiMaks
   }));
 
-  // Hitung total progress (nilai maksimal seluruh pilar) dan total skor (skor seluruh pilar)
+  // Hitung total progress: jumlah pertanyaan terjawab (status_kelengkapan = 1) / total seluruh pertanyaan
+  const totalPertanyaan = pilarProgress.reduce(
+    (sum, p) => sum + p.pertanyaanList.length,
+    0
+  );
+  const totalTerjawab = pilarProgress.reduce(
+    (sum, p) =>
+      sum +
+      p.pertanyaanList.filter((q: any) => q.status_kelengkapan === 1).length,
+    0
+  );
+  const totalProgressPercent =
+    totalPertanyaan > 0
+      ? Math.round((totalTerjawab / totalPertanyaan) * 100)
+      : 0;
+  const totalSkorAll = pilarProgress.reduce((sum, p) => sum + p.totalSkor, 0);
   const totalNilaiMaksAll = pilarProgress.reduce(
     (sum, p) => sum + p.totalNilaiMaks,
     0
   );
-  const totalSkorAll = pilarProgress.reduce((sum, p) => sum + p.totalSkor, 0);
+  const totalSkorPercent =
+    totalNilaiMaksAll > 0
+      ? Math.round((totalSkorAll / totalNilaiMaksAll) * 100)
+      : 0;
 
   return (
     <div className='container mx-auto max-w-6xl p-6'>
@@ -97,10 +115,13 @@ export default async function MonitoringDashboard() {
       <div className='mb-6 grid grid-cols-1 gap-4 md:grid-cols-2'>
         <div className='flex flex-col items-center justify-center rounded-lg border bg-white p-4 dark:bg-gray-900'>
           <div className='mb-1 text-xs text-gray-500'>
-            Total Progress (Nilai Maksimal Seluruh Pilar)
+            Total Progress (Pertanyaan Terjawab / Seluruh Pertanyaan)
           </div>
           <div className='text-2xl font-bold text-blue-600 dark:text-blue-400'>
-            {totalNilaiMaksAll}
+            {totalTerjawab} / {totalPertanyaan}
+          </div>
+          <div className='mt-1 text-sm font-semibold text-blue-500 dark:text-blue-300'>
+            {totalProgressPercent}%
           </div>
         </div>
         <div className='flex flex-col items-center justify-center rounded-lg border bg-white p-4 dark:bg-gray-900'>
@@ -108,7 +129,10 @@ export default async function MonitoringDashboard() {
             Total Skor Seluruh Pilar
           </div>
           <div className='text-2xl font-bold text-green-600 dark:text-green-400'>
-            {totalSkorAll}
+            {totalSkorAll} / {totalNilaiMaksAll}
+          </div>
+          <div className='mt-1 text-sm font-semibold text-green-500 dark:text-green-300'>
+            {totalSkorPercent}%
           </div>
         </div>
       </div>
