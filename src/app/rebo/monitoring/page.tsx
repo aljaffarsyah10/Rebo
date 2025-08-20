@@ -104,9 +104,10 @@ export default async function MonitoringDashboard() {
     (sum, p) => sum + p.totalNilaiMaks,
     0
   );
+  const totalNilaiMaksAllRounded = Math.round(totalNilaiMaksAll);
   const totalSkorPercent =
-    totalNilaiMaksAll > 0
-      ? Math.round((totalSkorAll / totalNilaiMaksAll) * 100)
+    totalNilaiMaksAllRounded > 0
+      ? Math.round((totalSkorAll / totalNilaiMaksAllRounded) * 100)
       : 0;
 
   return (
@@ -129,7 +130,7 @@ export default async function MonitoringDashboard() {
             Total Skor Seluruh Pilar
           </div>
           <div className='text-2xl font-bold text-green-600 dark:text-green-400'>
-            {totalSkorAll} / {totalNilaiMaksAll}
+            {totalSkorAll} / {totalNilaiMaksAllRounded}
           </div>
           <div className='mt-1 text-sm font-semibold text-green-500 dark:text-green-300'>
             {totalSkorPercent}%
