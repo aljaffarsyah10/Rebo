@@ -177,8 +177,8 @@ export default function MonitoringDashboard() {
           <BarChart
             data={chartData}
             layout='vertical'
-            margin={{ top: 40, right: 50, left: 250, bottom: 40 }}
-            barCategoryGap={10}
+            margin={{ top: 40, right: 20, left: 80, bottom: 40 }}
+            barCategoryGap={5}
           >
             <XAxis
               type='number'
