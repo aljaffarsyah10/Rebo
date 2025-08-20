@@ -190,7 +190,12 @@ export default function MonitoringDashboard() {
                 offset: -5
               }}
             />
-            <YAxis type='category' dataKey='nama_pilar' width={150} />
+            <YAxis
+              type='category'
+              dataKey='nama_pilar'
+              width={120}
+              tick={{ fontSize: 10 }}
+            />
             <Tooltip />
             <Legend />
             <Bar
