@@ -82,19 +82,17 @@ export default function MonitoringDashboard() {
 
       const chartDataData = pilarProgressData.map((p) => ({
         nama_pilar: p.nama_pilar,
-        progress:
+        persentase_terjawab:
           p.pertanyaanList.length > 0
             ? Math.round(
-                (p.pertanyaanList.filter((q: any) => q.status_kelengkapan === 2)
-                  .length /
+                (p.pertanyaanList.filter(
+                  (q: any) =>
+                    q.status_kelengkapan === 1 || q.status_kelengkapan === 2
+                ).length /
                   p.pertanyaanList.length) *
                   100
               )
-            : 0,
-        skor: p.totalSkor,
-        total_terjawab: p.pertanyaanList.filter(
-          (q: any) => q.status_kelengkapan === 1 || q.status_kelengkapan === 2
-        ).length
+            : 0
       }));
       setChartData(chartDataData);
 
@@ -172,7 +170,7 @@ export default function MonitoringDashboard() {
       </div>
       <div className='mb-8 rounded-lg border bg-white p-6 dark:bg-gray-900'>
         <h2 className='mb-4 text-xl font-semibold'>
-          Grafik Total Pertanyaan Terjawab per Pilar
+          Grafik Persentase Pertanyaan Terjawab per Pilar
         </h2>
         <ResponsiveContainer width='100%' height={450}>
           <BarChart
@@ -183,9 +181,10 @@ export default function MonitoringDashboard() {
           >
             <XAxis
               type='number'
+              domain={[0, 100]}
               allowDecimals={false}
               label={{
-                value: 'Total Terjawab',
+                value: 'Persentase Terjawab (%)',
                 position: 'insideBottomRight',
                 offset: -5
               }}
@@ -199,9 +198,9 @@ export default function MonitoringDashboard() {
             <Tooltip />
             <Legend />
             <Bar
-              dataKey='total_terjawab'
-              fill='#f59e42'
-              name='Pertanyaan Terjawab'
+              dataKey='persentase_terjawab'
+              fill='#3b82f6'
+              name='Persentase Terjawab (%)'
               barSize={30}
             />
           </BarChart>
