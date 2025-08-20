@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Settings } from 'lucide-react';
 import Link from 'next/link';
 import SkorBoxPilar from '@/components/rebo/skorBox-pilar';
+import ProgressPilar from '@/components/rebo/progress-pilar';
 
 export default async function FormRB() {
   const supabase = await createClient();
@@ -23,14 +24,18 @@ export default async function FormRB() {
 
   // Ambil totalSkor dan totalNilaiMaks dengan join pilar -> subpilar -> pertanyaan -> buktiDukung
   for (const pilar of pilarsArea2) {
+    // Ambil subpilar, pertanyaan, dan buktiDukung sekaligus
     const { data: subpilarData } = await supabase
       .from('subpilar')
       .select(
         'id_subpilar, id_pilar, pertanyaan (id_pertanyaan, kategoriPenilaian (*), buktiDukung (*))'
       )
       .eq('id_pilar', pilar.id_pilar);
+
     let totalSkor = 0;
     let totalNilaiMaks = 0;
+    let pertanyaanList: any[] = [];
+
     if (subpilarData && subpilarData.length > 0) {
       for (const subpilar of subpilarData) {
         if (subpilar.pertanyaan && subpilar.pertanyaan.length > 0) {
@@ -46,6 +51,19 @@ export default async function FormRB() {
                 (sum: number, b: any) => sum + (b.nilai_akhir || 0),
                 0
               );
+              // Ambil status_kelengkapan dari buktiDukung
+              for (const b of p.buktiDukung) {
+                pertanyaanList.push({
+                  id_pertanyaan: p.id_pertanyaan,
+                  status_kelengkapan: b.status_kelengkapan
+                });
+              }
+            } else {
+              // Jika tidak ada buktiDukung, tetap masukkan pertanyaan
+              pertanyaanList.push({
+                id_pertanyaan: p.id_pertanyaan,
+                status_kelengkapan: 0 // Belum lengkap
+              });
             }
           }
         }
@@ -53,6 +71,7 @@ export default async function FormRB() {
     }
     pilar.totalSkor = totalSkor;
     pilar.totalNilaiMaks = totalNilaiMaks;
+    pilar.pertanyaanList = pertanyaanList;
   }
 
   if (error) {
@@ -164,7 +183,7 @@ export default async function FormRB() {
                   </div>
                 </div>
 
-                {/* Right Side - Action Button & SkorBoxPilar */}
+                {/* Right Side - Action Button & SkorBoxPilar & ProgressPilar */}
                 <div className='ml-4 flex items-center gap-2'>
                   <Link href={`/rebo/formRB/${pilar.id_pilar}`}>
                     <Button
@@ -181,6 +200,7 @@ export default async function FormRB() {
                     totalNilaiMaks={pilar.totalNilaiMaks || 0}
                     className='relative static top-0 right-0'
                   />
+                  <ProgressPilar pertanyaanList={pilar.pertanyaanList || []} />
                 </div>
               </div>
             ))}
