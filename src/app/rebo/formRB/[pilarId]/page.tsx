@@ -331,10 +331,14 @@ export default function Page(props: PageProps) {
                                   ? kategoriObj.nilai
                                   : null;
                               }
-                              // Cek apakah sudah ada data
+                              // Cek apakah sudah ada data di map
                               const existing =
                                 buktiDukungMap[pertanyaan.id_pertanyaan];
-                              const method = existing ? 'PUT' : 'POST';
+                              // Gunakan kriteria apakah link_bukti pada table terisi untuk menentukan POST/PUT
+                              const hasDbLink = !!(
+                                existing && existing.link_bukti
+                              );
+                              const method = hasDbLink ? 'PUT' : 'POST';
                               const res = await fetch('/api', {
                                 method,
                                 headers: {
@@ -350,12 +354,26 @@ export default function Page(props: PageProps) {
                               const result = await res.json();
                               if (result.success) {
                                 setModalMsg(
-                                  existing
+                                  hasDbLink
                                     ? 'Bukti dukung berhasil diupdate!'
                                     : 'Bukti dukung berhasil disimpan!'
                                 );
                                 setModalOpen(true);
                                 form.reset();
+                                // Update local map agar UI mencerminkan DB (gunakan result.data jika ada)
+                                setBuktiDukungMap((prev) => ({
+                                  ...prev,
+                                  [pertanyaan.id_pertanyaan]: {
+                                    ...(result.data || {}),
+                                    // fallback ke nilai yang kita kirim jika result.data tidak tersedia
+                                    link_bukti:
+                                      result.data?.link_bukti ?? link_bukti,
+                                    id_kategori:
+                                      result.data?.id_kategori ?? id_kategori,
+                                    nilai_akhir:
+                                      result.data?.nilai_akhir ?? nilai_akhir
+                                  }
+                                }));
                               } else {
                                 setModalMsg(
                                   'Gagal menyimpan: ' +
@@ -525,10 +543,13 @@ export default function Page(props: PageProps) {
                                       setModalOpen(true);
                                       return;
                                     }
-                                    // Simpan status ke database (PUT jika sudah ada, POST jika belum)
+                                    // Simpan status ke database (PUT jika link_bukti di DB sudah ada, POST jika belum)
                                     const existing =
                                       buktiDukungMap[pertanyaan.id_pertanyaan];
-                                    const method = existing ? 'PUT' : 'POST';
+                                    const hasDbLink = !!(
+                                      existing && existing.link_bukti
+                                    );
+                                    const method = hasDbLink ? 'PUT' : 'POST';
                                     const res = await fetch('/api', {
                                       method,
                                       headers: {
@@ -545,6 +566,16 @@ export default function Page(props: PageProps) {
                                         'Status berhasil difinalisasi!'
                                       );
                                       setModalOpen(true);
+                                      // Update local map agar status tersimpan terlihat
+                                      setBuktiDukungMap((prev) => ({
+                                        ...prev,
+                                        [pertanyaan.id_pertanyaan]: {
+                                          ...(prev[pertanyaan.id_pertanyaan] ||
+                                            {}),
+                                          ...(result.data || {}),
+                                          status: result.data?.status ?? status
+                                        }
+                                      }));
                                     } else {
                                       setModalMsg(
                                         'Gagal finalisasi status: ' +
