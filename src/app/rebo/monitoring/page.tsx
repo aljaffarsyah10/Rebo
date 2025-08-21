@@ -25,6 +25,7 @@ export default function MonitoringDashboard() {
   const [totalSkorAll, setTotalSkorAll] = useState(0);
   const [totalNilaiMaksAllRounded, setTotalNilaiMaksAllRounded] = useState(0);
   const [totalSkorPercent, setTotalSkorPercent] = useState(0);
+  const [totalSkorPilarHasil, setTotalSkorPilarHasil] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -125,6 +126,26 @@ export default function MonitoringDashboard() {
       );
       setTotalSkorAll(totalSkorAllVal);
 
+      // fetch aggregate skor_pilarHasil from pilarHasil table
+      try {
+        const { data: pilarHasilRows, error: phError } = await supabase
+          .from('pilarHasil')
+          .select('skor_pilarHasil');
+        if (phError) {
+          console.error('Error fetching pilarHasil skor:', phError.message);
+          setTotalSkorPilarHasil(0);
+        } else {
+          const sumSkorPilarHasil = (pilarHasilRows || []).reduce(
+            (s: number, r: any) => s + (r.skor_pilarHasil || 0),
+            0
+          );
+          setTotalSkorPilarHasil(sumSkorPilarHasil);
+        }
+      } catch (err) {
+        console.error('Exception fetching pilarHasil skor:', err);
+        setTotalSkorPilarHasil(0);
+      }
+
       const totalNilaiMaksAllVal = pilarProgressData.reduce(
         (sum, p) => sum + p.totalNilaiMaks,
         0
@@ -145,7 +166,7 @@ export default function MonitoringDashboard() {
   return (
     <div className='container mx-auto max-w-6xl p-6'>
       <h1 className='mb-6 text-3xl font-bold'>Dashboard Monitoring</h1>
-      <div className='mb-6 grid grid-cols-1 gap-4 md:grid-cols-2'>
+      <div className='mb-6 grid grid-cols-1 gap-4 md:grid-cols-3'>
         <div className='flex flex-col items-center justify-center rounded-lg border bg-white p-4 dark:bg-gray-900'>
           <div className='mb-1 text-xs text-gray-500'>
             Total Progress (Pertanyaan Terjawab / Seluruh Pertanyaan)
@@ -166,6 +187,17 @@ export default function MonitoringDashboard() {
           </div>
           <div className='mt-1 text-sm font-semibold text-green-500 dark:text-green-300'>
             {totalSkorPercent}%
+          </div>
+        </div>
+        <div className='flex flex-col items-center justify-center rounded-lg border bg-white p-4 dark:bg-gray-900'>
+          <div className='mb-1 text-xs text-gray-500'>
+            Total Skor Aspek Hasil
+          </div>
+          <div className='text-2xl font-bold text-amber-600 dark:text-amber-400'>
+            {totalSkorPilarHasil} / 40
+          </div>
+          <div className='mt-1 text-sm font-semibold text-amber-500 dark:text-amber-300'>
+            {(totalSkorPilarHasil / 40) * 100}%
           </div>
         </div>
       </div>
