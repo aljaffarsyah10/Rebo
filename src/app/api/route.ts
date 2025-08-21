@@ -11,7 +11,8 @@ export async function POST(request: Request) {
       id_kategori,
       id_pertanyaan,
       nilai_akhir,
-      catatan_user
+      catatan_user,
+      catatan_koordinator
     } = body;
 
     // Minimal required fields from frontend: id_pertanyaan and link_bukti.
@@ -43,6 +44,9 @@ export async function POST(request: Request) {
     }
     if (Object.prototype.hasOwnProperty.call(body, 'catatan_user')) {
       insertData.catatan_user = catatan_user;
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'catatan_koordinator')) {
+      insertData.catatan_koordinator = catatan_koordinator;
     }
 
     console.error('[API /api] POST insertData (will upsert):', insertData);
@@ -81,7 +85,8 @@ export async function PUT(request: Request) {
       id_kategori,
       id_pertanyaan,
       nilai_akhir,
-      catatan_user
+      catatan_user,
+      catatan_koordinator
     } = body;
 
     if (!id_pertanyaan) {
@@ -97,6 +102,8 @@ export async function PUT(request: Request) {
     if (id_kategori !== undefined) updateData.id_kategori = id_kategori;
     if (nilai_akhir !== undefined) updateData.nilai_akhir = nilai_akhir;
     if (catatan_user !== undefined) updateData.catatan_user = catatan_user;
+    if (catatan_koordinator !== undefined)
+      updateData.catatan_koordinator = catatan_koordinator;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
