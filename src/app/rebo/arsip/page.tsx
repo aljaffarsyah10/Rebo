@@ -8,7 +8,7 @@ export default function ArsipPage() {
     'https://drive.google.com/drive/folders/1bCOPvfgdM21Wo5706y-fCwAhiKa6PyzA'; // Contoh link folder GDrive
 
   // Link PDF lokal dari folder public
-  const pdfPreviewUrl = '/rb.pdf'; // Pastikan file rb.pdf ada di folder public
+  const pdfPreviewUrl = '/SK_RB.pdf'; // Pastikan file rb.pdf ada di folder public
 
   return (
     <div className='container mx-auto max-w-3xl py-10'>
