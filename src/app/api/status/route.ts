@@ -24,8 +24,8 @@ async function postHandler(request: Request) {
     } else if (status && /disetujui|approve|approved/i.test(status)) {
       updatePayload.status_kelengkapan = 2;
     } else if (status && /ditolak|reject|rejected/i.test(status)) {
-      // keep explicit mapping if you want a different code for rejected
-      updatePayload.status_kelengkapan = 0;
+      // rejected -> mark with completeness code 3
+      updatePayload.status_kelengkapan = 3;
     }
 
     // Update the status on the existing buktiDukung row for the pertanyaan
