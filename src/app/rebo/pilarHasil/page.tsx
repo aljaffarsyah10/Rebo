@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import ScoreEditor from '@/app/rebo/pilarHasil/score-editor';
+import UraianCollapse from '@/components/rebo/uraian-collapse';
 
 export default async function PilarHasilPage() {
   const supabase = await createClient();
@@ -85,11 +86,7 @@ export default async function PilarHasilPage() {
                         {r.deskripsi}
                       </div>
                     )}
-                    {r.uraian_pilarHasil && (
-                      <div className='mt-1 text-sm text-gray-600 dark:text-gray-300'>
-                        {r.uraian_pilarHasil}
-                      </div>
-                    )}
+                    <UraianCollapse text={r.uraian_pilarHasil} />
                   </div>
                 </div>
                 <div className='flex items-center gap-3'>
