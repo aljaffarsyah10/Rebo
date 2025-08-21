@@ -526,6 +526,12 @@ export default function Page(props: PageProps) {
                                 }}
                                 className='mt-3 flex items-center justify-end gap-3'
                               >
+                                <label
+                                  htmlFor={`status-${pertanyaan.id_pertanyaan}`}
+                                  className='text-sm font-semibold text-gray-700 dark:text-gray-300'
+                                >
+                                  Status Bukti Dukung
+                                </label>
                                 <select
                                   id={`status-${pertanyaan.id_pertanyaan}`}
                                   name={`status-${pertanyaan.id_pertanyaan}`}
@@ -533,7 +539,7 @@ export default function Page(props: PageProps) {
                                     buktiDukungMap[pertanyaan.id_pertanyaan]
                                       ?.status || ''
                                   }
-                                  className='w-80 rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
+                                  className='w-40 rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
                                   disabled={
                                     !buktiDukungMap[pertanyaan.id_pertanyaan]
                                       ?.link_bukti
@@ -570,6 +576,121 @@ export default function Page(props: PageProps) {
                                   Send
                                 </button>
                               </form>
+
+                              {/* Approve / Reject actions — separate forms (not nested) */}
+                              <div className='mt-2 flex justify-end gap-2'>
+                                <form
+                                  onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const status = 'Approve';
+                                    const existing =
+                                      buktiDukungMap[pertanyaan.id_pertanyaan];
+                                    const hasDbLink = !!(
+                                      existing && existing.link_bukti
+                                    );
+                                    const method = hasDbLink ? 'PUT' : 'POST';
+                                    const res = await fetch('/api', {
+                                      method,
+                                      headers: {
+                                        'Content-Type': 'application/json'
+                                      },
+                                      body: JSON.stringify({
+                                        id_pertanyaan: pertanyaan.id_pertanyaan,
+                                        status
+                                      })
+                                    });
+                                    const result = await res.json();
+                                    if (result.success) {
+                                      setModalMsg(
+                                        'Status Approve berhasil dikirim!'
+                                      );
+                                      setModalOpen(true);
+                                      setBuktiDukungMap((prev) => ({
+                                        ...prev,
+                                        [pertanyaan.id_pertanyaan]: {
+                                          ...(prev[pertanyaan.id_pertanyaan] ||
+                                            {}),
+                                          ...(result.data || {}),
+                                          status: result.data?.status ?? status
+                                        }
+                                      }));
+                                    } else {
+                                      setModalMsg(
+                                        'Gagal mengirim Approve: ' +
+                                          (result.error || 'Unknown error')
+                                      );
+                                      setModalOpen(true);
+                                    }
+                                  }}
+                                >
+                                  <button
+                                    type='submit'
+                                    className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-emerald-700 hover:to-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none'
+                                    disabled={
+                                      !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                        ?.link_bukti
+                                    }
+                                  >
+                                    Approve
+                                  </button>
+                                </form>
+
+                                <form
+                                  onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const status = 'Reject';
+                                    const existing =
+                                      buktiDukungMap[pertanyaan.id_pertanyaan];
+                                    const hasDbLink = !!(
+                                      existing && existing.link_bukti
+                                    );
+                                    const method = hasDbLink ? 'PUT' : 'POST';
+                                    const res = await fetch('/api', {
+                                      method,
+                                      headers: {
+                                        'Content-Type': 'application/json'
+                                      },
+                                      body: JSON.stringify({
+                                        id_pertanyaan: pertanyaan.id_pertanyaan,
+                                        status
+                                      })
+                                    });
+                                    const result = await res.json();
+                                    if (result.success) {
+                                      setModalMsg(
+                                        'Status Reject berhasil dikirim!'
+                                      );
+                                      setModalOpen(true);
+                                      setBuktiDukungMap((prev) => ({
+                                        ...prev,
+                                        [pertanyaan.id_pertanyaan]: {
+                                          ...(prev[pertanyaan.id_pertanyaan] ||
+                                            {}),
+                                          ...(result.data || {}),
+                                          status: result.data?.status ?? status
+                                        }
+                                      }));
+                                    } else {
+                                      setModalMsg(
+                                        'Gagal mengirim Reject: ' +
+                                          (result.error || 'Unknown error')
+                                      );
+                                      setModalOpen(true);
+                                    }
+                                  }}
+                                >
+                                  <button
+                                    type='submit'
+                                    className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-red-700 hover:to-red-800 focus:ring-2 focus:ring-red-500 focus:outline-none'
+                                    disabled={
+                                      !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                        ?.link_bukti
+                                    }
+                                  >
+                                    Reject
+                                  </button>
+                                </form>
+                              </div>
                             </div>
                           </form>
                         </div>
