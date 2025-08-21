@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
+import ScoreEditor from '@/app/rebo/pilarHasil/score-editor';
 
 export default async function PilarHasilPage() {
   const supabase = await createClient();
@@ -55,7 +56,7 @@ export default async function PilarHasilPage() {
             Aspek Hasil
           </h1>
           <p className='text-sm text-gray-600 dark:text-gray-400'>
-            Daftar nama_pilarHasil dari tabel pilarHasil
+            Daftar Pilar dari Aspek Hasil
           </p>
         </div>
         <Button className='bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800'>
@@ -81,10 +82,12 @@ export default async function PilarHasilPage() {
                     </div>
                   )}
                 </div>
-                <div>
-                  <Button variant='outline' size='sm'>
-                    Update
-                  </Button>
+                <div className='flex items-center gap-3'>
+                  {/* Score editor client component */}
+                  <ScoreEditor
+                    id_pilarHasil={r.id_pilarHasil}
+                    initialSkor={r.skor}
+                  />
                 </div>
               </li>
             ))}
