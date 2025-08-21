@@ -80,8 +80,13 @@ export default function BuktiForm({
               <select
                 id={`kategori-${pertanyaan.id_pertanyaan}`}
                 name={`kategori-${pertanyaan.id_pertanyaan}`}
-                defaultValue={
-                  buktiDukungMap[pertanyaan.id_pertanyaan]?.id_kategori || ''
+                value={
+                  buktiDukungMap[pertanyaan.id_pertanyaan] &&
+                  buktiDukungMap[pertanyaan.id_pertanyaan].id_kategori != null
+                    ? String(
+                        buktiDukungMap[pertanyaan.id_pertanyaan].id_kategori
+                      )
+                    : ''
                 }
                 className={`focus:ring-opacity-50 w-full rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
                 onChange={(e) => {
@@ -97,7 +102,7 @@ export default function BuktiForm({
                 {pertanyaan.kategoriPenilaian.map((kategori: any) => (
                   <option
                     key={kategori.id_kategori}
-                    value={kategori.id_kategori}
+                    value={String(kategori.id_kategori)}
                   >
                     {kategori.uraian_kategori}
                   </option>
