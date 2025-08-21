@@ -50,7 +50,8 @@ export default function BuktiForm({
       id_kategori: selectedKategoriValue || null,
       link_bukti: linkValue || null,
       nilai_akhir,
-      catatan_user: currentMap.catatan_user || null
+      catatan_user: currentMap.catatan_user || null,
+      catatan_koordinator: currentMap.catatan_koordinator || null
     };
 
     if (onUpsert) {
@@ -185,6 +186,35 @@ export default function BuktiForm({
               setBuktiDukungMap(updatedMap);
             }}
             className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+            rows={3}
+          />
+        </div>
+
+        {/* Catatan Koordinator RB textarea */}
+        <div>
+          <label
+            htmlFor={`catatan-koordinator-${pertanyaan.id_pertanyaan}`}
+            className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
+          >
+            Catatan Koordinator RB
+          </label>
+          <textarea
+            id={`catatan-koordinator-${pertanyaan.id_pertanyaan}`}
+            name={`catatan-koordinator-${pertanyaan.id_pertanyaan}`}
+            defaultValue={
+              buktiDukungMap[pertanyaan.id_pertanyaan]?.catatan_koordinator ||
+              ''
+            }
+            placeholder='Catatan koordinator...'
+            onChange={(e) => {
+              const updatedMap = { ...buktiDukungMap };
+              if (!updatedMap[pertanyaan.id_pertanyaan])
+                updatedMap[pertanyaan.id_pertanyaan] = {};
+              updatedMap[pertanyaan.id_pertanyaan].catatan_koordinator =
+                e.target.value;
+              setBuktiDukungMap(updatedMap);
+            }}
+            className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
             rows={3}
           />
         </div>
