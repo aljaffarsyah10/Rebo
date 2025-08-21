@@ -32,6 +32,7 @@ export default function Page(props: PageProps) {
   const [namaPilar, setNamaPilar] = useState<string>('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMsg, setModalMsg] = useState('');
+  const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     async function getParams() {
@@ -48,8 +49,12 @@ export default function Page(props: PageProps) {
       try {
         const data = await fetchSubpilarWithPertanyaan(pilarId);
         setSubpilarjoinpertanyaan(data || []);
-        if (data && data.length > 0 && data[0].pilar) {
-          setNamaPilar(data[0].pilar.nama_pilar);
+        if (data && data.length > 0) {
+          if (data[0].pilar) {
+            setNamaPilar(data[0].pilar.nama_pilar);
+          }
+          // set the first subpilar as active tab
+          setActiveTab(data[0].id_subpilar?.toString());
         }
 
         const pertanyaanIds = (data || []).flatMap(
@@ -89,7 +94,8 @@ export default function Page(props: PageProps) {
       </h1>
 
       <Tabs
-        defaultValue={subpilarjoinpertanyaan[0]?.id_subpilar?.toString()}
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v)}
         className='w-full'
       >
         <TabsList className='grid h-auto w-full grid-cols-1 gap-1 border border-gray-200 bg-gray-50/50 p-1 lg:grid-cols-4 dark:border-gray-700 dark:bg-gray-800/50'>
