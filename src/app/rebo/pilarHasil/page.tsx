@@ -52,46 +52,52 @@ export default async function PilarHasilPage() {
     <div className='container mx-auto max-w-4xl p-6'>
       <div className='mb-6 flex items-center justify-between'>
         <div>
-          <h1 className='text-2xl font-bold text-gray-900 dark:text-gray-100'>
+          <h1 className='text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100'>
             Aspek Hasil
           </h1>
           <p className='text-sm text-gray-600 dark:text-gray-400'>
             Daftar Pilar dari Aspek Hasil
           </p>
         </div>
-        <Button className='bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800'>
+        <Button className='bg-gradient-to-r from-sky-500 to-indigo-600 text-white hover:from-sky-600 hover:to-indigo-700'>
           Refresh
         </Button>
       </div>
 
-      <div className='rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'>
+      <div className='rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900'>
         {rows && rows.length > 0 ? (
-          <ul>
-            {rows.map((r: any) => (
+          <ol className='divide-y divide-gray-100'>
+            {rows.map((r: any, idx: number) => (
               <li
                 key={r.id_pilarHasil}
-                className='flex items-center justify-between border-b border-gray-100 p-4 last:border-0 dark:border-gray-800'
+                className='flex items-center justify-between gap-4 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800'
               >
-                <div>
-                  <div className='text-sm font-medium text-gray-900 dark:text-gray-100'>
-                    {r.nama_pilarHasil}
+                <div className='flex items-start gap-4'>
+                  <div className='flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-sm font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'>
+                    {idx + 1}
                   </div>
-                  {r.deskripsi && (
-                    <div className='text-xs text-gray-500 dark:text-gray-400'>
-                      {r.deskripsi}
+                  <div>
+                    <div className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+                      {r.nama_pilarHasil}
                     </div>
-                  )}
+                    {r.deskripsi && (
+                      <div className='text-xs text-gray-500 dark:text-gray-400'>
+                        {r.deskripsi}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className='flex items-center gap-3'>
-                  {/* Score editor client component */}
+                  {/* Score editor client component with colored Update button */}
                   <ScoreEditor
                     id_pilarHasil={r.id_pilarHasil}
                     initialSkor={r.skor_pilarHasil ?? r.skor}
+                    buttonClassName='bg-blue-600 hover:bg-blue-700 text-white'
                   />
                 </div>
               </li>
             ))}
-          </ul>
+          </ol>
         ) : (
           <div className='p-6 text-center text-sm text-gray-500 dark:text-gray-400'>
             Tidak ada data pilar hasil.
