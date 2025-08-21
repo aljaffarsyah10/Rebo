@@ -85,6 +85,11 @@ export default async function PilarHasilPage() {
                         {r.deskripsi}
                       </div>
                     )}
+                    {r.uraian_pilarHasil && (
+                      <div className='mt-1 text-sm text-gray-600 dark:text-gray-300'>
+                        {r.uraian_pilarHasil}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className='flex items-center gap-3'>
