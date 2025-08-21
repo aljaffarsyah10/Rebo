@@ -55,7 +55,7 @@ export const navItems: NavItem[] = [
       },
       {
         title: 'Hasil',
-        url: '/rebo/hasil',
+        url: '/rebo/pilarHasil',
         icon: 'userPen',
         shortcut: ['m', 'm']
       }
