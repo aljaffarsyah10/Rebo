@@ -86,7 +86,7 @@ export default async function PilarHasilPage() {
                   {/* Score editor client component */}
                   <ScoreEditor
                     id_pilarHasil={r.id_pilarHasil}
-                    initialSkor={r.skor}
+                    initialSkor={r.skor_pilarHasil ?? r.skor}
                   />
                 </div>
               </li>

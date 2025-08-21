@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id_pilarHasil, skor } = body;
+    const { id_pilarHasil, skor_pilarHasil } = body;
     if (!id_pilarHasil) {
       return NextResponse.json(
         { error: 'id_pilarHasil wajib' },
@@ -15,7 +15,7 @@ export async function PUT(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase
       .from('pilarHasil')
-      .update({ skor })
+      .update({ skor_pilarHasil })
       .eq('id_pilarHasil', id_pilarHasil);
 
     if (error)

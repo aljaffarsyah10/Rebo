@@ -20,7 +20,7 @@ export default function ScoreEditor({ id_pilarHasil, initialSkor }: Props) {
       const res = await fetch('/api/pilarHasil', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_pilarHasil, skor })
+        body: JSON.stringify({ id_pilarHasil, skor_pilarHasil: skor })
       });
       const data = await res.json();
       if (!data || !data.success) {
