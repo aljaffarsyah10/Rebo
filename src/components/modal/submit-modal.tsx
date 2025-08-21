@@ -37,9 +37,24 @@ export default function SubmitModal({
         </div>
         <button
           onClick={onClose}
-          className='mt-2 w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 px-4 py-2 font-semibold text-white shadow transition-all duration-150 hover:from-blue-600 hover:to-blue-800 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none'
+          aria-label='Tutup'
+          type='button'
+          className='mt-2 inline-flex w-full transform items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 px-4 py-2 font-semibold text-white shadow-md transition duration-150 hover:scale-[1.02] hover:from-blue-600 hover:to-blue-800 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95'
         >
-          Tutup
+          <svg
+            xmlns='http://www.w3.org/2000/svg'
+            className='h-4 w-4'
+            viewBox='0 0 20 20'
+            fill='currentColor'
+            aria-hidden='true'
+          >
+            <path
+              fillRule='evenodd'
+              d='M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V6a1 1 0 112 0v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3z'
+              clipRule='evenodd'
+            />
+          </svg>
+          <span>Tutup</span>
         </button>
       </div>
       <style>{`
