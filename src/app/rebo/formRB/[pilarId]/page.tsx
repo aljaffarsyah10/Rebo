@@ -444,36 +444,12 @@ export default function Page(props: PageProps) {
                               }}
                               className={`focus:ring-opacity-50 flex-1 rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
                             />
-                            {/* Dropdown Status Lengkap/Belum Lengkap & Button Finalisasi di bawah, hanya aktif jika sudah update */}
+                            {/* Status moved to its own form below; main form keeps only Update button */}
                             <div className='mt-4 flex flex-col'>
                               <div className='mb-2 flex-1'>
-                                <label
-                                  htmlFor={`status-${pertanyaan.id_pertanyaan}`}
-                                  className='mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300'
-                                >
-                                  Status Bukti Dukung
-                                </label>
-                                <select
-                                  id={`status-${pertanyaan.id_pertanyaan}`}
-                                  name={`status-${pertanyaan.id_pertanyaan}`}
-                                  defaultValue={
-                                    buktiDukungMap[pertanyaan.id_pertanyaan]
-                                      ?.status || ''
-                                  }
-                                  className='w-full rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
-                                  disabled={
-                                    !buktiDukungMap[pertanyaan.id_pertanyaan]
-                                      ?.link_bukti
-                                  }
-                                >
-                                  <option value=''>Pilih status...</option>
-                                  <option value='Lengkap'>Lengkap</option>
-                                  <option value='Belum Lengkap'>
-                                    Belum Lengkap
-                                  </option>
-                                </select>
+                                {/* Status select removed from main form */}
                               </div>
-                              <div className='flex justify-end gap-4'>
+                              <div className='flex justify-end'>
                                 <button
                                   type='submit'
                                   className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-green-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-green-700 hover:to-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none dark:from-green-700 dark:to-green-800 dark:hover:from-green-800 dark:hover:to-green-900 dark:focus:ring-offset-gray-900'
@@ -494,16 +470,89 @@ export default function Page(props: PageProps) {
                                   </svg>
                                   Update
                                 </button>
-                                <button
-                                  type='button'
-                                  className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
-                                  style={{ minWidth: '110px' }}
-                                  onClick={() => {
+                              </div>
+
+                              <form
+                                onSubmit={async (e) => {
+                                  e.preventDefault();
+                                  const form = e.currentTarget;
+                                  const select = form.querySelector(
+                                    `select[name="status-${pertanyaan.id_pertanyaan}"]`
+                                  ) as HTMLSelectElement | null;
+                                  const status = select?.value;
+                                  if (!status) {
                                     setModalMsg(
-                                      'Fitur kirim belum diimplementasikan.'
+                                      'Status bukti dukung wajib dipilih!'
                                     );
                                     setModalOpen(true);
-                                  }}
+                                    return;
+                                  }
+                                  const existing =
+                                    buktiDukungMap[pertanyaan.id_pertanyaan];
+                                  const hasDbLink = !!(
+                                    existing && existing.link_bukti
+                                  );
+                                  const method = hasDbLink ? 'PUT' : 'POST';
+                                  const res = await fetch('/api', {
+                                    method,
+                                    headers: {
+                                      'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                      id_pertanyaan: pertanyaan.id_pertanyaan,
+                                      status
+                                    })
+                                  });
+                                  const result = await res.json();
+                                  if (result.success) {
+                                    setModalMsg('Status berhasil dikirim!');
+                                    setModalOpen(true);
+                                    setBuktiDukungMap((prev) => ({
+                                      ...prev,
+                                      [pertanyaan.id_pertanyaan]: {
+                                        ...(prev[pertanyaan.id_pertanyaan] ||
+                                          {}),
+                                        ...(result.data || {}),
+                                        status: result.data?.status ?? status
+                                      }
+                                    }));
+                                  } else {
+                                    setModalMsg(
+                                      'Gagal mengirim status: ' +
+                                        (result.error || 'Unknown error')
+                                    );
+                                    setModalOpen(true);
+                                  }
+                                }}
+                                className='mt-3 flex items-center justify-end gap-3'
+                              >
+                                <select
+                                  id={`status-${pertanyaan.id_pertanyaan}`}
+                                  name={`status-${pertanyaan.id_pertanyaan}`}
+                                  defaultValue={
+                                    buktiDukungMap[pertanyaan.id_pertanyaan]
+                                      ?.status || ''
+                                  }
+                                  className='w-80 rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
+                                  disabled={
+                                    !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                      ?.link_bukti
+                                  }
+                                >
+                                  <option value=''>Pilih status...</option>
+                                  <option value='Lengkap'>Lengkap</option>
+                                  <option value='Belum Lengkap'>
+                                    Belum Lengkap
+                                  </option>
+                                </select>
+                                <button
+                                  type='submit'
+                                  className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
+                                  style={{ minWidth: '110px' }}
+                                  disabled={
+                                    !buktiDukungMap[pertanyaan.id_pertanyaan]
+                                      ?.link_bukti
+                                  }
                                 >
                                   <svg
                                     className='mr-1 h-4 w-4'
@@ -520,76 +569,7 @@ export default function Page(props: PageProps) {
                                   </svg>
                                   Send
                                 </button>
-                                <button
-                                  type='button'
-                                  className='rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-purple-700 hover:to-purple-800 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none dark:from-purple-700 dark:to-purple-800 dark:hover:from-purple-800 dark:hover:to-purple-900 dark:focus:ring-offset-gray-900'
-                                  style={{ minWidth: '110px' }}
-                                  disabled={
-                                    !buktiDukungMap[pertanyaan.id_pertanyaan]
-                                      ?.link_bukti
-                                  }
-                                  onClick={async () => {
-                                    if (
-                                      !buktiDukungMap[pertanyaan.id_pertanyaan]
-                                    )
-                                      return;
-                                    const statusSelect =
-                                      document.getElementById(
-                                        `status-${pertanyaan.id_pertanyaan}`
-                                      ) as HTMLSelectElement;
-                                    const status = statusSelect?.value;
-                                    if (!status) {
-                                      setModalMsg(
-                                        'Status bukti dukung wajib dipilih!'
-                                      );
-                                      setModalOpen(true);
-                                      return;
-                                    }
-                                    // Simpan status ke database (PUT jika link_bukti di DB sudah ada, POST jika belum)
-                                    const existing =
-                                      buktiDukungMap[pertanyaan.id_pertanyaan];
-                                    const hasDbLink = !!(
-                                      existing && existing.link_bukti
-                                    );
-                                    const method = hasDbLink ? 'PUT' : 'POST';
-                                    const res = await fetch('/api', {
-                                      method,
-                                      headers: {
-                                        'Content-Type': 'application/json'
-                                      },
-                                      body: JSON.stringify({
-                                        id_pertanyaan: pertanyaan.id_pertanyaan,
-                                        status
-                                      })
-                                    });
-                                    const result = await res.json();
-                                    if (result.success) {
-                                      setModalMsg(
-                                        'Status berhasil difinalisasi!'
-                                      );
-                                      setModalOpen(true);
-                                      // Update local map agar status tersimpan terlihat
-                                      setBuktiDukungMap((prev) => ({
-                                        ...prev,
-                                        [pertanyaan.id_pertanyaan]: {
-                                          ...(prev[pertanyaan.id_pertanyaan] ||
-                                            {}),
-                                          ...(result.data || {}),
-                                          status: result.data?.status ?? status
-                                        }
-                                      }));
-                                    } else {
-                                      setModalMsg(
-                                        'Gagal finalisasi status: ' +
-                                          (result.error || 'Unknown error')
-                                      );
-                                      setModalOpen(true);
-                                    }
-                                  }}
-                                >
-                                  Finalisasi
-                                </button>
-                              </div>
+                              </form>
                             </div>
                           </form>
                         </div>
