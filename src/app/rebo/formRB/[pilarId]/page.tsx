@@ -5,10 +5,17 @@ import { createClient } from '@/lib/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect, useState } from 'react';
 import type { Pertanyaan, BuktiDukung, Subpilar } from '@/types/rebo';
-import { upsertBukti, sendStatus, approveReject } from '@/lib/api/rebo';
+import {
+  upsertBukti,
+  sendStatus,
+  approveReject,
+  fetchSubpilarWithPertanyaan,
+  fetchBuktiByPertanyaanIds
+} from '@/lib/api/rebo';
 import SubmitModal from '@/components/modal/submit-modal';
 import SkorBox from '@/components/rebo/skorBox';
 import BuktiForm from '@/components/rebo/bukti-form';
+import PertanyaanItem from '@/components/rebo/pertanyaan-item';
 
 type PageProps = { params: Promise<{ pilarId: string }> };
 
@@ -39,33 +46,20 @@ export default function Page(props: PageProps) {
 
     async function fetchData() {
       try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('subpilar')
-          .select(
-            `*, pilar (id_pilar, nama_pilar), pertanyaan (*, kategoriPenilaian (*))`
-          )
-          .eq('id_pilar', pilarId)
-          .order('id_subpilar', { ascending: true });
-
-        if (error) throw error;
+        const data = await fetchSubpilarWithPertanyaan(pilarId);
         setSubpilarjoinpertanyaan(data || []);
         if (data && data.length > 0 && data[0].pilar) {
           setNamaPilar(data[0].pilar.nama_pilar);
         }
 
-        // Ambil semua id_pertanyaan
         const pertanyaanIds = (data || []).flatMap(
           (subpilar: any) =>
             subpilar.pertanyaan?.map((p: any) => p.id_pertanyaan) || []
         );
+
         if (pertanyaanIds.length > 0) {
-          const { data: buktiData, error: buktiError } = await supabase
-            .from('buktiDukung')
-            .select('*')
-            .in('id_pertanyaan', pertanyaanIds);
-          if (!buktiError && buktiData) {
-            // Map id_pertanyaan ke data
+          const buktiData = await fetchBuktiByPertanyaanIds(pertanyaanIds);
+          if (buktiData) {
             const map: Record<string, any> = {};
             buktiData.forEach((row: any) => {
               map[row.id_pertanyaan] = row;
@@ -88,110 +82,11 @@ export default function Page(props: PageProps) {
     fetchData();
   }, [pilarId]);
 
-  if (loading) {
-    return (
-      <div className='container mx-auto max-w-4xl p-6'>
-        <div className='flex h-64 items-center justify-center'>
-          <div className='text-lg text-gray-600 dark:text-gray-400'>
-            Loading...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    console.error('Error fetching subpilar:', error.message);
-    return (
-      <div className='container mx-auto max-w-4xl p-6'>
-        <div className='rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20'>
-          <div className='mb-4 flex items-center'>
-            <div className='flex-shrink-0'>
-              <svg
-                className='h-5 w-5 text-red-400 dark:text-red-500'
-                viewBox='0 0 20 20'
-                fill='currentColor'
-              >
-                <path
-                  fillRule='evenodd'
-                  d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
-                  clipRule='evenodd'
-                />
-              </svg>
-            </div>
-            <div className='ml-3'>
-              <h3 className='text-sm font-medium text-red-800 dark:text-red-400'>
-                Error Loading Data
-              </h3>
-            </div>
-          </div>
-          <div className='text-sm text-red-700 dark:text-red-300'>
-            <p className='mb-2'>
-              Terjadi kesalahan saat mengambil data subpilar:
-            </p>
-            <p className='rounded border bg-red-100 p-2 font-mono dark:border-red-700 dark:bg-red-900/40'>
-              {error.message}
-            </p>
-            <p className='mt-2 text-xs text-red-600 dark:text-red-400'>
-              Silakan coba refresh halaman atau hubungi administrator jika
-              masalah berlanjut.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className='container mx-auto max-w-6xl p-6'>
-      <SubmitModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        message={modalMsg}
-      />
-      <div className='mb-8 flex items-center justify-between'>
-        <div>
-          <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
-            {namaPilar ? `Pilar ${pilarId}: ${namaPilar}` : `Pilar ${pilarId}`}
-          </h1>
-          <p className='mt-2 text-lg text-gray-600 dark:text-gray-400'>
-            Subpilar dan Pertanyaan Evaluasi
-          </p>
-        </div>
-        {/* SkorBox total di samping kanan judul */}
-        <SkorBox
-          nilaiAkhir={Number(
-            subpilarjoinpertanyaan.reduce((total, subpilar) => {
-              return (
-                total +
-                (subpilar.pertanyaan?.reduce(
-                  (t: number, p: any) =>
-                    t + (buktiDukungMap[p.id_pertanyaan]?.nilai_akhir || 0),
-                  0
-                ) || 0)
-              );
-            }, 0)
-          )}
-          nilaiMaks={Number(
-            subpilarjoinpertanyaan.reduce((total, subpilar) => {
-              return (
-                total +
-                (subpilar.pertanyaan?.reduce(
-                  (t: number, p: any) =>
-                    t +
-                    (p.kategoriPenilaian?.length
-                      ? Math.max(
-                          ...p.kategoriPenilaian.map((k: any) => k.nilai)
-                        )
-                      : 0),
-                  0
-                ) || 0)
-              );
-            }, 0)
-          )}
-          className='relative static top-0 right-0 ml-4'
-        />
-      </div>
+      <h1 className='mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100'>
+        {namaPilar || 'Form RB'}
+      </h1>
 
       <Tabs
         defaultValue={subpilarjoinpertanyaan[0]?.id_subpilar?.toString()}
@@ -202,7 +97,7 @@ export default function Page(props: PageProps) {
             <TabsTrigger
               key={subpilar.id_subpilar}
               value={subpilar.id_subpilar.toString()}
-              className='flex h-auto flex-col items-start justify-start p-3 text-left whitespace-normal transition-all duration-200 hover:bg-gray-50 data-[state=active]:border data-[state=active]:border-blue-200 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:hover:bg-gray-700 dark:data-[state=active]:border-blue-500 dark:data-[state=active]:bg-gray-900'
+              className='flex h-auto flex-col items-start justify-start p-3 text-left whitespace-normal'
             >
               <span className='mb-1 text-xs font-medium text-gray-600 dark:text-gray-400'>
                 Subpilar {subpilar.id_subpilar}
@@ -234,7 +129,6 @@ export default function Page(props: PageProps) {
                 </p>
               </div>
 
-              {/* Tampilkan pertanyaan-pertanyaan */}
               {subpilar.pertanyaan && subpilar.pertanyaan.length > 0 && (
                 <div className='relative'>
                   <div className='absolute top-8 bottom-0 left-4 w-0.5 bg-gradient-to-b from-blue-300 to-blue-100 dark:from-blue-600 dark:to-blue-400'></div>
@@ -247,378 +141,36 @@ export default function Page(props: PageProps) {
                   <div className='ml-9 space-y-8'>
                     {subpilar.pertanyaan.map(
                       (pertanyaan: any, index: number) => (
-                        <div
+                        <PertanyaanItem
                           key={pertanyaan.id_pertanyaan}
-                          className='relative rounded-xl border border-gray-100 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-gray-700 dark:from-gray-800 dark:to-gray-900 dark:hover:shadow-lg'
-                        >
-                          <SkorBox
-                            nilaiAkhir={
-                              buktiDukungMap[pertanyaan.id_pertanyaan]
-                                ?.nilai_akhir
-                            }
-                          />
-                          <div className='mb-4 flex items-start justify-between gap-4'>
-                            <div className='flex items-center gap-2'>
-                              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white dark:bg-blue-600'>
-                                {index + 1}
-                              </div>
-                              <p className='m-0 text-lg leading-relaxed font-medium text-gray-800 dark:text-gray-100'>
-                                {pertanyaan.pertanyaan}
-                              </p>
-                            </div>
-                            <SkorBox
-                              nilaiAkhir={
-                                buktiDukungMap[pertanyaan.id_pertanyaan]
-                                  ?.nilai_akhir
-                              }
-                              nilaiMaks={
-                                pertanyaan.kategoriPenilaian?.length
-                                  ? Math.max(
-                                      ...pertanyaan.kategoriPenilaian.map(
-                                        (k: any) => k.nilai
-                                      )
-                                    )
-                                  : undefined
-                              }
-                              className='relative static top-0 right-0'
-                            />
-                          </div>
-                          {pertanyaan.deskripsi_pertanyaan && (
-                            <p className='mb-6 rounded-lg border-l-4 border-blue-200 bg-blue-50 p-3 text-sm leading-relaxed text-gray-600 dark:border-blue-500 dark:bg-blue-900/30 dark:text-gray-300'>
-                              {pertanyaan.deskripsi_pertanyaan}
-                            </p>
-                          )}
-
-                          {/* Uraian Bukti Dukung */}
-                          {pertanyaan.uraian_buktidukung && (
-                            <div className='mb-6 rounded-lg border-l-4 border-green-200 bg-green-50 p-4 dark:border-green-500 dark:bg-green-900/30'>
-                              <h4 className='mb-2 text-sm font-semibold text-green-800 dark:text-green-300'>
-                                Uraian Bukti Dukung:
-                              </h4>
-                              <p className='text-sm leading-relaxed text-green-700 dark:text-green-200'>
-                                {pertanyaan.uraian_buktidukung}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Dropdown Kategori Penilaian & Link Bukti Dukung */}
-                          <form
-                            className={`flex flex-col gap-3 space-y-2 rounded-lg border p-4 ${buktiDukungMap[pertanyaan.id_pertanyaan]?.link_bukti ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/10' : 'border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10'}`}
-                            onSubmit={async (e) => {
-                              e.preventDefault();
-                              const form = e.currentTarget;
-                              const formData = new FormData(form);
-                              const _link_bukti = formData.get(
-                                `bukti-${pertanyaan.id_pertanyaan}`
-                              );
-                              const _id_kategori = formData.get(
-                                `kategori-${pertanyaan.id_pertanyaan}`
-                              );
-                              const link_bukti =
-                                typeof _link_bukti === 'string'
-                                  ? _link_bukti
-                                  : null;
-                              const id_kategori =
-                                typeof _id_kategori === 'string'
-                                  ? _id_kategori
-                                  : null;
-
-                              if (!link_bukti || !id_kategori) {
-                                setModalMsg(
-                                  'Link bukti dan kategori penilaian wajib diisi!'
-                                );
-                                setModalOpen(true);
-                                return;
-                              }
-                              let nilai_akhir = null;
-                              if (
-                                pertanyaan.kategoriPenilaian &&
-                                pertanyaan.kategoriPenilaian.length > 0
-                              ) {
-                                const kategoriObj =
-                                  pertanyaan.kategoriPenilaian.find(
-                                    (k: any) =>
-                                      k.id_kategori?.toString() ===
-                                      id_kategori?.toString()
-                                  );
-                                nilai_akhir = kategoriObj
-                                  ? kategoriObj.nilai
-                                  : null;
-                              }
-                              // Cek apakah sudah ada data di map
-                              const existing =
-                                buktiDukungMap[pertanyaan.id_pertanyaan];
-                              // Gunakan kriteria apakah link_bukti pada table terisi untuk menentukan POST/PUT
-                              const hasDbLink = !!(
-                                existing && existing.link_bukti
-                              );
-                              const result = await upsertBukti({
-                                id_pertanyaan: pertanyaan.id_pertanyaan,
-                                link_bukti,
-                                id_kategori,
-                                nilai_akhir
-                              });
-                              if (result && result.success) {
-                                setModalMsg(
-                                  hasDbLink
-                                    ? 'Bukti dukung berhasil diupdate!'
-                                    : 'Bukti dukung berhasil disimpan!'
-                                );
-                                setModalOpen(true);
-                                form.reset();
-                                // Update local map agar UI mencerminkan DB (gunakan result.data jika ada)
-                                setBuktiDukungMap((prev) => ({
-                                  ...prev,
-                                  [pertanyaan.id_pertanyaan]: {
-                                    ...(result.data || {}),
-                                    link_bukti:
-                                      result.data?.link_bukti ?? link_bukti,
-                                    id_kategori:
-                                      result.data?.id_kategori ?? id_kategori,
-                                    nilai_akhir:
-                                      result.data?.nilai_akhir ?? nilai_akhir
-                                  }
-                                }));
-                              } else {
-                                setModalMsg(
-                                  'Gagal menyimpan: ' +
-                                    (result.error || 'Unknown error')
-                                );
-                                setModalOpen(true);
-                              }
-                            }}
-                          >
-                            <BuktiForm
-                              pertanyaan={pertanyaan}
-                              buktiDukungMap={buktiDukungMap}
-                              setBuktiDukungMap={setBuktiDukungMap}
-                            />
-                            {/* Status moved to its own form below; main form keeps only Update button */}
-                            <div className='mt-4 flex flex-col'>
-                              <div className='mb-2 flex-1'>
-                                {/* Status select removed from main form */}
-                              </div>
-                              <div className='flex justify-end'>
-                                <button
-                                  type='submit'
-                                  className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-green-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-green-700 hover:to-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none dark:from-green-700 dark:to-green-800 dark:hover:from-green-800 dark:hover:to-green-900 dark:focus:ring-offset-gray-900'
-                                  style={{ minWidth: '110px' }}
-                                >
-                                  <svg
-                                    className='mr-1 h-4 w-4'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='2'
-                                    viewBox='0 0 24 24'
-                                  >
-                                    <path
-                                      strokeLinecap='round'
-                                      strokeLinejoin='round'
-                                      d='M5 13l4 4L19 7'
-                                    />
-                                  </svg>
-                                  Update
-                                </button>
-                              </div>
-
-                              <form
-                                onSubmit={async (e) => {
-                                  e.preventDefault();
-                                  const form = e.currentTarget;
-                                  const select = form.querySelector(
-                                    `select[name="status-${pertanyaan.id_pertanyaan}"]`
-                                  ) as HTMLSelectElement | null;
-                                  const status = select?.value;
-                                  if (!status) {
-                                    setModalMsg(
-                                      'Status bukti dukung wajib dipilih!'
-                                    );
-                                    setModalOpen(true);
-                                    return;
-                                  }
-                                  const existing =
-                                    buktiDukungMap[pertanyaan.id_pertanyaan];
-                                  const hasDbLink = !!(
-                                    existing && existing.link_bukti
-                                  );
-                                  const result = await sendStatus(
-                                    pertanyaan.id_pertanyaan,
-                                    status
-                                  );
-                                  if (result && result.success) {
-                                    setModalMsg('Status berhasil dikirim!');
-                                    setModalOpen(true);
-                                    setBuktiDukungMap((prev) => ({
-                                      ...prev,
-                                      [pertanyaan.id_pertanyaan]: {
-                                        ...(prev[pertanyaan.id_pertanyaan] ||
-                                          {}),
-                                        ...(result.data || {}),
-                                        status: result.data?.status ?? status
-                                      }
-                                    }));
-                                  } else {
-                                    setModalMsg(
-                                      'Gagal mengirim status: ' +
-                                        (result?.error || 'Unknown error')
-                                    );
-                                    setModalOpen(true);
-                                  }
-                                }}
-                                className='mt-3 flex items-center justify-end gap-3'
-                              >
-                                <label
-                                  htmlFor={`status-${pertanyaan.id_pertanyaan}`}
-                                  className='text-sm font-semibold text-gray-700 dark:text-gray-300'
-                                >
-                                  Status Bukti Dukung
-                                </label>
-                                <select
-                                  id={`status-${pertanyaan.id_pertanyaan}`}
-                                  name={`status-${pertanyaan.id_pertanyaan}`}
-                                  defaultValue={
-                                    buktiDukungMap[pertanyaan.id_pertanyaan]
-                                      ?.status || ''
-                                  }
-                                  className='w-40 rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
-                                  disabled={
-                                    !buktiDukungMap[pertanyaan.id_pertanyaan]
-                                      ?.link_bukti
-                                  }
-                                >
-                                  <option value=''>Pilih status...</option>
-                                  <option value='Lengkap'>Lengkap</option>
-                                  <option value='Belum Lengkap'>
-                                    Belum Lengkap
-                                  </option>
-                                </select>
-                                <button
-                                  type='submit'
-                                  className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
-                                  style={{ minWidth: '110px' }}
-                                  disabled={
-                                    !buktiDukungMap[pertanyaan.id_pertanyaan]
-                                      ?.link_bukti
-                                  }
-                                >
-                                  <svg
-                                    className='mr-1 h-4 w-4'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='2'
-                                    viewBox='0 0 24 24'
-                                  >
-                                    <path
-                                      strokeLinecap='round'
-                                      strokeLinejoin='round'
-                                      d='M4 12h16M4 6h16M4 18h16'
-                                    />
-                                  </svg>
-                                  Send
-                                </button>
-                              </form>
-
-                              {/* Approve / Reject actions — separate forms (not nested) */}
-                              <div className='mt-2 flex justify-end gap-2'>
-                                <form
-                                  onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    const status = 'Approve';
-                                    const existing =
-                                      buktiDukungMap[pertanyaan.id_pertanyaan];
-                                    const hasDbLink = !!(
-                                      existing && existing.link_bukti
-                                    );
-                                    const result = await approveReject(
-                                      pertanyaan.id_pertanyaan,
-                                      status
-                                    );
-                                    if (result && result.success) {
-                                      setModalMsg(
-                                        'Status Approve berhasil dikirim!'
-                                      );
-                                      setModalOpen(true);
-                                      setBuktiDukungMap((prev) => ({
-                                        ...prev,
-                                        [pertanyaan.id_pertanyaan]: {
-                                          ...(prev[pertanyaan.id_pertanyaan] ||
-                                            {}),
-                                          ...(result.data || {}),
-                                          status: result.data?.status ?? status
-                                        }
-                                      }));
-                                    } else {
-                                      setModalMsg(
-                                        'Gagal mengirim Approve: ' +
-                                          (result?.error || 'Unknown error')
-                                      );
-                                      setModalOpen(true);
-                                    }
-                                  }}
-                                >
-                                  <button
-                                    type='submit'
-                                    className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-emerald-700 hover:to-emerald-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none'
-                                    disabled={
-                                      !buktiDukungMap[pertanyaan.id_pertanyaan]
-                                        ?.link_bukti
-                                    }
-                                  >
-                                    Approve
-                                  </button>
-                                </form>
-
-                                <form
-                                  onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    const status = 'Reject';
-                                    const existing =
-                                      buktiDukungMap[pertanyaan.id_pertanyaan];
-                                    const hasDbLink = !!(
-                                      existing && existing.link_bukti
-                                    );
-                                    const result = await approveReject(
-                                      pertanyaan.id_pertanyaan,
-                                      status
-                                    );
-                                    if (result && result.success) {
-                                      setModalMsg(
-                                        'Status Reject berhasil dikirim!'
-                                      );
-                                      setModalOpen(true);
-                                      setBuktiDukungMap((prev) => ({
-                                        ...prev,
-                                        [pertanyaan.id_pertanyaan]: {
-                                          ...(prev[pertanyaan.id_pertanyaan] ||
-                                            {}),
-                                          ...(result.data || {}),
-                                          status: result.data?.status ?? status
-                                        }
-                                      }));
-                                    } else {
-                                      setModalMsg(
-                                        'Gagal mengirim Reject: ' +
-                                          (result?.error || 'Unknown error')
-                                      );
-                                      setModalOpen(true);
-                                    }
-                                  }}
-                                >
-                                  <button
-                                    type='submit'
-                                    className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-red-700 hover:to-red-800 focus:ring-2 focus:ring-red-500 focus:outline-none'
-                                    disabled={
-                                      !buktiDukungMap[pertanyaan.id_pertanyaan]
-                                        ?.link_bukti
-                                    }
-                                  >
-                                    Reject
-                                  </button>
-                                </form>
-                              </div>
-                            </div>
-                          </form>
-                        </div>
+                          pertanyaan={pertanyaan}
+                          index={index}
+                          bukti={buktiDukungMap[pertanyaan.id_pertanyaan]}
+                          buktiDukungMap={buktiDukungMap}
+                          setBuktiDukungMap={setBuktiDukungMap}
+                          onUpsert={async (
+                            payload: any,
+                            form?: HTMLFormElement
+                          ) => {
+                            const res = await upsertBukti(payload);
+                            if (res && res.success && form) form.reset();
+                            return res;
+                          }}
+                          onSendStatus={async (
+                            id_pertanyaan: string,
+                            status: string
+                          ) => {
+                            return await sendStatus(id_pertanyaan, status);
+                          }}
+                          onApproveReject={async (
+                            id_pertanyaan: string,
+                            status: string
+                          ) => {
+                            return await approveReject(id_pertanyaan, status);
+                          }}
+                          setModalMsg={setModalMsg}
+                          setModalOpen={setModalOpen}
+                        />
                       )
                     )}
                   </div>
@@ -628,6 +180,12 @@ export default function Page(props: PageProps) {
           </TabsContent>
         ))}
       </Tabs>
+
+      <SubmitModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        message={modalMsg}
+      />
     </div>
   );
 }
