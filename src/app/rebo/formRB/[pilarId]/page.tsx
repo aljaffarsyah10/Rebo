@@ -4,6 +4,8 @@
 import { createClient } from '@/lib/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect, useState } from 'react';
+import type { Pertanyaan, BuktiDukung, Subpilar } from '@/types/rebo';
+import { upsertBukti, sendStatus, approveReject } from '@/lib/api/rebo';
 import SubmitModal from '@/components/modal/submit-modal';
 import SkorBox from '@/components/rebo/skorBox';
 import BuktiForm from '@/components/rebo/bukti-form';
@@ -11,10 +13,12 @@ import BuktiForm from '@/components/rebo/bukti-form';
 type PageProps = { params: Promise<{ pilarId: string }> };
 
 export default function Page(props: PageProps) {
-  const [subpilarjoinpertanyaan, setSubpilarjoinpertanyaan] = useState<any[]>(
-    []
-  );
-  const [buktiDukungMap, setBuktiDukungMap] = useState<Record<string, any>>({});
+  const [subpilarjoinpertanyaan, setSubpilarjoinpertanyaan] = useState<
+    Subpilar[]
+  >([]);
+  const [buktiDukungMap, setBuktiDukungMap] = useState<
+    Record<string, BuktiDukung>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
   const [pilarId, setPilarId] = useState<string>('');
@@ -304,12 +308,21 @@ export default function Page(props: PageProps) {
                               e.preventDefault();
                               const form = e.currentTarget;
                               const formData = new FormData(form);
-                              const link_bukti = formData.get(
+                              const _link_bukti = formData.get(
                                 `bukti-${pertanyaan.id_pertanyaan}`
                               );
-                              const id_kategori = formData.get(
+                              const _id_kategori = formData.get(
                                 `kategori-${pertanyaan.id_pertanyaan}`
                               );
+                              const link_bukti =
+                                typeof _link_bukti === 'string'
+                                  ? _link_bukti
+                                  : null;
+                              const id_kategori =
+                                typeof _id_kategori === 'string'
+                                  ? _id_kategori
+                                  : null;
+
                               if (!link_bukti || !id_kategori) {
                                 setModalMsg(
                                   'Link bukti dan kategori penilaian wajib diisi!'
@@ -339,21 +352,13 @@ export default function Page(props: PageProps) {
                               const hasDbLink = !!(
                                 existing && existing.link_bukti
                               );
-                              const method = hasDbLink ? 'PUT' : 'POST';
-                              const res = await fetch('/api', {
-                                method,
-                                headers: {
-                                  'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                  link_bukti,
-                                  id_kategori,
-                                  id_pertanyaan: pertanyaan.id_pertanyaan,
-                                  nilai_akhir
-                                })
+                              const result = await upsertBukti({
+                                id_pertanyaan: pertanyaan.id_pertanyaan,
+                                link_bukti,
+                                id_kategori,
+                                nilai_akhir
                               });
-                              const result = await res.json();
-                              if (result.success) {
+                              if (result && result.success) {
                                 setModalMsg(
                                   hasDbLink
                                     ? 'Bukti dukung berhasil diupdate!'
@@ -366,7 +371,6 @@ export default function Page(props: PageProps) {
                                   ...prev,
                                   [pertanyaan.id_pertanyaan]: {
                                     ...(result.data || {}),
-                                    // fallback ke nilai yang kita kirim jika result.data tidak tersedia
                                     link_bukti:
                                       result.data?.link_bukti ?? link_bukti,
                                     id_kategori:
@@ -437,19 +441,11 @@ export default function Page(props: PageProps) {
                                   const hasDbLink = !!(
                                     existing && existing.link_bukti
                                   );
-                                  const method = hasDbLink ? 'PUT' : 'POST';
-                                  const res = await fetch('/api', {
-                                    method,
-                                    headers: {
-                                      'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({
-                                      id_pertanyaan: pertanyaan.id_pertanyaan,
-                                      status
-                                    })
-                                  });
-                                  const result = await res.json();
-                                  if (result.success) {
+                                  const result = await sendStatus(
+                                    pertanyaan.id_pertanyaan,
+                                    status
+                                  );
+                                  if (result && result.success) {
                                     setModalMsg('Status berhasil dikirim!');
                                     setModalOpen(true);
                                     setBuktiDukungMap((prev) => ({
@@ -464,7 +460,7 @@ export default function Page(props: PageProps) {
                                   } else {
                                     setModalMsg(
                                       'Gagal mengirim status: ' +
-                                        (result.error || 'Unknown error')
+                                        (result?.error || 'Unknown error')
                                     );
                                     setModalOpen(true);
                                   }
@@ -533,19 +529,11 @@ export default function Page(props: PageProps) {
                                     const hasDbLink = !!(
                                       existing && existing.link_bukti
                                     );
-                                    const method = hasDbLink ? 'PUT' : 'POST';
-                                    const res = await fetch('/api', {
-                                      method,
-                                      headers: {
-                                        'Content-Type': 'application/json'
-                                      },
-                                      body: JSON.stringify({
-                                        id_pertanyaan: pertanyaan.id_pertanyaan,
-                                        status
-                                      })
-                                    });
-                                    const result = await res.json();
-                                    if (result.success) {
+                                    const result = await approveReject(
+                                      pertanyaan.id_pertanyaan,
+                                      status
+                                    );
+                                    if (result && result.success) {
                                       setModalMsg(
                                         'Status Approve berhasil dikirim!'
                                       );
@@ -562,7 +550,7 @@ export default function Page(props: PageProps) {
                                     } else {
                                       setModalMsg(
                                         'Gagal mengirim Approve: ' +
-                                          (result.error || 'Unknown error')
+                                          (result?.error || 'Unknown error')
                                       );
                                       setModalOpen(true);
                                     }
@@ -589,19 +577,11 @@ export default function Page(props: PageProps) {
                                     const hasDbLink = !!(
                                       existing && existing.link_bukti
                                     );
-                                    const method = hasDbLink ? 'PUT' : 'POST';
-                                    const res = await fetch('/api', {
-                                      method,
-                                      headers: {
-                                        'Content-Type': 'application/json'
-                                      },
-                                      body: JSON.stringify({
-                                        id_pertanyaan: pertanyaan.id_pertanyaan,
-                                        status
-                                      })
-                                    });
-                                    const result = await res.json();
-                                    if (result.success) {
+                                    const result = await approveReject(
+                                      pertanyaan.id_pertanyaan,
+                                      status
+                                    );
+                                    if (result && result.success) {
                                       setModalMsg(
                                         'Status Reject berhasil dikirim!'
                                       );
@@ -618,7 +598,7 @@ export default function Page(props: PageProps) {
                                     } else {
                                       setModalMsg(
                                         'Gagal mengirim Reject: ' +
-                                          (result.error || 'Unknown error')
+                                          (result?.error || 'Unknown error')
                                       );
                                       setModalOpen(true);
                                     }
