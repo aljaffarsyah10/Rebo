@@ -35,7 +35,7 @@ export default function StatusControls({
       >
         <label
           htmlFor={`status-${pertanyaanId}`}
-          className='text-sm font-semibold text-gray-700 dark:text-gray-300'
+          className='text-sm font-semibold text-green-700 dark:text-green-300'
         >
           Status Bukti Dukung
         </label>
@@ -43,7 +43,7 @@ export default function StatusControls({
           id={`status-${pertanyaanId}`}
           name={`status-${pertanyaanId}`}
           defaultValue={bukti?.status || ''}
-          className='w-40 rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
+          className='w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-blue-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200'
           disabled={!bukti?.link_bukti}
         >
           <option value=''>Pilih status...</option>

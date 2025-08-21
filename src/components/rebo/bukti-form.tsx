@@ -59,7 +59,7 @@ export default function BuktiForm({
           updatedMap[pertanyaan.id_pertanyaan].link_bukti = e.target.value;
           setBuktiDukungMap(updatedMap);
         }}
-        className={`focus:ring-opacity-50 flex-1 rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
+        className={`focus:ring-opacity-50 w-full flex-1 rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
       />
     </>
   );

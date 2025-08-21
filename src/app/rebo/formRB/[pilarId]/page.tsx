@@ -92,7 +92,7 @@ export default function Page(props: PageProps) {
       <h1 className='mb-1 text-3xl font-bold text-gray-800 dark:text-gray-100'>
         Pilar {pilarId} : {namaPilar || 'Form RB'}
       </h1>
-      <p class='mb-4 text-lg text-gray-600 dark:text-gray-400'>
+      <p className='mb-4 text-lg text-gray-600 dark:text-gray-400'>
         Subpilar dan Pertanyaan Evaluasi
       </p>
 
