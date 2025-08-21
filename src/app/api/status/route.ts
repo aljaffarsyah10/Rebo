@@ -16,12 +16,25 @@ async function postHandler(request: Request) {
 
     const supabase = await createClient();
 
+    // Build update payload. Do NOT write a non-existent `status` column.
+    // The DB column is `status_kelengkapan` (numeric completeness state).
+    const updatePayload: any = {};
+    if (status && /dikirim/i.test(status)) {
+      updatePayload.status_kelengkapan = 1;
+    } else if (status && /disetujui|approve|approved/i.test(status)) {
+      updatePayload.status_kelengkapan = 2;
+    } else if (status && /ditolak|reject|rejected/i.test(status)) {
+      // keep explicit mapping if you want a different code for rejected
+      updatePayload.status_kelengkapan = 0;
+    }
+
     // Update the status on the existing buktiDukung row for the pertanyaan
+    // also join the `statusBukti` relation so caller can get `nama_status` immediately
     const { data, error } = await supabase
       .from('buktiDukung')
-      .update({ status })
+      .update(updatePayload)
       .eq('id_pertanyaan', id_pertanyaan)
-      .select()
+      .select('*, statusBukti (id_status, nama_status)')
       .single();
 
     if (error) {
@@ -35,7 +48,16 @@ async function postHandler(request: Request) {
       );
     }
 
-    return NextResponse.json({ success: true, data });
+    // flatten nama_status for convenience and include a compatibility `status` string
+    const flattened = {
+      ...data,
+      nama_status: (data as any)?.statusBukti?.nama_status ?? null,
+      status_kelengkapan: (data as any)?.status_kelengkapan ?? null,
+      // include `status` field so older client code that reads res.data.status keeps working
+      status: status
+    };
+
+    return NextResponse.json({ success: true, data: flattened });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || 'Unknown error' },
