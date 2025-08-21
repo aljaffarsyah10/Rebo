@@ -17,14 +17,20 @@ export default function ScoreEditor({ id_pilarHasil, initialSkor }: Props) {
   async function handleUpdate() {
     setLoading(true);
     try {
+      const payload = {
+        id_pilarHasil,
+        skor_pilarHasil: skor === '' ? null : Number(skor)
+      };
       const res = await fetch('/api/pilarHasil', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_pilarHasil, skor_pilarHasil: skor })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!data || !data.success) {
         alert('Gagal menyimpan skor');
+      } else {
+        alert('Skor berhasil disimpan');
       }
     } catch (err) {
       console.error(err);
