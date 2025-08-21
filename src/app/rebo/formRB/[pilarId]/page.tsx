@@ -474,50 +474,26 @@ export default function Page(props: PageProps) {
                                 </select>
                               </div>
                               <div className='flex justify-end gap-4'>
-                                {buktiDukungMap[pertanyaan.id_pertanyaan]
-                                  ?.link_bukti ? (
-                                  <button
-                                    type='submit'
-                                    className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-green-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-green-700 hover:to-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none dark:from-green-700 dark:to-green-800 dark:hover:from-green-800 dark:hover:to-green-900 dark:focus:ring-offset-gray-900'
-                                    style={{ minWidth: '110px' }}
+                                <button
+                                  type='submit'
+                                  className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-green-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-green-700 hover:to-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none dark:from-green-700 dark:to-green-800 dark:hover:from-green-800 dark:hover:to-green-900 dark:focus:ring-offset-gray-900'
+                                  style={{ minWidth: '110px' }}
+                                >
+                                  <svg
+                                    className='mr-1 h-4 w-4'
+                                    fill='none'
+                                    stroke='currentColor'
+                                    strokeWidth='2'
+                                    viewBox='0 0 24 24'
                                   >
-                                    <svg
-                                      className='mr-1 h-4 w-4'
-                                      fill='none'
-                                      stroke='currentColor'
-                                      strokeWidth='2'
-                                      viewBox='0 0 24 24'
-                                    >
-                                      <path
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                        d='M5 13l4 4L19 7'
-                                      />
-                                    </svg>
-                                    Update
-                                  </button>
-                                ) : (
-                                  <button
-                                    type='submit'
-                                    className='flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
-                                    style={{ minWidth: '110px' }}
-                                  >
-                                    <svg
-                                      className='mr-1 h-4 w-4'
-                                      fill='none'
-                                      stroke='currentColor'
-                                      strokeWidth='2'
-                                      viewBox='0 0 24 24'
-                                    >
-                                      <path
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                        d='M12 4v16m8-8H4'
-                                      />
-                                    </svg>
-                                    Submit
-                                  </button>
-                                )}
+                                    <path
+                                      strokeLinecap='round'
+                                      strokeLinejoin='round'
+                                      d='M5 13l4 4L19 7'
+                                    />
+                                  </svg>
+                                  Update
+                                </button>
                                 <button
                                   type='button'
                                   className='rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:from-purple-700 hover:to-purple-800 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none dark:from-purple-700 dark:to-purple-800 dark:hover:from-purple-800 dark:hover:to-purple-900 dark:focus:ring-offset-gray-900'
