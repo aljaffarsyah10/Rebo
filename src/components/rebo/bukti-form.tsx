@@ -1,5 +1,6 @@
 import React from 'react';
 import { upsertBukti } from '@/lib/api/rebo';
+import { toast } from 'sonner';
 
 type Props = {
   pertanyaan: any;
@@ -29,11 +30,11 @@ export default function BuktiForm({
       !selectedKategoriValue
     ) {
       // require category for API
-      alert('Pilih kategori penilaian sebelum Update.');
+      toast.error('Pilih kategori penilaian sebelum Update.');
       return;
     }
     if (!linkValue) {
-      alert('Masukkan link bukti dukung sebelum Update.');
+      toast.error('Masukkan link bukti dukung sebelum Update.');
       return;
     }
 
@@ -78,11 +79,11 @@ export default function BuktiForm({
           }));
         } else {
           console.error('Upsert failed', res);
-          alert('Gagal menyimpan bukti.');
+          toast.error('Gagal menyimpan bukti.');
         }
       } catch (err) {
         console.error('Upsert error', err);
-        alert('Terjadi error saat menyimpan bukti.');
+        toast.error('Terjadi error saat menyimpan bukti.');
       }
     }
   }

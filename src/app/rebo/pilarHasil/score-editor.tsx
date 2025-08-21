@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 type Props = {
   id_pilarHasil: number | string;
@@ -28,13 +29,13 @@ export default function ScoreEditor({ id_pilarHasil, initialSkor }: Props) {
       });
       const data = await res.json();
       if (!data || !data.success) {
-        alert('Gagal menyimpan skor');
+        toast.error('Gagal menyimpan skor');
       } else {
-        alert('Skor berhasil disimpan');
+        toast.success('Skor berhasil disimpan');
       }
     } catch (err) {
       console.error(err);
-      alert('Error saat menyimpan skor');
+      toast.error('Error saat menyimpan skor');
     } finally {
       setLoading(false);
     }
