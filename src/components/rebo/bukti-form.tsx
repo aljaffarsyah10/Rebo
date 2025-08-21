@@ -15,22 +15,13 @@ export default function BuktiForm({
 }: Props) {
   async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = e.currentTarget;
-    const kategori = (
-      form.querySelector(
-        `select[name="kategori-${pertanyaan.id_pertanyaan}"]`
-      ) as HTMLSelectElement | null
-    )?.value;
-    const link = (
-      form.querySelector(
-        `input[name="bukti-${pertanyaan.id_pertanyaan}"]`
-      ) as HTMLInputElement | null
-    )?.value;
-
-    // Validation: ensure kategori (if required) and link are present
+    // Use values from buktiDukungMap (populated from DB by parent) so inputs reflect DB state
     const currentMap = buktiDukungMap[pertanyaan.id_pertanyaan] || {};
-    const selectedKategoriValue = kategori || currentMap.id_kategori || '';
-    const linkValue = link || currentMap.link_bukti || '';
+    const selectedKategoriValue =
+      currentMap.id_kategori !== undefined && currentMap.id_kategori !== null
+        ? currentMap.id_kategori
+        : '';
+    const linkValue = currentMap.link_bukti || '';
 
     if (
       (pertanyaan.kategoriPenilaian?.length || 0) > 0 &&
@@ -57,16 +48,11 @@ export default function BuktiForm({
       id_kategori: selectedKategoriValue || null,
       link_bukti: linkValue || null,
       nilai_akhir,
-      catatan_user:
-        (
-          form.querySelector(
-            `textarea[name="catatan-${pertanyaan.id_pertanyaan}"]`
-          ) as HTMLTextAreaElement | null
-        )?.value || null
+      catatan_user: currentMap.catatan_user || null
     };
 
     if (onUpsert) {
-      const res = await onUpsert(payload, form);
+      const res = await onUpsert(payload, undefined);
       if (res && res.success) {
         // optionally update local map
         setBuktiDukungMap((prev) => ({
