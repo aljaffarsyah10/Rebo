@@ -18,12 +18,19 @@ export async function fetchSubpilarWithPertanyaan(pilarId: string) {
 export async function fetchBuktiByPertanyaanIds(ids: string[]) {
   if (!ids || ids.length === 0) return [];
   const supabase = createClient();
+  // select related statusBukti.nama_status via relationship `statusBukti`
   const { data, error } = await supabase
     .from('buktiDukung')
-    .select('*')
+    .select('*, statusBukti (id_status, nama_status)')
     .in('id_pertanyaan', ids);
   if (error) throw error;
-  return (data as BuktiDukung[]) || [];
+  // flatten returned relation to include nama_status directly
+  const mapped = (data || []).map((row: any) => ({
+    ...row,
+    status_kelengkapan: row.status_kelengkapan ?? null,
+    nama_status: row.statusBukti?.nama_status ?? null
+  }));
+  return (mapped as BuktiDukung[]) || [];
 }
 
 export async function upsertBukti(

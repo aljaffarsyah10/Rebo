@@ -10,6 +10,8 @@ export interface BuktiDukung {
   id_kategori?: string | null;
   nilai_akhir?: number | null;
   status?: string | null;
+  status_kelengkapan?: string | null;
+  nama_status?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 }

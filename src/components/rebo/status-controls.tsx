@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import type { BuktiDukung } from '@/types/rebo';
 
 type Props = {
@@ -18,30 +18,7 @@ export default function StatusControls({
   onApprove,
   onReject
 }: Props) {
-  const [statusMap, setStatusMap] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        const res = await fetch('/api/status');
-        const json = await res.json();
-        if (json && json.success && mounted) {
-          const map: Record<string, string> = {};
-          (json.data || []).forEach((s: any) => {
-            map[s.id_status] = s.nama_status;
-          });
-          setStatusMap(map);
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // status name now supplied directly on `bukti.nama_status` by the API
   return (
     <div>
       <form
@@ -63,10 +40,7 @@ export default function StatusControls({
               Status Bukti
             </div>
             <div className='text-sm text-gray-700 dark:text-gray-300'>
-              {(bukti as any)?.status_kelengkapan
-                ? statusMap[(bukti as any).status_kelengkapan] ||
-                  (bukti as any).status_kelengkapan
-                : '-'}
+              {bukti?.nama_status ?? '-'}
             </div>
           </div>
           <button
