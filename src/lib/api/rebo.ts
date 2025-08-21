@@ -26,10 +26,14 @@ export async function fetchBuktiByPertanyaanIds(ids: string[]) {
   return (data as BuktiDukung[]) || [];
 }
 
-export async function upsertBukti(payload: Partial<BuktiDukung>) {
+export async function upsertBukti(
+  payload: Partial<BuktiDukung>,
+  method?: 'POST' | 'PUT'
+) {
   // payload should contain id_pertanyaan and either link_bukti or status or other fields
+  const httpMethod = method ?? (payload.id_bukti ? 'PUT' : 'POST');
   const res = await fetch('/api', {
-    method: payload.id_bukti ? 'PUT' : 'POST',
+    method: httpMethod,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
@@ -37,7 +41,7 @@ export async function upsertBukti(payload: Partial<BuktiDukung>) {
 }
 
 export async function sendStatus(id_pertanyaan: string, status: string) {
-  const res = await fetch('/api', {
+  const res = await fetch('/api/status', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id_pertanyaan, status })
@@ -47,7 +51,7 @@ export async function sendStatus(id_pertanyaan: string, status: string) {
 
 export async function approveReject(id_pertanyaan: string, status: string) {
   // status expected: 'Disetujui' or 'Ditolak' or similar
-  const res = await fetch('/api', {
+  const res = await fetch('/api/status', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id_pertanyaan, status })

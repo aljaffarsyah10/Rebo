@@ -27,10 +27,36 @@ export default function BuktiForm({
       ) as HTMLInputElement | null
     )?.value;
 
+    // Validation: ensure kategori (if required) and link are present
+    const currentMap = buktiDukungMap[pertanyaan.id_pertanyaan] || {};
+    const selectedKategoriValue = kategori || currentMap.id_kategori || '';
+    const linkValue = link || currentMap.link_bukti || '';
+
+    if (
+      (pertanyaan.kategoriPenilaian?.length || 0) > 0 &&
+      !selectedKategoriValue
+    ) {
+      // require category for API
+      alert('Pilih kategori penilaian sebelum Update.');
+      return;
+    }
+    if (!linkValue) {
+      alert('Masukkan link bukti dukung sebelum Update.');
+      return;
+    }
+
+    // derive nilai_akhir from selected kategori if possible
+    const selectedKategori = pertanyaan.kategoriPenilaian?.find(
+      (k: any) =>
+        k.id_kategori?.toString() === selectedKategoriValue?.toString()
+    );
+    const nilai_akhir = selectedKategori ? selectedKategori.nilai : null;
+
     const payload: any = {
       id_pertanyaan: pertanyaan.id_pertanyaan,
-      id_kategori: kategori || null,
-      link_bukti: link || null
+      id_kategori: selectedKategoriValue || null,
+      link_bukti: linkValue || null,
+      nilai_akhir
     };
 
     if (onUpsert) {
@@ -116,7 +142,17 @@ export default function BuktiForm({
             />
             <button
               type='submit'
-              className='rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white'
+              className='rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50'
+              disabled={
+                !(
+                  (pertanyaan.kategoriPenilaian?.length
+                    ? Boolean(
+                        buktiDukungMap[pertanyaan.id_pertanyaan]?.id_kategori
+                      )
+                    : true) &&
+                  Boolean(buktiDukungMap[pertanyaan.id_pertanyaan]?.link_bukti)
+                )
+              }
             >
               Update
             </button>

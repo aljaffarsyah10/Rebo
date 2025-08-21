@@ -161,8 +161,48 @@ export default function Page(props: PageProps) {
                             payload: any,
                             form?: HTMLFormElement
                           ) => {
-                            const res = await upsertBukti(payload);
-                            if (res && res.success && form) form.reset();
+                            // determine if this is an update (existing bukti) or create
+                            const exists = Boolean(
+                              buktiDukungMap[payload.id_pertanyaan]
+                            );
+                            const method = exists ? 'PUT' : 'POST';
+                            const res = await upsertBukti(
+                              payload,
+                              method as any
+                            );
+                            if (res && res.success) {
+                              // reset form if provided
+                              if (form) form.reset();
+
+                              // prefer authoritative data returned from backend
+                              const returned = res.data;
+                              if (returned && returned.id_pertanyaan) {
+                                setBuktiDukungMap((prev) => ({
+                                  ...prev,
+                                  [returned.id_pertanyaan]: {
+                                    ...(prev[returned.id_pertanyaan] || {}),
+                                    ...returned
+                                  }
+                                }));
+                              } else {
+                                // fallback to payload update
+                                setBuktiDukungMap((prev) => ({
+                                  ...prev,
+                                  [payload.id_pertanyaan]: {
+                                    ...(prev[payload.id_pertanyaan] || {}),
+                                    ...payload
+                                  }
+                                }));
+                              }
+
+                              // show modal with message depending on action
+                              const actionMsg =
+                                method === 'PUT'
+                                  ? 'Update bukti berhasil!'
+                                  : 'Bukti berhasil dibuat!';
+                              setModalMsg(actionMsg);
+                              setModalOpen(true);
+                            }
                             return res;
                           }}
                           onSendStatus={async (
