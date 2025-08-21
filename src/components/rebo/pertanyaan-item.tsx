@@ -110,7 +110,8 @@ export default function PertanyaanItem({
           }
         }}
         onApprove={async () => {
-          const status = 'Approve';
+          // use localized status so server mapping picks it up and sets status_kelengkapan=2
+          const status = 'Disetujui';
           const res = await onApproveReject(pertanyaan.id_pertanyaan, status);
           if (res && res.success) {
             setModalMsg('Status Approve berhasil dikirim!');
@@ -131,7 +132,8 @@ export default function PertanyaanItem({
           }
         }}
         onReject={async () => {
-          const status = 'Reject';
+          // use localized status for rejected
+          const status = 'Ditolak';
           const res = await onApproveReject(pertanyaan.id_pertanyaan, status);
           if (res && res.success) {
             setModalMsg('Status Reject berhasil dikirim!');
