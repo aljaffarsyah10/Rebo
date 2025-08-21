@@ -1,4 +1,5 @@
 import React from 'react';
+import { upsertBukti } from '@/lib/api/rebo';
 
 type Props = {
   pertanyaan: any;
@@ -62,6 +63,26 @@ export default function BuktiForm({
             ...payload
           }
         }));
+      }
+    } else {
+      // fallback to local API helper
+      try {
+        const res = await upsertBukti(payload);
+        if (res && res.success) {
+          setBuktiDukungMap((prev) => ({
+            ...prev,
+            [pertanyaan.id_pertanyaan]: {
+              ...(prev[pertanyaan.id_pertanyaan] || {}),
+              ...payload
+            }
+          }));
+        } else {
+          console.error('Upsert failed', res);
+          alert('Gagal menyimpan bukti.');
+        }
+      } catch (err) {
+        console.error('Upsert error', err);
+        alert('Terjadi error saat menyimpan bukti.');
       }
     }
   }

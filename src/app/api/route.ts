@@ -6,7 +6,13 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     console.error('[API /api] POST body:', body);
-    const { link_bukti, id_kategori, id_pertanyaan, nilai_akhir } = body;
+    const {
+      link_bukti,
+      id_kategori,
+      id_pertanyaan,
+      nilai_akhir,
+      catatan_user
+    } = body;
 
     // Minimal required fields from frontend: id_pertanyaan and link_bukti.
     if (!id_pertanyaan) {
@@ -34,6 +40,9 @@ export async function POST(request: Request) {
     }
     if (Object.prototype.hasOwnProperty.call(body, 'nilai_akhir')) {
       insertData.nilai_akhir = nilai_akhir;
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'catatan_user')) {
+      insertData.catatan_user = catatan_user;
     }
 
     console.error('[API /api] POST insertData (will upsert):', insertData);
@@ -67,7 +76,13 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
     console.error('[API /api] PUT body:', body);
-    const { link_bukti, id_kategori, id_pertanyaan, nilai_akhir } = body;
+    const {
+      link_bukti,
+      id_kategori,
+      id_pertanyaan,
+      nilai_akhir,
+      catatan_user
+    } = body;
 
     if (!id_pertanyaan) {
       return NextResponse.json(
@@ -81,6 +96,7 @@ export async function PUT(request: Request) {
     if (link_bukti !== undefined) updateData.link_bukti = link_bukti;
     if (id_kategori !== undefined) updateData.id_kategori = id_kategori;
     if (nilai_akhir !== undefined) updateData.nilai_akhir = nilai_akhir;
+    if (catatan_user !== undefined) updateData.catatan_user = catatan_user;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
