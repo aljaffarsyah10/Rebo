@@ -83,6 +83,7 @@ export default function PertanyaanItem({
         pertanyaan={pertanyaan}
         buktiDukungMap={buktiDukungMap}
         setBuktiDukungMap={setBuktiDukungMap}
+        onUpsert={onUpsert}
       />
 
       <StatusControls
