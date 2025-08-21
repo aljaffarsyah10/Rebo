@@ -52,6 +52,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/formRB/reform',
         icon: 'userPen',
         shortcut: ['m', 'm']
+      },
+      {
+        title: 'Hasil',
+        url: '/rebo/hasil',
+        icon: 'userPen',
+        shortcut: ['m', 'm']
       }
     ]
   },
