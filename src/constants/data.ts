@@ -42,8 +42,8 @@ export const navItems: NavItem[] = [
         shortcut: ['m', 'm']
       },
       {
-        title: 'Pengungkit',
-        url: '/rebo/formRB/pengungkit',
+        title: 'Pemenuhan',
+        url: '/rebo/formRB/pemenuhan',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },

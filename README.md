@@ -22,7 +22,7 @@
 
 - **Input & Validasi Link Bukti Dukung**: Form digital untuk mengumpulkan dan memvalidasi dokumen RB secara terstruktur.
 - **Monitoring**: Pantau progres dan status implementasi RB secara real-time.
-- **Manajemen Pilar & Area**: Kelola pilar pengungkit dan reformasi sesuai struktur nasional.
+- **Manajemen Pilar & Area**: Kelola pilar pemenuhan dan reformasi sesuai struktur nasional.
 - **Keamanan & Audit**: Otentikasi Clerk, pelacakan aktivitas, dan integrasi Sentry untuk error monitoring.
 
 ### Stack Teknologi
@@ -46,8 +46,8 @@
 | --------------------------- | ---------------------------------------------------------------------- |
 | **/auth/signin**            | Login aman dengan Clerk, mendukung passwordless, SSO, dan social login |
 | **/dashboard**              | Dashboard overview, monitoring progres RB, dan quick actions           |
-| **/rebo/formRB/area**       | Pilih area Pengungkit atau Reform untuk input bukti dukung             |
-| **/rebo/formRB/pengungkit** | Daftar pilar pengungkit, input & validasi dokumen                      |
+| **/rebo/formRB/area**       | Pilih area Pemenuhan atau Reform untuk input bukti dukung              |
+| **/rebo/formRB/pemenuhan**  | Daftar pilar pemenuhan, input & validasi dokumen                       |
 | **/rebo/formRB/reform**     | Daftar pilar reformasi, input & validasi dokumen                       |
 | **/dashboard/profile**      | Manajemen akun dan pengaturan profil user                              |
 | **/dashboard/kanban**       | Kanban board untuk manajemen tugas RB                                  |

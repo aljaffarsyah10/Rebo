@@ -19,7 +19,7 @@ export default async function FormRB() {
     )
     .order('id_pilar', { ascending: true });
 
-  // Filter hanya untuk Area 1 (Pengungkit)
+  // Filter hanya untuk Area 1 (Pemenuhan)
   const pilarsArea1 = pilarsData?.filter((pilar) => pilar.id_area === 1) || [];
 
   // Ambil totalSkor dan totalNilaiMaks dengan join pilar -> subpilar -> pertanyaan -> buktiDukung
@@ -123,10 +123,10 @@ export default async function FormRB() {
         <div className='flex items-center justify-between'>
           <div>
             <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
-              Pilar Pengungkit Reformasi Birokrasi
+              Pilar Pemenuhan Reformasi Birokrasi
             </h1>
             <p className='mt-2 text-gray-600 dark:text-gray-400'>
-              Kelola dan pantau pilar pengungkit reformasi birokrasi
+              Kelola dan pantau pilar pemenuhan reformasi birokrasi
             </p>
           </div>
           <Button className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800'>
@@ -136,14 +136,14 @@ export default async function FormRB() {
         </div>
       </div>
 
-      {/* Pilar Pengungkit Section */}
+      {/* Pilar Pemenuhan Section */}
       <div>
         <div className='mb-4 flex items-center gap-3'>
           <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white dark:bg-blue-600'>
             1
           </div>
           <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-            {pilarsArea1[0]?.area?.nama_area || 'Pilar Pengungkit'}
+            {pilarsArea1[0]?.area?.nama_area || 'Pilar Pemenuhan'}
           </h2>
           <div className='h-px flex-1 bg-gradient-to-r from-blue-300 to-transparent dark:from-blue-600'></div>
         </div>
@@ -210,7 +210,7 @@ export default async function FormRB() {
         ) : (
           <div className='rounded-lg border-2 border-dashed border-gray-300 p-6 text-center dark:border-gray-600'>
             <p className='text-gray-500 dark:text-gray-400'>
-              Tidak ada pilar pengungkit tersedia
+              Tidak ada pilar pemenuhan tersedia
             </p>
           </div>
         )}
@@ -223,10 +223,10 @@ export default async function FormRB() {
             <Settings className='h-8 w-8 text-gray-400 dark:text-gray-600' />
           </div>
           <h3 className='mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-            Belum ada data pilar pengungkit
+            Belum ada data pilar pemenuhan
           </h3>
           <p className='max-w-md text-center text-gray-600 dark:text-gray-400'>
-            Data pilar pengungkit reformasi birokrasi belum tersedia. Silakan
+            Data pilar pemenuhan reformasi birokrasi belum tersedia. Silakan
             tambahkan data pilar terlebih dahulu.
           </p>
         </div>

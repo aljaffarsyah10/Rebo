@@ -61,7 +61,7 @@ export default async function AreaPage() {
   const pilarsArea2 = pilarsData?.filter((pilar) => pilar.id_area === 2) || [];
 
   // Ambil nama area dari data
-  const namaArea1 = pilarsArea1[0]?.area?.nama_area || 'Pengungkit';
+  const namaArea1 = pilarsArea1[0]?.area?.nama_area || 'Pemenuhan';
   const namaArea2 = pilarsArea2[0]?.area?.nama_area || 'Reform';
   return (
     <div className='container mx-auto max-w-6xl p-6'>
@@ -85,7 +85,7 @@ export default async function AreaPage() {
 
       {/* Area Cards */}
       <div className='grid gap-8 md:grid-cols-2'>
-        {/* Pengungkit Container */}
+        {/* Pemenuhan Container */}
         <div className='group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-900'>
           {/* Background Gradient */}
           <div className='absolute inset-0 bg-gradient-to-br from-blue-50 via-transparent to-blue-100 opacity-50 transition-opacity duration-300 group-hover:opacity-70 dark:from-blue-900/20 dark:to-blue-800/20'></div>
@@ -112,9 +112,9 @@ export default async function AreaPage() {
             </div>
 
             <p className='mb-8 leading-relaxed text-gray-600 dark:text-gray-300'>
-              Kelola dan pantau pilar-pilar pengungkit yang menjadi fondasi
-              dalam reformasi birokrasi. Area ini mencakup aspek-aspek
-              fundamental yang mendukung transformasi organisasi.
+              Kelola dan pantau pilar-pilar pemenuhan yang menjadi fondasi dalam
+              reformasi birokrasi. Area ini mencakup aspek-aspek fundamental
+              yang mendukung transformasi organisasi.
             </p>
 
             {/* Features - Dynamic from database */}
@@ -131,7 +131,7 @@ export default async function AreaPage() {
             </div>
 
             {/* Action Button */}
-            <Link href='/rebo/formRB/pengungkit'>
+            <Link href='/rebo/formRB/pemenuhan'>
               <Button
                 className='group/btn w-full bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800'
                 disabled={pilarsArea1.length === 0}
