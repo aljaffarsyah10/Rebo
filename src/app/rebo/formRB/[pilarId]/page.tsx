@@ -89,9 +89,12 @@ export default function Page(props: PageProps) {
 
   return (
     <div className='container mx-auto max-w-6xl p-6'>
-      <h1 className='mb-4 text-2xl font-bold text-gray-800 dark:text-gray-100'>
-        {namaPilar || 'Form RB'}
+      <h1 className='mb-1 text-3xl font-bold text-gray-800 dark:text-gray-100'>
+        Pilar {pilarId} : {namaPilar || 'Form RB'}
       </h1>
+      <p class='mb-4 text-lg text-gray-600 dark:text-gray-400'>
+        Subpilar dan Pertanyaan Evaluasi
+      </p>
 
       <Tabs
         value={activeTab}
