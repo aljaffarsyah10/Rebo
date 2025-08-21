@@ -39,8 +39,41 @@ export default function StatusControls({
             <div className='text-sm font-semibold text-green-700 dark:text-green-300'>
               Status Bukti
             </div>
-            <div className='text-sm text-gray-700 dark:text-gray-300'>
-              {bukti?.nama_status ?? '-'}
+            <div className='flex items-center gap-2'>
+              {/* display name */}
+              {/* <div className='text-sm text-gray-700 dark:text-gray-300'>
+                {bukti?.nama_status ?? '-'}
+              </div> */}
+              {/* badge */}
+              {(() => {
+                const name = bukti?.nama_status ?? '';
+                let classes =
+                  'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold';
+                if (!name) {
+                  classes +=
+                    ' bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+                } else if (/draft/i.test(name)) {
+                  classes +=
+                    ' bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+                } else if (/dikirim|sent|kirim/i.test(name)) {
+                  classes +=
+                    ' bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+                } else if (/disetujui|approve|approved/i.test(name)) {
+                  classes +=
+                    ' bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
+                } else if (/ditolak|reject|rejected/i.test(name)) {
+                  classes +=
+                    ' bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+                } else {
+                  classes +=
+                    ' bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+                }
+                return (
+                  <span className={classes} aria-hidden>
+                    {name || 'Belum'}
+                  </span>
+                );
+              })()}
             </div>
           </div>
           <button
