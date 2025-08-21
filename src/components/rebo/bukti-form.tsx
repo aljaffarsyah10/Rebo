@@ -56,7 +56,13 @@ export default function BuktiForm({
       id_pertanyaan: pertanyaan.id_pertanyaan,
       id_kategori: selectedKategoriValue || null,
       link_bukti: linkValue || null,
-      nilai_akhir
+      nilai_akhir,
+      catatan_user:
+        (
+          form.querySelector(
+            `textarea[name="catatan-${pertanyaan.id_pertanyaan}"]`
+          ) as HTMLTextAreaElement | null
+        )?.value || null
     };
 
     if (onUpsert) {
@@ -140,36 +146,67 @@ export default function BuktiForm({
               }}
               className={`focus:ring-opacity-50 w-full flex-1 rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
             />
-            <button
-              type='submit'
-              className='inline-flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition duration-150 hover:scale-[1.02] hover:from-indigo-700 hover:to-indigo-800 focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
-              disabled={
-                !(
-                  (pertanyaan.kategoriPenilaian?.length
-                    ? Boolean(
-                        buktiDukungMap[pertanyaan.id_pertanyaan]?.id_kategori
-                      )
-                    : true) &&
-                  Boolean(buktiDukungMap[pertanyaan.id_pertanyaan]?.link_bukti)
-                )
-              }
-            >
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                className='h-4 w-4'
-                viewBox='0 0 20 20'
-                fill='currentColor'
-                aria-hidden='true'
-              >
-                <path
-                  fillRule='evenodd'
-                  d='M16.707 5.293a1 1 0 00-1.414 0L9 11.586 6.707 9.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z'
-                  clipRule='evenodd'
-                />
-              </svg>
-              <span>Update</span>
-            </button>
           </div>
+        </div>
+        {/* Catatan user textarea */}
+        <div>
+          <label
+            htmlFor={`catatan-${pertanyaan.id_pertanyaan}`}
+            className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
+          >
+            Catatan User
+          </label>
+          <textarea
+            id={`catatan-${pertanyaan.id_pertanyaan}`}
+            name={`catatan-${pertanyaan.id_pertanyaan}`}
+            defaultValue={
+              buktiDukungMap[pertanyaan.id_pertanyaan]?.catatan_user || ''
+            }
+            placeholder='Tambahkan catatan atau komentar...'
+            onChange={(e) => {
+              const updatedMap = { ...buktiDukungMap };
+              if (!updatedMap[pertanyaan.id_pertanyaan])
+                updatedMap[pertanyaan.id_pertanyaan] = {};
+              updatedMap[pertanyaan.id_pertanyaan].catatan_user =
+                e.target.value;
+              setBuktiDukungMap(updatedMap);
+            }}
+            className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+            rows={3}
+          />
+        </div>
+
+        {/* Secondary Update button below */}
+        <div className='pt-1'>
+          <button
+            type='submit'
+            className='inline-flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition duration-150 hover:scale-[1.02] hover:from-indigo-700 hover:to-indigo-800 focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
+            disabled={
+              !(
+                (pertanyaan.kategoriPenilaian?.length
+                  ? Boolean(
+                      buktiDukungMap[pertanyaan.id_pertanyaan]?.id_kategori
+                    )
+                  : true) &&
+                Boolean(buktiDukungMap[pertanyaan.id_pertanyaan]?.link_bukti)
+              )
+            }
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-4 w-4'
+              viewBox='0 0 20 20'
+              fill='currentColor'
+              aria-hidden='true'
+            >
+              <path
+                fillRule='evenodd'
+                d='M16.707 5.293a1 1 0 00-1.414 0L9 11.586 6.707 9.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z'
+                clipRule='evenodd'
+              />
+            </svg>
+            <span>Update</span>
+          </button>
         </div>
       </form>
     </>
