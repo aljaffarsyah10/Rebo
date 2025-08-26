@@ -27,12 +27,22 @@ export async function GET() {
   const { data: subpilars, error } = await supabase
     .from('subpilar')
     .select(
-      'id_subpilar,nama_subpilar,pilar(nama_pilar),pertanyaan(id_pertanyaan,deskripsi_pertanyaan,buktiDukung(link_bukti,status_kelengkapan,nilai_akhir,catatan_user,catatan_koordinator))'
+      'id_subpilar,nama_subpilar,pilar(nama_pilar),pertanyaan(id_pertanyaan,deskripsi_pertanyaan,buktiDukung(id_bukti,id_kategori,link_bukti,status_kelengkapan,nilai_akhir,catatan_user,catatan_koordinator))'
     );
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Fetch kategoriPenilaian separately and map by id_kategori because
+  // the DB schema may not expose a direct relation name from buktiDukung.
+  const { data: kategoriList } = await supabase
+    .from('kategoriPenilaian')
+    .select('id_kategori,uraian_kategori');
+  const kategoriMap: Record<string | number, string> = {};
+  (kategoriList || []).forEach((k: any) => {
+    kategoriMap[k.id_kategori] = k.uraian_kategori ?? '';
+  });
 
   // Flatten pertanyaan rows from subpilars
   const rows: any[] = [];
@@ -58,12 +68,21 @@ export async function GET() {
         if (Array.isArray(bd)) first = bd[0] ?? {};
         else if (bd && typeof bd === 'object') first = bd;
 
+        // Extract uraian_kategori using foreign key id_kategori on buktiDukung
+        const fk =
+          first.id_kategori ??
+          first.idKategori ??
+          first.idKategoriPenilaian ??
+          null;
+        const uraian_kategori = fk != null ? (kategoriMap[fk] ?? '') : '';
+
         rows.push({
           nama_pilar,
           nama_subpilar,
           id_pertanyaan: r.id_pertanyaan,
           deskripsi_pertanyaan: r.deskripsi_pertanyaan,
           link_bukti: first.link_bukti ?? '',
+          uraian_kategori,
           status_kelengkapan: first.status_kelengkapan ?? '',
           nilai_akhir: first.nilai_akhir ?? '',
           catatan_user: first.catatan_user ?? '',
@@ -74,7 +93,7 @@ export async function GET() {
   });
 
   // Sort rows by id_pertanyaan ascending
-  rows.sort((a, b) => {
+  rows.sort((a: any, b: any) => {
     const A = Number(a.id_pertanyaan ?? 0);
     const B = Number(b.id_pertanyaan ?? 0);
     return A - B;
