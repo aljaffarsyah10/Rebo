@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import ProgressPilar from '@/components/rebo/progress-pilar';
 import SkorBoxPilar from '@/components/rebo/skorBox-pilar';
 import { ChartContainer } from '@/components/ui/chart';
+import Link from 'next/link';
 import {
   BarChart,
   Bar,
@@ -165,7 +166,15 @@ export default function MonitoringDashboard() {
 
   return (
     <div className='container mx-auto max-w-6xl p-6'>
-      <h1 className='mb-6 text-3xl font-bold'>Dashboard Monitoring</h1>
+      <div className='mb-6 flex items-center justify-between'>
+        <h1 className='text-3xl font-bold'>Dashboard Monitoring</h1>
+        <Link
+          href='/api/download'
+          className='inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700'
+        >
+          Download Isian LKE (CSV)
+        </Link>
+      </div>
       <div className='mb-6 grid grid-cols-1 gap-4 md:grid-cols-3'>
         <div className='flex flex-col items-center justify-center rounded-lg border bg-white p-4 dark:bg-gray-900'>
           <div className='mb-1 text-xs text-gray-500'>
