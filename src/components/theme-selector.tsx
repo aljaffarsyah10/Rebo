@@ -21,26 +21,26 @@ const DEFAULT_THEMES = [
   {
     name: 'Blue',
     value: 'blue'
-  },
-  {
-    name: 'Green',
-    value: 'green'
-  },
-  {
-    name: 'Amber',
-    value: 'amber'
   }
+  // {
+  //   name: 'Green',
+  //   value: 'green'
+  // },
+  // {
+  //   name: 'Amber',
+  //   value: 'amber'
+  // }
 ];
 
 const SCALED_THEMES = [
   {
     name: 'Default',
     value: 'default-scaled'
-  },
-  {
-    name: 'Blue',
-    value: 'blue-scaled'
   }
+  // {
+  //   name: 'Blue',
+  //   value: 'blue-scaled'
+  // }
 ];
 
 const MONO_THEMES = [
