@@ -136,13 +136,15 @@ export default function Overview() {
               Dashboard komprehensif untuk memantau progress dan pencapaian
               target zona integritas.
             </p>
-            <Button
-              variant='outline'
-              size='sm'
-              className='w-full border-slate-300/60 text-slate-700 hover:border-emerald-300/60 hover:bg-emerald-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-emerald-600/60 dark:hover:bg-emerald-900/20'
-            >
-              Lihat Progress <ArrowRight className='ml-2 h-4 w-4' />
-            </Button>
+            <Link href='/rebo/monitoring'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='w-full border-slate-300/60 text-slate-700 hover:border-emerald-300/60 hover:bg-emerald-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-emerald-600/60 dark:hover:bg-emerald-900/20'
+              >
+                Lihat Progress <ArrowRight className='ml-2 h-4 w-4' />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
@@ -165,13 +167,15 @@ export default function Overview() {
               Platform kolaboratif untuk koordinasi antar tim dalam mencapai
               standar WBK dan WBBM.
             </p>
-            <Button
-              variant='outline'
-              size='sm'
-              className='w-full border-slate-300/60 text-slate-700 hover:border-purple-300/60 hover:bg-purple-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-purple-600/60 dark:hover:bg-purple-900/20'
-            >
-              Bergabung <ArrowRight className='ml-2 h-4 w-4' />
-            </Button>
+            <Link href='/rebo/admin'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='w-full border-slate-300/60 text-slate-700 hover:border-purple-300/60 hover:bg-purple-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-purple-600/60 dark:hover:bg-purple-900/20'
+              >
+                Manjemen Role <ArrowRight className='ml-2 h-4 w-4' />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

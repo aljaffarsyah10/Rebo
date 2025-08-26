@@ -24,7 +24,15 @@ export const navItems: NavItem[] = [
   {
     title: 'Monitoring',
     url: '/rebo/monitoring',
-    icon: 'dashboard',
+    icon: 'kanban',
+    isActive: false,
+    shortcut: ['d', 'd'],
+    items: [] // Empty array as there are no child items for Dashboard
+  },
+  {
+    title: 'Admin Dashboard',
+    url: '/rebo/admin',
+    icon: 'page',
     isActive: false,
     shortcut: ['d', 'd'],
     items: [] // Empty array as there are no child items for Dashboard
