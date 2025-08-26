@@ -73,7 +73,7 @@ export const navItems: NavItem[] = [
     title: 'Data RB',
     url: '#', // Placeholder as there is no direct link for the parent
     icon: 'page',
-    isActive: true,
+    isActive: false,
 
     items: [
       {
@@ -156,7 +156,7 @@ export const navItems: NavItem[] = [
   //   ]
   // },
   {
-    title: 'Kanban',
+    title: 'Todo',
     url: '/dashboard/kanban',
     icon: 'kanban',
     shortcut: ['k', 'k'],

@@ -1,5 +1,6 @@
 'use client';
 import { navItems } from '@/constants/data';
+import { useUser } from '@clerk/nextjs';
 import {
   KBarAnimator,
   KBarPortal,
@@ -14,6 +15,7 @@ import useThemeSwitching from './use-theme-switching';
 
 export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { user } = useUser();
 
   // These action are for the navigation
   const actions = useMemo(() => {
@@ -22,7 +24,14 @@ export default function KBar({ children }: { children: React.ReactNode }) {
       router.push(url);
     };
 
-    return navItems.flatMap((navItem) => {
+    const visibleNavItems = navItems.filter((navItem) => {
+      if (navItem.title === 'Admin Dashboard') {
+        return !!user && user.publicMetadata?.role === 'admin';
+      }
+      return true;
+    });
+
+    return visibleNavItems.flatMap((navItem) => {
       // Only include base action if the navItem has a real URL and is not just a container
       const baseAction =
         navItem.url !== '#'
