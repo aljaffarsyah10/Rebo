@@ -162,6 +162,14 @@ export const navItems: NavItem[] = [
     shortcut: ['k', 'k'],
     isActive: false,
     items: [] // No child items
+  },
+  {
+    title: 'Informasi RB',
+    url: '/rebo/informasi',
+    icon: 'help',
+    shortcut: ['k', 'k'],
+    isActive: false,
+    items: [] // No child items
   }
 ];
 
