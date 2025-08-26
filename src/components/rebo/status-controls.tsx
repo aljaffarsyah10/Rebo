@@ -1,5 +1,6 @@
 'use client';
 
+import { useUser } from '@clerk/nextjs';
 import React from 'react';
 import type { BuktiDukung } from '@/types/rebo';
 
@@ -18,10 +19,16 @@ export default function StatusControls({
   onApprove,
   onReject
 }: Props) {
-  // status name now supplied directly on `bukti.nama_status` by the API
+  const { user } = useUser();
+  const role = (user?.publicMetadata as any)?.role as string | undefined;
+  const isAdmin = role === 'admin';
+
+  const badge = bukti?.nama_status ?? 'Belum';
+
   return (
     <div>
       <form
+        className='mt-3 flex items-center justify-end gap-3'
         onSubmit={async (e) => {
           e.preventDefault();
           const form = e.currentTarget as HTMLFormElement;
@@ -32,7 +39,6 @@ export default function StatusControls({
           if (!status) return;
           await onSendStatus(status);
         }}
-        className='mt-3 flex items-center justify-end gap-3'
       >
         <div className='flex w-full items-center justify-between gap-3'>
           <div>
@@ -40,104 +46,47 @@ export default function StatusControls({
               Status Bukti
             </div>
             <div className='flex items-center gap-2'>
-              {/* display name */}
-              {/* <div className='text-sm text-gray-700 dark:text-gray-300'>
-                {bukti?.nama_status ?? '-'}
-              </div> */}
-              {/* badge */}
-              {(() => {
-                const name = bukti?.nama_status ?? '';
-                let classes =
-                  'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold';
-                if (!name) {
-                  classes +=
-                    ' bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-                } else if (/draft/i.test(name)) {
-                  classes +=
-                    ' bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-                } else if (/dikirim|sent|kirim/i.test(name)) {
-                  classes +=
-                    ' bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-                } else if (/disetujui|approve|approved/i.test(name)) {
-                  classes +=
-                    ' bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
-                } else if (/ditolak|reject|rejected/i.test(name)) {
-                  classes +=
-                    ' bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-                } else {
-                  classes +=
-                    ' bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-                }
-                return (
-                  <span className={classes} aria-hidden>
-                    {name || 'Belum'}
-                  </span>
-                );
-              })()}
+              <span className='inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800'>
+                {badge}
+              </span>
             </div>
           </div>
+
           <button
             type='button'
             onClick={async () => await onSendStatus('Dikirim')}
-            className='flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-3 py-2 text-xs font-semibold text-white shadow-sm transition duration-150 hover:scale-[1.02] hover:from-blue-700 hover:to-blue-800 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
+            className='flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50'
             disabled={!bukti?.link_bukti}
           >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-3 w-3'
-              viewBox='0 0 20 20'
-              fill='currentColor'
-              aria-hidden='true'
-            >
-              <path d='M2.003 5.884l8 4.8a1 1 0 00.994 0l8-4.8A1 1 0 0018 4H2a1 1 0 00.003 1.884z' />
-              <path d='M18 8.118l-7.555 4.533a3 3 0 01-2.89 0L0 8.118V14a2 2 0 002 2h16a2 2 0 002-2V8.118z' />
-            </svg>
-            <span>Send</span>
+            Send
           </button>
         </div>
       </form>
 
       <div className='mt-2 flex justify-end gap-2'>
-        <button
-          onClick={async () => await onApprove()}
-          className='flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition duration-150 hover:scale-[1.02] hover:from-emerald-700 hover:to-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
-          disabled={!bukti?.link_bukti}
-        >
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            className='h-3 w-3'
-            viewBox='0 0 20 20'
-            fill='currentColor'
-            aria-hidden='true'
-          >
-            <path
-              fillRule='evenodd'
-              d='M16.707 5.293a1 1 0 00-1.414 0L9 11.586 6.707 9.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z'
-              clipRule='evenodd'
-            />
-          </svg>
-          <span>Approve</span>
-        </button>
-        <button
-          onClick={async () => await onReject()}
-          className='flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition duration-150 hover:scale-[1.02] hover:from-red-700 hover:to-red-800 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
-          disabled={!bukti?.link_bukti}
-        >
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            className='h-3 w-3'
-            viewBox='0 0 20 20'
-            fill='currentColor'
-            aria-hidden='true'
-          >
-            <path
-              fillRule='evenodd'
-              d='M6.293 9.293a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414L11.414 13l2.293 2.293a1 1 0 01-1.414 1.414L10 14.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 13 6.293 10.707a1 1 0 010-1.414z'
-              clipRule='evenodd'
-            />
-          </svg>
-          <span>Reject</span>
-        </button>
+        {isAdmin ? (
+          <>
+            <button
+              onClick={async () => await onApprove()}
+              className='flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50'
+              disabled={!bukti?.link_bukti}
+            >
+              Approve
+            </button>
+
+            <button
+              onClick={async () => await onReject()}
+              className='flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50'
+              disabled={!bukti?.link_bukti}
+            >
+              Reject
+            </button>
+          </>
+        ) : (
+          <div className='text-muted-foreground self-center text-sm'>
+            Hanya admin yang dapat Approve/Reject
+          </div>
+        )}
       </div>
     </div>
   );
