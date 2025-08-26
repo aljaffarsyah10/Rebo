@@ -7,35 +7,26 @@ import {
   CardContent,
   CardDescription
 } from '@/components/ui/card';
+import PremiumCard from '@/components/ui/premium-card';
 import PilarCollapse from '@/components/rebo/pilar-collapse';
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent
-} from '@/components/ui/accordion';
 
 export const metadata = {
   title: 'Informasi Zona Integritas'
 };
 
 export default function InformasiPage() {
+  const gdriveLink =
+    'https://drive.google.com/drive/folders/1GgIbNOoKb98xNtBXZcqyYahFAdd4ZtF_?usp=sharing';
   return (
     <PageContainer>
       <div className='container mx-auto max-w-4xl py-6'>
-        <Link href='/rebo/overview' className='text-sm text-blue-600 underline'>
-          &larr; Kembali
-        </Link>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Informasi: Pembangunan Zona Integritas</CardTitle>
-            <CardDescription>
-              Panduan singkat mengenai konsep dan komponen pembangunan Zona
-              Integritas (ZI).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className='-mx-6 rounded-3xl bg-gradient-to-b from-slate-50/60 to-white/60 p-6 shadow-sm'>
+          <PremiumCard
+            title={'Informasi: Pembangunan Zona Integritas'}
+            description={
+              'Panduan singkat mengenai konsep dan komponen pembangunan Zona Integritas (ZI) Reformasi Birokrasi.'
+            }
+          >
             <p className='mb-4 leading-relaxed'>
               Pembangunan zona integritas bukanlah semata tentang kepatuhan pada
               peraturan, tetapi juga sebuah komitmen untuk menciptakan
@@ -57,73 +48,63 @@ export default function InformasiPage() {
             </p>
 
             <h2 className='mt-6 mb-2 text-xl font-semibold'>Pengertian Umum</h2>
-            <ol className='mb-2 list-inside list-decimal space-y-2'>
-              <li>
-                Zona Integritas (ZI) adalah instansi pemerintah yang pimpinan
-                dan jajarannya telah berkomitmen untuk mewujudkan Wilayah Bebas
-                dari Korupsi/Wilayah Birokrasi Bersih dan Melayani melalui
-                reformasi birokrasi.
-              </li>
-              <li>
-                Wilayah Bebas dari Korupsi (WBK) adalah predikat yang diberikan
-                kepada unit/satuan kerja yang telah berhasil melaksanakan
-                reformasi birokrasi dengan baik.
-              </li>
-              <li>
-                Wilayah Birokrasi Bersih dan Melayani (WBBM) adalah predikat
-                untuk unit/satuan kerja yang telah melaksanakan reformasi
-                birokrasi dengan sangat baik.
-              </li>
-            </ol>
-
-            <Accordion type='single' collapsible className='mb-4'>
-              <AccordionItem value='pengertian'>
-                <AccordionTrigger className='px-0 text-sm text-blue-600'>
-                  Lihat selengkapnya
-                </AccordionTrigger>
-                <AccordionContent className='mt-2'>
-                  <ol className='list-inside list-decimal space-y-2' start={4}>
-                    <li>
-                      Unit Kerja: serendah-rendahnya eselon II yang
-                      menyelenggarakan layanan.
-                    </li>
-                    <li>
-                      Satker: serendah-rendahnya unit Eselon III yang
-                      menyelenggarakan layanan.
-                    </li>
-                    <li>
-                      Tim Pembinaan Pembangunan ZI: tim yang dibentuk oleh BPS
-                      untuk pembinaan dan pendampingan (contoh: Biro Perencanaan
-                      untuk BPS).
-                    </li>
-                    <li>
-                      Tim Penanggung Jawab Kegiatan (PJK) Evaluasi Pembangunan
-                      ZI: melakukan koordinasi evaluasi pembangunan ZI (contoh:
-                      Inspektorat Wilayah III di BPS).
-                    </li>
-                    <li>
-                      Tim Penilai Internal (TPI): tim internal yang melakukan
-                      evaluasi dan memberikan rekomendasi bagi unit yang sedang
-                      membangun ZI.
-                    </li>
-                    <li>
-                      Tim Penilai Pendahuluan (TPP): ditetapkan pada level
-                      provinsi untuk menilai dan merekomendasikan satker sebelum
-                      diusulkan ke TPI.
-                    </li>
-                    <li>
-                      Tim Penilai Mandiri (TPM): tim untuk penilaian mandiri
-                      dalam proses memperoleh predikat WBK.
-                    </li>
-                    <li>
-                      Tim Penilai Nasional (TPN): tim nasional yang terdiri dari
-                      kementerian terkait dan instansi pemerintah lain untuk
-                      evaluasi ZI.
-                    </li>
-                  </ol>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+            <div className='mb-6 rounded-xl border border-slate-100 bg-white p-4 shadow-md'>
+              <ol className='list-inside list-decimal space-y-2 text-slate-700'>
+                <li>
+                  Zona Integritas (ZI) adalah instansi pemerintah yang pimpinan
+                  dan jajarannya telah berkomitmen untuk mewujudkan Wilayah
+                  Bebas dari Korupsi/Wilayah Birokrasi Bersih dan Melayani
+                  melalui reformasi birokrasi.
+                </li>
+                <li>
+                  Wilayah Bebas dari Korupsi (WBK) adalah predikat yang
+                  diberikan kepada unit/satuan kerja yang telah berhasil
+                  melaksanakan reformasi birokrasi dengan baik.
+                </li>
+                <li>
+                  Wilayah Birokrasi Bersih dan Melayani (WBBM) adalah predikat
+                  untuk unit/satuan kerja yang telah melaksanakan reformasi
+                  birokrasi dengan sangat baik.
+                </li>
+                <li>
+                  Unit Kerja: serendah-rendahnya eselon II yang menyelenggarakan
+                  layanan.
+                </li>
+                <li>
+                  Satker: serendah-rendahnya unit Eselon III yang
+                  menyelenggarakan layanan.
+                </li>
+                <li>
+                  Tim Pembinaan Pembangunan ZI: tim yang dibentuk oleh BPS untuk
+                  pembinaan dan pendampingan (contoh: Biro Perencanaan untuk
+                  BPS).
+                </li>
+                <li>
+                  Tim Penanggung Jawab Kegiatan (PJK) Evaluasi Pembangunan ZI:
+                  melakukan koordinasi evaluasi pembangunan ZI (contoh:
+                  Inspektorat Wilayah III di BPS).
+                </li>
+                <li>
+                  Tim Penilai Internal (TPI): tim internal yang melakukan
+                  evaluasi dan memberikan rekomendasi bagi unit yang sedang
+                  membangun ZI.
+                </li>
+                <li>
+                  Tim Penilai Pendahuluan (TPP): ditetapkan pada level provinsi
+                  untuk menilai dan merekomendasikan satker sebelum diusulkan ke
+                  TPI.
+                </li>
+                <li>
+                  Tim Penilai Mandiri (TPM): tim untuk penilaian mandiri dalam
+                  proses memperoleh predikat WBK.
+                </li>
+                <li>
+                  Tim Penilai Nasional (TPN): tim nasional yang terdiri dari
+                  kementerian terkait dan instansi pemerintah lain untuk
+                  evaluasi ZI.
+                </li>
+              </ol>
+            </div>
 
             <p className='mb-4'>
               Pembangunan ZI mencakup dua komponen: pengungkit dan hasil.
@@ -225,8 +206,50 @@ export default function InformasiPage() {
                 <li>Meningkatnya indeks kepuasan masyarakat.</li>
               </ul>
             </PilarCollapse>
-          </CardContent>
-        </Card>
+          </PremiumCard>
+        </div>
+
+        <div className='mb-8 flex flex-col gap-2 rounded-xl border bg-gradient-to-br from-blue-100 via-white to-blue-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gradient-to-br dark:from-blue-900 dark:via-gray-900 dark:to-gray-900'>
+          <div className='flex items-center gap-2'>
+            <span className='inline-flex items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-700 p-1 shadow'>
+              <svg
+                width='20'
+                height='20'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+                className='text-white'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M3 7V5a2 2 0 012-2h10a2 2 0 012 2v2'
+                />
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M3 7h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z'
+                />
+              </svg>
+            </span>
+            <span className='text-base font-semibold text-gray-700 dark:text-gray-300'>
+              Link GDrive Buku Pedoman
+            </span>
+          </div>
+          <a
+            href={gdriveLink}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='mt-2 inline-block rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2 text-sm font-bold text-white shadow-md transition-all duration-200 hover:scale-105 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
+          >
+            Buka Folder GDrive
+          </a>
+          <p className='mt-2 text-xs text-gray-500 dark:text-gray-400'>
+            Folder berisi seluruh dokumen Pedoman RB.
+          </p>
+        </div>
       </div>
     </PageContainer>
   );
