@@ -191,19 +191,21 @@ export default function Overview() {
         </CardHeader>
         <CardContent>
           <div className='grid gap-4 md:grid-cols-2'>
-            <Link href='/rebo/formRB/'>
+            <Link href='/rebo/formRB/pemenuhan'>
               <Button className='w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'>
                 <FileText className='mr-2 h-4 w-4' />
                 Input Bukti Dukung Baru
               </Button>
             </Link>
-            <Button
-              variant='outline'
-              className='justify-start border-slate-300/60 text-slate-700 hover:border-blue-300/60 hover:bg-blue-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-blue-600/60 dark:hover:bg-blue-900/20'
-            >
-              <Target className='mr-2 h-4 w-4' />
-              Lihat Dashboard RB
-            </Button>
+            <Link href='/rebo/pilarHasil'>
+              <Button
+                variant='outline'
+                className='w-full justify-start border-slate-300/60 text-slate-700 hover:border-blue-300/60 hover:bg-blue-50 dark:border-slate-600/60 dark:text-slate-300 dark:hover:border-blue-600/60 dark:hover:bg-blue-900/20'
+              >
+                <Target className='mr-2 h-4 w-4' />
+                Input Aspek Hasil
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

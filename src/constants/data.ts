@@ -26,7 +26,7 @@ export const navItems: NavItem[] = [
     url: '/rebo/monitoring',
     icon: 'laptop',
     isActive: false,
-    shortcut: ['d', 'd'],
+    shortcut: ['m', 'm'],
     items: [] // Empty array as there are no child items for Dashboard
   },
   {
@@ -34,7 +34,7 @@ export const navItems: NavItem[] = [
     url: '/rebo/admin',
     icon: 'settings',
     isActive: false,
-    shortcut: ['d', 'd'],
+    shortcut: ['a', 'a'],
     items: [] // Empty array as there are no child items for Dashboard
   },
   {
@@ -47,25 +47,25 @@ export const navItems: NavItem[] = [
         title: 'Aspek-Pengungkit',
         url: '/rebo/formRB/area',
         icon: 'userPen',
-        shortcut: ['m', 'm']
+        shortcut: ['u', 'u']
       },
       {
         title: 'Aspek-Hasil',
         url: '/rebo/pilarHasil',
         icon: 'userPen',
-        shortcut: ['m', 'm']
+        shortcut: ['h', 'h']
       },
       {
         title: 'Area-Pemenuhan',
         url: '/rebo/formRB/pemenuhan',
         icon: 'userPen',
-        shortcut: ['m', 'm']
+        shortcut: ['p', 'p']
       },
       {
         title: 'Area-Reform',
         url: '/rebo/formRB/reform',
         icon: 'userPen',
-        shortcut: ['m', 'm']
+        shortcut: ['r', 'r']
       }
     ]
   },
@@ -80,19 +80,19 @@ export const navItems: NavItem[] = [
         title: 'Pilar',
         url: '/rebo/dataRB/pilar',
         icon: 'post',
-        shortcut: ['m', 'm']
+        shortcut: ['l', 'l']
       },
       {
         title: 'Subpilar',
         url: '/rebo/dataRB/pilar/subpilar',
         icon: 'post',
-        shortcut: ['m', 'm']
+        shortcut: ['s', 's']
       },
       {
         title: 'Pertanyaan',
         url: '/rebo/dataRB/pilar/pertanyaan',
         icon: 'post',
-        shortcut: ['m', 'm']
+        shortcut: ['q', 'q']
       }
       // {
       //   title: 'Rincian',
@@ -107,7 +107,7 @@ export const navItems: NavItem[] = [
     url: '/rebo/arsip',
     icon: 'page',
     isActive: false,
-    shortcut: ['d', 'd'],
+    shortcut: ['r', 'r'],
     items: [] // Empty array as there are no child items for Dashboard
   },
   // {
@@ -130,7 +130,7 @@ export const navItems: NavItem[] = [
     title: 'Account',
     url: '/dashboard/profile',
     icon: 'userPen',
-    shortcut: ['k', 'k'],
+    shortcut: ['c', 'c'],
     isActive: false,
     items: [] // No child items
   },
@@ -159,7 +159,7 @@ export const navItems: NavItem[] = [
     title: 'Todo',
     url: '/dashboard/kanban',
     icon: 'kanban',
-    shortcut: ['k', 'k'],
+    shortcut: ['d', 'd'],
     isActive: false,
     items: [] // No child items
   },
@@ -167,7 +167,7 @@ export const navItems: NavItem[] = [
     title: 'Informasi RB',
     url: '/rebo/informasi',
     icon: 'help',
-    shortcut: ['k', 'k'],
+    shortcut: ['i', 'i'],
     isActive: false,
     items: [] // No child items
   }
