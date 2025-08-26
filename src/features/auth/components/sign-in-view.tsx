@@ -140,7 +140,7 @@ export default function SignInViewPage({ stars }: { stars: number }) {
 
           <ClerkSignInForm
             initialValues={{
-              emailAddress: 'your_mail+clerk_test@example.com'
+              emailAddress: 'your_email@example.com'
             }}
           />
 
