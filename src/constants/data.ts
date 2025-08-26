@@ -44,25 +44,25 @@ export const navItems: NavItem[] = [
     isActive: true,
     items: [
       {
-        title: 'Area-Pengungkit',
+        title: 'Aspek-Pengungkit',
         url: '/rebo/formRB/area',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
-        title: 'Area-Hasil',
+        title: 'Aspek-Hasil',
         url: '/rebo/pilarHasil',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
-        title: 'Pemenuhan',
+        title: 'Area-Pemenuhan',
         url: '/rebo/formRB/pemenuhan',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
       {
-        title: 'Reform',
+        title: 'Area-Reform',
         url: '/rebo/formRB/reform',
         icon: 'userPen',
         shortcut: ['m', 'm']
