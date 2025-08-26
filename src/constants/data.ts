@@ -24,7 +24,7 @@ export const navItems: NavItem[] = [
   {
     title: 'Monitoring',
     url: '/rebo/monitoring',
-    icon: 'kanban',
+    icon: 'laptop',
     isActive: false,
     shortcut: ['d', 'd'],
     items: [] // Empty array as there are no child items for Dashboard
@@ -32,7 +32,7 @@ export const navItems: NavItem[] = [
   {
     title: 'Admin Dashboard',
     url: '/rebo/admin',
-    icon: 'page',
+    icon: 'settings',
     isActive: false,
     shortcut: ['d', 'd'],
     items: [] // Empty array as there are no child items for Dashboard
@@ -72,33 +72,33 @@ export const navItems: NavItem[] = [
   {
     title: 'Data RB',
     url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
+    icon: 'page',
     isActive: true,
 
     items: [
       {
         title: 'Pilar',
         url: '/rebo/dataRB/pilar',
-        icon: 'userPen',
+        icon: 'post',
         shortcut: ['m', 'm']
       },
       {
         title: 'Subpilar',
         url: '/rebo/dataRB/pilar/subpilar',
-        icon: 'userPen',
+        icon: 'post',
         shortcut: ['m', 'm']
       },
       {
         title: 'Pertanyaan',
         url: '/rebo/dataRB/pilar/pertanyaan',
-        icon: 'userPen',
+        icon: 'post',
         shortcut: ['m', 'm']
       },
       {
         title: 'Rincian',
         shortcut: ['l', 'l'],
         url: '/',
-        icon: 'login'
+        icon: 'page'
       }
     ]
   },
@@ -128,25 +128,33 @@ export const navItems: NavItem[] = [
   // },
   {
     title: 'Account',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
+    url: '/dashboard/profile',
+    icon: 'userPen',
+    shortcut: ['k', 'k'],
     isActive: false,
-
-    items: [
-      {
-        title: 'Profile',
-        url: '/dashboard/profile',
-        icon: 'userPen',
-        shortcut: ['m', 'm']
-      },
-      {
-        title: 'Login',
-        shortcut: ['l', 'l'],
-        url: '/auth/sign-in',
-        icon: 'login'
-      }
-    ]
+    items: [] // No child items
   },
+  // {
+  //   title: 'Account',
+  //   url: '#', // Placeholder as there is no direct link for the parent
+  //   icon: 'billing',
+  //   isActive: false,
+
+  //   items: [
+  //     {
+  //       title: 'Profile',
+  //       url: '/dashboard/profile',
+  //       icon: 'userPen',
+  //       shortcut: ['m', 'm']
+  //     },
+  //     {
+  //       title: 'Login',
+  //       shortcut: ['l', 'l'],
+  //       url: '/auth/sign-in',
+  //       icon: 'login'
+  //     }
+  //   ]
+  // },
   {
     title: 'Kanban',
     url: '/dashboard/kanban',
