@@ -23,51 +23,61 @@ function toCSV(rows: any[]) {
 export async function GET() {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('pertanyaan')
-    // join buktiDukung and select relevant fields from related table
+  // Fetch from subpilar, include pilar and nested pertanyaan (+ buktiDukung)
+  const { data: subpilars, error } = await supabase
+    .from('subpilar')
     .select(
-      'id_pertanyaan,deskripsi_pertanyaan,buktiDukung(link_bukti,status_kelengkapan,nilai_akhir,catatan_user,catatan_koordinator)'
-    )
-    .order('id_pertanyaan', { ascending: true });
+      'id_subpilar,nama_subpilar,pilar(nama_pilar),pertanyaan(id_pertanyaan,deskripsi_pertanyaan,buktiDukung(link_bukti,status_kelengkapan,nilai_akhir,catatan_user,catatan_koordinator))'
+    );
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const rows = (data || []).map((r: any) => {
-    // buktiDukung can be an object or array depending on relationship
-    let link = '';
-    let status_kelengkapan = '';
-    let nilai_akhir: any = '';
-    let catatan_user = '';
-    let catatan_koordinator = '';
-
-    const bd = r.buktiDukung;
-    if (Array.isArray(bd)) {
-      const first = bd[0] ?? {};
-      link = first.link_bukti ?? '';
-      status_kelengkapan = first.status_kelengkapan ?? '';
-      nilai_akhir = first.nilai_akhir ?? '';
-      catatan_user = first.catatan_user ?? '';
-      catatan_koordinator = first.catatan_koordinator ?? '';
-    } else if (bd && typeof bd === 'object') {
-      link = bd.link_bukti ?? '';
-      status_kelengkapan = bd.status_kelengkapan ?? '';
-      nilai_akhir = bd.nilai_akhir ?? '';
-      catatan_user = bd.catatan_user ?? '';
-      catatan_koordinator = bd.catatan_koordinator ?? '';
+  // Flatten pertanyaan rows from subpilars
+  const rows: any[] = [];
+  (subpilars || []).forEach((sp: any) => {
+    // resolve nama_pilar
+    let nama_pilar = '';
+    const p = sp.pilar;
+    if (Array.isArray(p)) {
+      nama_pilar = p[0]?.nama_pilar ?? '';
+    } else if (p && typeof p === 'object') {
+      nama_pilar = p.nama_pilar ?? '';
     }
 
-    return {
-      id_pertanyaan: r.id_pertanyaan,
-      deskripsi_pertanyaan: r.deskripsi_pertanyaan,
-      link_bukti: link,
-      status_kelengkapan,
-      nilai_akhir,
-      catatan_user,
-      catatan_koordinator
-    };
+    const nama_subpilar = sp.nama_subpilar ?? '';
+
+    // pertanyaan may be array; iterate
+    const pertanyaanArr = sp.pertanyaan ?? [];
+    if (Array.isArray(pertanyaanArr)) {
+      pertanyaanArr.forEach((r: any) => {
+        // extract buktiDukung fields (take first if array)
+        const bd = r.buktiDukung;
+        let first = {} as any;
+        if (Array.isArray(bd)) first = bd[0] ?? {};
+        else if (bd && typeof bd === 'object') first = bd;
+
+        rows.push({
+          nama_pilar,
+          nama_subpilar,
+          id_pertanyaan: r.id_pertanyaan,
+          deskripsi_pertanyaan: r.deskripsi_pertanyaan,
+          link_bukti: first.link_bukti ?? '',
+          status_kelengkapan: first.status_kelengkapan ?? '',
+          nilai_akhir: first.nilai_akhir ?? '',
+          catatan_user: first.catatan_user ?? '',
+          catatan_koordinator: first.catatan_koordinator ?? ''
+        });
+      });
+    }
+  });
+
+  // Sort rows by id_pertanyaan ascending
+  rows.sort((a, b) => {
+    const A = Number(a.id_pertanyaan ?? 0);
+    const B = Number(b.id_pertanyaan ?? 0);
+    return A - B;
   });
 
   const csv = toCSV(rows);
