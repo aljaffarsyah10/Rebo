@@ -44,8 +44,14 @@ export const navItems: NavItem[] = [
     isActive: true,
     items: [
       {
-        title: 'Area',
+        title: 'Area-Pengungkit',
         url: '/rebo/formRB/area',
+        icon: 'userPen',
+        shortcut: ['m', 'm']
+      },
+      {
+        title: 'Area-Hasil',
+        url: '/rebo/pilarHasil',
         icon: 'userPen',
         shortcut: ['m', 'm']
       },
@@ -58,12 +64,6 @@ export const navItems: NavItem[] = [
       {
         title: 'Reform',
         url: '/rebo/formRB/reform',
-        icon: 'userPen',
-        shortcut: ['m', 'm']
-      },
-      {
-        title: 'Hasil',
-        url: '/rebo/pilarHasil',
         icon: 'userPen',
         shortcut: ['m', 'm']
       }
@@ -93,13 +93,13 @@ export const navItems: NavItem[] = [
         url: '/rebo/dataRB/pilar/pertanyaan',
         icon: 'post',
         shortcut: ['m', 'm']
-      },
-      {
-        title: 'Rincian',
-        shortcut: ['l', 'l'],
-        url: '/',
-        icon: 'page'
       }
+      // {
+      //   title: 'Rincian',
+      //   shortcut: ['l', 'l'],
+      //   url: '/',
+      //   icon: 'page'
+      // }
     ]
   },
   {
