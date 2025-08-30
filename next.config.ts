@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
+import withPWA from 'next-pwa';
 
 // Define the base Next.js configuration
 const baseConfig: NextConfig = {
@@ -15,7 +16,17 @@ const baseConfig: NextConfig = {
   transpilePackages: ['geist']
 };
 
-let configWithPlugins = baseConfig;
+// Wrap base config with PWA first. Install `next-pwa` in your environment
+// (e.g. `pnpm add next-pwa`) before building.
+let configWithPlugins = withPWA({
+  ...baseConfig,
+  pwa: {
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: process.env.NODE_ENV === 'development'
+  }
+} as any);
 
 // Conditionally enable Sentry configuration
 if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
