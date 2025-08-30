@@ -16,17 +16,20 @@ const baseConfig: NextConfig = {
   transpilePackages: ['geist']
 };
 
-// Wrap base config with PWA first. Install `next-pwa` in your environment
-// (e.g. `pnpm add next-pwa`) before building.
-let configWithPlugins = withPWA({
-  ...baseConfig,
-  pwa: {
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-    disable: process.env.NODE_ENV === 'development'
-  }
-} as any);
+// Wrap base config with PWA first. Make sure `next-pwa` and `@sentry/nextjs` are installed in your environment
+// (e.g. `pnpm add next-pwa @sentry/nextjs`) before building.
+// Create PWA wrapper with options. Do NOT spread Next.js config into this
+// options object — that caused Workbox to see unrelated properties (like
+// `images`) and fail. Instead, create the pwa wrapper and apply it to the
+// Next.js config below.
+const pwaWrapper = withPWA({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development'
+});
+
+let configWithPlugins = baseConfig;
 
 // Conditionally enable Sentry configuration
 if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
@@ -63,6 +66,11 @@ if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
     telemetry: false
   });
 }
+
+// Finally apply the PWA wrapper to the resulting Next.js config. We do this
+// last so Workbox only sees the PWA options and not unrelated Next.js
+// configuration objects.
+configWithPlugins = pwaWrapper(configWithPlugins as any);
 
 const nextConfig = configWithPlugins;
 export default nextConfig;
