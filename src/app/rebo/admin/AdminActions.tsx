@@ -1,6 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 
 type Props = {
   userId: string;
@@ -48,12 +49,12 @@ export default function AdminActions({ userId }: Props) {
 
   return (
     <div className='flex items-center gap-2'>
-      <button onClick={makeAdmin} className='text-sm text-blue-600'>
+      <Button size='sm' variant='ghost' onClick={makeAdmin}>
         Make Admin
-      </button>
-      <button onClick={removeRole} className='text-sm text-red-600'>
+      </Button>
+      <Button size='sm' variant='destructive' onClick={removeRole}>
         Remove
-      </button>
+      </Button>
     </div>
   );
 }
