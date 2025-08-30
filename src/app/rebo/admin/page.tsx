@@ -3,6 +3,7 @@ import { checkRole } from '@/utils/roles';
 import { SearchUsers } from './SearchUsers';
 import { clerkClient } from '@clerk/nextjs/server';
 import { removeRole, setRole } from './_actions';
+import AdminActions from './AdminActions';
 import {
   Card,
   CardContent,
@@ -178,40 +179,13 @@ export default async function AdminDashboard(params: {
                               </td>
                               <td className='py-4'>
                                 <div className='flex items-center gap-2'>
-                                  <form action={setRole} className='inline'>
-                                    <input
-                                      type='hidden'
-                                      value={user.id}
-                                      name='id'
-                                    />
-                                    <input
-                                      type='hidden'
-                                      value='admin'
-                                      name='role'
-                                    />
-                                    <Button
-                                      size='sm'
-                                      variant='ghost'
-                                      type='submit'
-                                    >
-                                      Make Admin
-                                    </Button>
-                                  </form>
+                                  {/* client actions for role management */}
+                                  <div className='inline'>
+                                    {/* @ts-ignore Server->Client boundary: AdminActions is client component */}
+                                    <AdminActions userId={user.id} />
+                                  </div>
                                   {/* moderator role removed */}
-                                  <form action={removeRole} className='inline'>
-                                    <input
-                                      type='hidden'
-                                      value={user.id}
-                                      name='id'
-                                    />
-                                    <Button
-                                      size='sm'
-                                      variant='destructive'
-                                      type='submit'
-                                    >
-                                      Remove
-                                    </Button>
-                                  </form>
+                                  {/* remove handled by AdminActions */}
                                 </div>
                               </td>
                             </tr>
@@ -282,44 +256,12 @@ export default async function AdminDashboard(params: {
 
                             <div className='mt-4 flex items-center justify-between gap-3'>
                               <div className='flex gap-2'>
-                                <form action={setRole} className='inline'>
-                                  <input
-                                    type='hidden'
-                                    value={user.id}
-                                    name='id'
-                                  />
-                                  <input
-                                    type='hidden'
-                                    value='admin'
-                                    name='role'
-                                  />
-                                  <Button
-                                    size='sm'
-                                    variant='ghost'
-                                    type='submit'
-                                    className='px-3'
-                                  >
-                                    Make Admin
-                                  </Button>
-                                </form>
-                                {/* moderator role removed */}
+                                {/* client actions for role management */}
+                                {/* @ts-ignore Server->Client boundary: AdminActions is client component */}
+                                <AdminActions userId={user.id} />
                               </div>
 
-                              <form action={removeRole} className='inline'>
-                                <input
-                                  type='hidden'
-                                  value={user.id}
-                                  name='id'
-                                />
-                                <Button
-                                  size='sm'
-                                  variant='destructive'
-                                  type='submit'
-                                  className='px-3'
-                                >
-                                  Remove Role
-                                </Button>
-                              </form>
+                              {/* remove handled by AdminActions */}
                             </div>
                           </div>
                         </div>
