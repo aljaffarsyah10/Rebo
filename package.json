@@ -119,6 +119,7 @@
     "prettier": "3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "prisma": "^6.13.0",
+    "pwa-asset-generator": "^8.1.1",
     "tw-animate-css": "^1.2.4"
   },
   "overrides": {
