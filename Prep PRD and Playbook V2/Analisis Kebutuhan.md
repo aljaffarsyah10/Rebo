@@ -35,10 +35,14 @@ Dokumen ini berisi daftar ringkas kebutuhan perbaikan (**Yang Perlu Diperbaiki/W
    - **Anggota Tim / Operator:** Mengunggah bukti dukung dan mengisi penilaian mandiri.
    - **Tim Penilai Internal (TPI) / Verifikator:** Memberikan reviu, catatan evaluasi, dan nilai verifikasi akhir.
 
-### C. Manajemen Bukti Dukung yang Lebih Kaya
+### C. Manajemen Bukti Dukung yang Lebih Kaya & Terintegrasi
 1. **Multi-Link / Multi-Dokumen per Pertanyaan:** Satu pertanyaan LKE dapat memiliki beberapa tautan bukti dukung spesifik (misal: *Undangan*, *Daftar Hadir*, *Notula*, *Laporan*, *Dokumentasi*) beserta labelnya.
-2. **Riwayat Revisi & Log Aktivitas (Audit Trail):** Mencatat siapa yang mengubah link bukti, kapan dikirim, dan riwayat komentar antara operator dan koordinator/verifikator.
-3. **Arsip Dinamis:** Mengubah halaman `/rebo/arsip` yang semula *hardcoded* menjadi daftar dokumen SK, Pedoman, dan Folder Bukti yang dapat dikelola dari dashboard per tahun.
+2. **Standardisasi & Auto-Generate Link Google Drive per Indikator:**
+   - Menyediakan fitur pembuatan/pemetaan tautan Google Drive otomatis untuk tiap indikator/pertanyaan LKE (1 indikator = 1 link folder khusus).
+   - Penataan struktur folder Google Drive yang tersistematisasi dan terpusat dalam satu master folder per periode tahun evaluasi (misal: `REBO > [Tahun 2025 / 2026] > [Area] > [Pilar] > [Subpilar] > [Indikator]`).
+   - Mencegah link bukti dukung tercecer atau tidak seragam, memastikan hak akses folder konsisten, serta mempermudah backup/arsip bukti dukung tahunan.
+3. **Riwayat Revisi & Log Aktivitas (Audit Trail):** Mencatat siapa yang mengubah link bukti, kapan dikirim, dan riwayat komentar antara operator dan koordinator/verifikator.
+4. **Arsip Dinamis:** Mengubah halaman `/rebo/arsip` yang semula *hardcoded* menjadi daftar dokumen SK, Pedoman, dan Folder Bukti yang dapat dikelola dari dashboard per tahun.
 
 ### D. Pelaporan, Ekspor, & Kolaborasi
 1. **Ekspor LKE Format Excel (.xlsx) & Laporan PDF:** Menyempurnakan ekspor CSV menjadi format Excel terstruktur menyerupai kertas kerja LKE resmi dan ringkasan eksekutif PDF.
