@@ -11,17 +11,50 @@ import './globals.css';
 import './theme.css';
 
 const META_THEME_COLORS = {
-  light: '#ffffff',
+  light: '#003366',
   dark: '#09090b'
 };
 
 export const metadata: Metadata = {
-  title: 'Rebo',
-  description: 'Reformasi Birokrasi dashboard with Next.js'
+  title: {
+    default: 'REBO V2 | Zona Integritas BPS Kabupaten Kepulauan Sitaro',
+    template: '%s | REBO V2 BPS Sitaro'
+  },
+  description:
+    'Sistem Digitalisasi, Pemantauan, dan Evaluasi Lembar Kerja Evaluasi (LKE) PMPRB Menuju Wilayah Bebas dari Korupsi (WBK) dan Wilayah Birokrasi Bersih dan Melayani (WBBM) - BPS Kabupaten Kepulauan Siau Tagulandang Biaro',
+  applicationName: 'REBO V2',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icons/favicon-196.png', sizes: '196x196', type: 'image/png' },
+      {
+        url: '/icons/manifest-icon-192.maskable.png',
+        sizes: '192x192',
+        type: 'image/png'
+      }
+    ],
+    apple: [
+      { url: '/icons/apple-icon-180.png', sizes: '180x180', type: 'image/png' }
+    ]
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'REBO V2'
+  },
+  formatDetection: {
+    telephone: false
+  }
 };
 
 export const viewport: Viewport = {
-  themeColor: META_THEME_COLORS.light
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#003366' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090b' }
+  ],
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5
 };
 
 export default async function RootLayout({
@@ -34,19 +67,24 @@ export default async function RootLayout({
   const isScaled = activeThemeValue?.endsWith('-scaled');
 
   return (
-    <html lang='en' suppressHydrationWarning>
+    <html lang='id' suppressHydrationWarning>
       <head>
         <link rel='manifest' href='/manifest.json' />
-        <meta name='theme-color' content={viewport.themeColor as string} />
         <meta name='mobile-web-app-capable' content='yes' />
         <meta name='apple-mobile-web-app-capable' content='yes' />
+        <meta name='apple-mobile-web-app-status-bar-style' content='default' />
+        <meta name='apple-mobile-web-app-title' content='REBO V2' />
         <link rel='apple-touch-icon' href='/icons/apple-icon-180.png' />
+        <link
+          rel='apple-touch-startup-image'
+          href='/icons/apple-splash-2048-2732.jpg'
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
                 if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.querySelector('meta[name="theme-color"]').setAttribute('content', '${META_THEME_COLORS.dark}')
+                  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '${META_THEME_COLORS.dark}')
                 }
               } catch (_) {}
             `

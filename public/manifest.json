@@ -1,13 +1,22 @@
 {
-  "name": "Rebo",
-  "short_name": "Rebo",
-  "description": "Reformasi Birokrasi dashboard",
-  "start_url": "/",
-  "display": "standalone",
+  "name": "REBO V2 - Zona Integritas BPS Kabupaten Kepulauan Sitaro",
+  "short_name": "REBO V2",
+  "description": "Platform Digitalisasi, Evaluasi, dan Pemantauan Bukti Dukung Zona Integritas (ZI) Menuju WBK/WBBM BPS Kabupaten Kepulauan Siau Tagulandang Biaro",
+  "start_url": "/rebo/overview",
   "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#0ea5a4",
+  "theme_color": "#003366",
+  "lang": "id",
+  "categories": ["government", "productivity", "management"],
   "icons": [
+    {
+      "src": "/icons/favicon-196.png",
+      "sizes": "196x196",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icons/manifest-icon-192.maskable.png",
       "sizes": "192x192",
@@ -19,6 +28,36 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard Utama",
+      "short_name": "Overview",
+      "description": "Buka Dashboard Utama REBO V2",
+      "url": "/rebo/overview",
+      "icons": [{ "src": "/icons/manifest-icon-192.maskable.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Formulir LKE",
+      "short_name": "Form RB",
+      "description": "Akses Pengisian Bukti Dukung RB",
+      "url": "/rebo/formRB/area",
+      "icons": [{ "src": "/icons/manifest-icon-192.maskable.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Monitoring Progress",
+      "short_name": "Monitoring",
+      "description": "Pantau Capaian dan Skor LKE",
+      "url": "/rebo/monitoring",
+      "icons": [{ "src": "/icons/manifest-icon-192.maskable.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Kanban Tindak Lanjut",
+      "short_name": "Kanban",
+      "description": "Daftar Tugas dan Revisi Dokumen Bukti",
+      "url": "/rebo/kanban",
+      "icons": [{ "src": "/icons/manifest-icon-192.maskable.png", "sizes": "192x192" }]
     }
   ]
 }

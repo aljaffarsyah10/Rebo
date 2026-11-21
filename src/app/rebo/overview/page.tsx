@@ -14,7 +14,8 @@ import {
   Target,
   ArrowRight,
   CheckCircle,
-  Kanban
+  Kanban,
+  FileSpreadsheet
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -191,7 +192,7 @@ export default function Overview() {
           <CardDescription>Akses fitur utama dengan satu klik</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className='grid gap-4 md:grid-cols-3'>
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
             <Link href='/rebo/formRB/pemenuhan'>
               <Button className='w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'>
                 <FileText className='mr-2 h-4 w-4' />
@@ -213,6 +214,20 @@ export default function Overview() {
                 Input Aspek Hasil
               </Button>
             </Link>
+            <a
+              href='/api/export/lke'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='block'
+            >
+              <Button
+                variant='outline'
+                className='w-full justify-start border-emerald-300/60 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50 dark:border-emerald-600/60 dark:text-emerald-300 dark:hover:border-emerald-500/60 dark:hover:bg-emerald-950/30'
+              >
+                <FileSpreadsheet className='mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400' />
+                Unduh Kertas Kerja LKE
+              </Button>
+            </a>
           </div>
         </CardContent>
       </Card>
