@@ -11,11 +11,14 @@ import {
   FileCheck2,
   CheckCircle2,
   Clock,
-  XCircle
+  XCircle,
+  TrendingUp,
+  TrendingDown,
+  Equal
 } from 'lucide-react';
 import { toast } from 'sonner';
-import SkorBox from '@/components/rebo/skorBox';
 import BuktiForm from '@/components/rebo/bukti-form';
+import VerifikasiPanel from '@/components/rebo/verifikasi-panel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -84,13 +87,39 @@ export default function PertanyaanItem({
       ? currentBukti.link_bukti
       : null);
 
-  // Compute maximum score
+  // Compute maximum score for this indicator
   const nilaiMaks = pertanyaan.kategoriPenilaian?.length
     ? Math.max(...pertanyaan.kategoriPenilaian.map((k: any) => k.nilai || 0))
     : undefined;
 
-  const currentScore =
-    currentBukti?.nilai_mandiri ?? currentBukti?.nilai_akhir ?? null;
+  // Dual-Scoring Metrics
+  const rawMandiri =
+    currentBukti?.nilai_mandiri !== null &&
+    currentBukti?.nilai_mandiri !== undefined
+      ? Number(currentBukti.nilai_mandiri)
+      : currentBukti?.nilai_akhir !== null &&
+          currentBukti?.nilai_akhir !== undefined
+        ? Number(currentBukti.nilai_akhir)
+        : null;
+
+  const nilaiMandiri = rawMandiri !== null ? rawMandiri : null;
+
+  const isVerified = statusCode === 2;
+  const rawVerifikasi =
+    currentBukti?.nilai_verifikasi !== null &&
+    currentBukti?.nilai_verifikasi !== undefined
+      ? Number(currentBukti.nilai_verifikasi)
+      : isVerified && nilaiMandiri !== null
+        ? nilaiMandiri
+        : null;
+
+  const nilaiVerifikasi = rawVerifikasi !== null ? rawVerifikasi : null;
+
+  // Deviasi/Selisih antara Nilai Usulan Mandiri dan Nilai Verifikasi
+  const deviasi =
+    nilaiMandiri !== null && nilaiVerifikasi !== null
+      ? Number((nilaiVerifikasi - nilaiMandiri).toFixed(2))
+      : null;
 
   const copyToClipboard = async () => {
     if (!gdriveFolderUrl) return;
@@ -119,10 +148,27 @@ export default function PertanyaanItem({
     }
   };
 
+  // Handler callback saat verifikasi berhasil disimpan
+  const handleVerifikasiSuccess = (updatedData: Partial<BuktiDukung>) => {
+    if (setBuktiDukungMap) {
+      setBuktiDukungMap((prev) => {
+        const existing = prev[pertanyaan.id_pertanyaan] || {};
+        return {
+          ...prev,
+          [pertanyaan.id_pertanyaan]: {
+            ...existing,
+            ...updatedData,
+            id_pertanyaan: pertanyaan.id_pertanyaan
+          }
+        };
+      });
+    }
+  };
+
   return (
     <div className='relative rounded-2xl border border-gray-200 bg-white p-6 shadow-xs transition-all duration-200 hover:shadow-md dark:border-gray-700/80 dark:bg-gray-900'>
-      {/* 1. HEADER INDIKATOR */}
-      <div className='mb-4 flex flex-col justify-between gap-4 md:flex-row md:items-start'>
+      {/* 1. HEADER INDIKATOR & DUAL-SCORING SUMMARY */}
+      <div className='mb-4 flex flex-col justify-between gap-4 lg:flex-row lg:items-start'>
         <div className='flex flex-1 items-start gap-3'>
           <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white shadow-xs dark:bg-blue-600'>
             {index + 1}
@@ -154,13 +200,87 @@ export default function PertanyaanItem({
           </div>
         </div>
 
-        {/* Skor Box Nilai Mandiri */}
-        <div className='shrink-0 self-start'>
-          <SkorBox
-            nilaiAkhir={currentScore}
-            nilaiMaks={nilaiMaks}
-            className='relative static top-auto right-auto'
-          />
+        {/* DUAL-SCORING COMPARISON CARD */}
+        <div className='shrink-0 rounded-xl border border-gray-200 bg-gray-50/90 p-3 shadow-2xs dark:border-gray-800 dark:bg-gray-800/80'>
+          <div className='text-2xs flex items-center justify-between gap-3 font-semibold text-gray-500 uppercase dark:text-gray-400'>
+            <span>Skor Indikator</span>
+            {nilaiMaks !== undefined && <span>Maks: {nilaiMaks}</span>}
+          </div>
+
+          <div className='mt-1.5 flex items-center gap-2'>
+            {/* Skor Mandiri (Usulan) */}
+            <div className='flex flex-col items-center rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-center dark:border-gray-700 dark:bg-gray-900'>
+              <span className='text-3xs font-medium text-gray-500 dark:text-gray-400'>
+                Mandiri (Usulan)
+              </span>
+              <span
+                className={`font-mono text-xs font-bold ${
+                  nilaiMandiri !== null
+                    ? 'text-blue-700 dark:text-blue-400'
+                    : 'text-gray-400'
+                }`}
+              >
+                {nilaiMandiri !== null ? nilaiMandiri.toFixed(2) : '-'}
+              </span>
+            </div>
+
+            {/* Separator / Arrow */}
+            <span className='text-xs font-bold text-gray-400 dark:text-gray-600'>
+              vs
+            </span>
+
+            {/* Skor Verifikasi (Final) */}
+            <div className='flex flex-col items-center rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-center dark:border-gray-700 dark:bg-gray-900'>
+              <span className='text-3xs font-medium text-gray-500 dark:text-gray-400'>
+                Verifikasi (Final)
+              </span>
+              <span
+                className={`font-mono text-xs font-bold ${
+                  nilaiVerifikasi !== null
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-amber-600 dark:text-amber-400'
+                }`}
+              >
+                {nilaiVerifikasi !== null
+                  ? nilaiVerifikasi.toFixed(2)
+                  : statusCode === 1
+                    ? 'Review'
+                    : '-'}
+              </span>
+            </div>
+          </div>
+
+          {/* Deviasi / Selisih Badge */}
+          {deviasi !== null && (
+            <div className='text-2xs mt-2 flex items-center justify-between border-t border-gray-200/80 pt-1.5 dark:border-gray-700'>
+              <span className='text-gray-500 dark:text-gray-400'>Deviasi:</span>
+              <span
+                className={`inline-flex items-center gap-0.5 font-mono font-bold ${
+                  deviasi > 0
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : deviasi < 0
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : 'text-blue-600 dark:text-blue-400'
+                }`}
+              >
+                {deviasi > 0 ? (
+                  <>
+                    <TrendingUp className='h-3 w-3' />+{deviasi.toFixed(2)}
+                  </>
+                ) : deviasi < 0 ? (
+                  <>
+                    <TrendingDown className='h-3 w-3' />
+                    {deviasi.toFixed(2)}
+                  </>
+                ) : (
+                  <>
+                    <Equal className='h-3 w-3' />
+                    0.00 (Selaras)
+                  </>
+                )}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -191,7 +311,7 @@ export default function PertanyaanItem({
       )}
 
       {/* 2. SECTION: FOLDER GDRIVE INDIKATOR */}
-      <div className='dark:via-gray-850 mb-5 rounded-xl border border-gray-200 bg-gradient-to-r from-blue-50/40 via-white to-indigo-50/40 p-4 dark:border-gray-800 dark:from-gray-800/60 dark:to-gray-800/40'>
+      <div className='mb-5 rounded-xl border border-gray-200 bg-gradient-to-r from-blue-50/40 via-white to-indigo-50/40 p-4 dark:border-gray-800 dark:from-gray-800/60 dark:to-gray-800/40'>
         <div className='flex flex-col justify-between gap-3 sm:flex-row sm:items-center'>
           <div className='flex items-center gap-3'>
             <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 shadow-xs dark:bg-blue-900/60 dark:text-blue-300'>
@@ -261,7 +381,7 @@ export default function PertanyaanItem({
         </div>
       </div>
 
-      {/* 3. MULTI-EVIDENCE & SELF-ASSESSMENT FORM */}
+      {/* 3. MULTI-EVIDENCE & SELF-ASSESSMENT FORM (OPERATOR FLOW) */}
       <BuktiForm
         pertanyaan={pertanyaan}
         bukti={currentBukti}
@@ -272,6 +392,15 @@ export default function PertanyaanItem({
         activePeriodeId={activePeriodeId}
         targetPilarId={targetPilarId}
         onUpsert={onUpsert}
+      />
+
+      {/* 4. VERIFIKASI PANEL & CATATAN KOORDINATOR (DUAL-FLOW: READ-ONLY vs INTERAKTIF) */}
+      <VerifikasiPanel
+        pertanyaan={pertanyaan}
+        bukti={currentBukti}
+        canVerify={canVerify}
+        activePeriodeId={activePeriodeId}
+        onVerifikasiSuccess={handleVerifikasiSuccess}
       />
     </div>
   );

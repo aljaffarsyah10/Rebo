@@ -11,7 +11,11 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Equal,
+  Sparkles
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -59,7 +63,7 @@ export default function FormRBPilarClient({
     return '1';
   });
 
-  // Calculate Pilar Statistics
+  // Calculate Pilar Statistics & Dual-Scoring Metrics
   const stats = useMemo(() => {
     let totalQuestions = 0;
     let belumDiisi = 0;
@@ -67,21 +71,35 @@ export default function FormRBPilarClient({
     let disetujui = 0;
     let perluRevisi = 0;
     let totalSkorMandiri = 0;
+    let totalSkorVerifikasi = 0;
     let totalSkorMaks = 0;
 
     subpilarList.forEach((sub) => {
       (sub.pertanyaan || []).forEach((q: any) => {
         totalQuestions++;
         const bukti = buktiDukungMap[q.id_pertanyaan];
-        const status = bukti?.status_kelengkapan ?? 0;
+        const status = Number(bukti?.status_kelengkapan ?? 0);
 
         if (status === 2) disetujui++;
         else if (status === 1) menungguReview++;
         else if (status === 3) perluRevisi++;
         else belumDiisi++;
 
-        const mandiri = bukti?.nilai_mandiri ?? bukti?.nilai_akhir ?? 0;
-        totalSkorMandiri += Number(mandiri);
+        const mandiri = Number(bukti?.nilai_mandiri ?? bukti?.nilai_akhir ?? 0);
+        totalSkorMandiri += mandiri;
+
+        // Nilai verifikasi dihitung jika berstatus disetujui (2) atau memiliki nilai_verifikasi
+        const verifikasi =
+          status === 2
+            ? Number(
+                bukti?.nilai_verifikasi !== null &&
+                  bukti?.nilai_verifikasi !== undefined
+                  ? bukti.nilai_verifikasi
+                  : mandiri
+              )
+            : Number(bukti?.nilai_verifikasi ?? 0);
+
+        totalSkorVerifikasi += verifikasi;
 
         const maxScore = q.kategoriPenilaian?.length
           ? Math.max(...q.kategoriPenilaian.map((k: any) => k.nilai || 0))
@@ -95,6 +113,10 @@ export default function FormRBPilarClient({
         ? Math.round(((disetujui + menungguReview) / totalQuestions) * 100)
         : 0;
 
+    const deviasiSkor = Number(
+      (totalSkorVerifikasi - totalSkorMandiri).toFixed(2)
+    );
+
     return {
       totalQuestions,
       belumDiisi,
@@ -102,8 +124,10 @@ export default function FormRBPilarClient({
       disetujui,
       perluRevisi,
       totalSkorMandiri,
+      totalSkorVerifikasi,
       totalSkorMaks,
-      completionPercent
+      completionPercent,
+      deviasiSkor
     };
   }, [subpilarList, buktiDukungMap]);
 
@@ -160,10 +184,10 @@ export default function FormRBPilarClient({
         </div>
       </div>
 
-      {/* 2. HEADER PILAR BANNER */}
+      {/* 2. HEADER PILAR BANNER WITH DUAL-SCORING COMPARISON */}
       <div className='relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 p-6 text-white shadow-md dark:border-gray-800'>
-        <div className='relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-center'>
-          <div className='max-w-3xl space-y-2'>
+        <div className='relative z-10 flex flex-col justify-between gap-6 lg:flex-row lg:items-center'>
+          <div className='max-w-2xl space-y-2'>
             <div className='flex flex-wrap items-center gap-2'>
               <span className='inline-flex items-center rounded-md border border-blue-400/30 bg-blue-500/20 px-2.5 py-1 text-xs font-bold text-blue-200 backdrop-blur-xs'>
                 PILAR {pilarId}
@@ -175,6 +199,12 @@ export default function FormRBPilarClient({
                 <ShieldCheck className='h-3.5 w-3.5' />
                 {roleLabel}
               </span>
+              {canVerify && (
+                <span className='inline-flex items-center gap-1 rounded-md border border-amber-400/30 bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-200'>
+                  <Sparkles className='h-3.5 w-3.5' />
+                  Akses Verifikator Aktif
+                </span>
+              )}
             </div>
 
             <h1 className='text-2xl font-extrabold tracking-tight sm:text-3xl'>
@@ -187,30 +217,80 @@ export default function FormRBPilarClient({
             </p>
           </div>
 
-          {/* Quick Score Card */}
-          <div className='flex shrink-0 flex-row items-center justify-between gap-3 rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-xs md:flex-col md:items-end'>
-            <div className='text-left md:text-right'>
-              <div className='text-xs font-medium text-blue-200'>
-                Total Skor Mandiri
+          {/* Quick Dual-Score Card */}
+          <div className='flex shrink-0 flex-col gap-3 rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-xs sm:flex-row lg:flex-col'>
+            <div className='grid grid-cols-2 gap-4 border-b border-white/10 pb-3 sm:border-r sm:border-b-0 sm:pr-4 sm:pb-0 lg:border-r-0 lg:border-b lg:pr-0 lg:pb-3'>
+              {/* Skor Mandiri */}
+              <div>
+                <div className='text-2xs font-medium text-blue-200 uppercase'>
+                  Skor Mandiri (Usulan)
+                </div>
+                <div className='text-xl font-black text-white'>
+                  {stats.totalSkorMandiri.toFixed(2)}
+                  <span className='text-xs font-normal text-blue-200'>
+                    {' '}
+                    / {stats.totalSkorMaks.toFixed(2)}
+                  </span>
+                </div>
               </div>
-              <div className='text-2xl font-black text-white'>
-                {stats.totalSkorMandiri.toFixed(2)}
-                <span className='text-sm font-normal text-blue-200'>
-                  {' '}
-                  / {stats.totalSkorMaks.toFixed(2)}
-                </span>
+
+              {/* Skor Verifikasi */}
+              <div>
+                <div className='text-2xs font-medium text-emerald-300 uppercase'>
+                  Skor Verifikasi (Final)
+                </div>
+                <div className='text-xl font-black text-emerald-300'>
+                  {stats.totalSkorVerifikasi.toFixed(2)}
+                  <span className='text-xs font-normal text-emerald-200/70'>
+                    {' '}
+                    / {stats.totalSkorMaks.toFixed(2)}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className='w-28'>
-              <div className='text-2xs mb-1 flex items-center justify-between text-blue-200'>
-                <span>Progress:</span>
-                <span className='font-bold'>{stats.completionPercent}%</span>
+            {/* Deviasi & Progress Bar */}
+            <div className='space-y-2 pt-1'>
+              <div className='text-2xs flex items-center justify-between'>
+                <span className='text-blue-200'>Selisih (Deviasi):</span>
+                <span
+                  className={`inline-flex items-center gap-1 font-mono font-bold ${
+                    stats.deviasiSkor > 0
+                      ? 'text-emerald-300'
+                      : stats.deviasiSkor < 0
+                        ? 'text-rose-300'
+                        : 'text-blue-200'
+                  }`}
+                >
+                  {stats.deviasiSkor > 0 ? (
+                    <>
+                      <TrendingUp className='h-3 w-3' />+
+                      {stats.deviasiSkor.toFixed(2)}
+                    </>
+                  ) : stats.deviasiSkor < 0 ? (
+                    <>
+                      <TrendingDown className='h-3 w-3' />
+                      {stats.deviasiSkor.toFixed(2)}
+                    </>
+                  ) : (
+                    <>
+                      <Equal className='h-3 w-3' />
+                      0.00 (Selaras)
+                    </>
+                  )}
+                </span>
               </div>
-              <Progress
-                value={stats.completionPercent}
-                className='h-2 bg-white/20'
-              />
+
+              <div>
+                <div className='text-3xs mb-1 flex items-center justify-between text-blue-200'>
+                  <span>Penyelesaian Bukti:</span>
+                  <span className='font-bold'>{stats.completionPercent}%</span>
+                </div>
+                <Progress
+                  value={stats.completionPercent}
+                  className='h-2 bg-white/20'
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -225,14 +305,25 @@ export default function FormRBPilarClient({
           <Lock className='mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400' />
           <div className='flex-1'>
             <div className='font-bold text-amber-950 dark:text-amber-100'>
-              Mode Pratinjau (Read-Only)
+              Mode Pratinjau Bukti (Read-Only)
             </div>
             <p className='mt-0.5 text-xs leading-relaxed'>
-              Anda saat ini membuka formulir ini sebagai{' '}
-              <span className='font-semibold'>{roleLabel}</span>. Anda tidak
-              memiliki wewenang untuk mengisi atau mengubah bukti dukung pada
-              Pilar {pilarId}. Hak edit hanya dimiliki oleh Operator Tim Pilar{' '}
-              {pilarId} atau Super Admin.
+              Anda membuka formulir ini sebagai{' '}
+              <span className='font-semibold'>{roleLabel}</span>.
+              {canVerify ? (
+                <span>
+                  {' '}
+                  Anda memiliki wewenang verifikasi untuk memeriksa dan memberi
+                  skor pada panel verifikasi di setiap indikator.
+                </span>
+              ) : (
+                <span>
+                  {' '}
+                  Anda tidak memiliki wewenang untuk mengubah bukti dukung pada
+                  Pilar {pilarId}. Hak edit bukti dimiliki oleh Operator Tim
+                  Pilar {pilarId} atau Super Admin.
+                </span>
+              )}
             </p>
           </div>
         </div>
