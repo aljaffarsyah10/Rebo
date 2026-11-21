@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 
 function toCSV(rows: any[]) {
@@ -21,6 +22,11 @@ function toCSV(rows: any[]) {
 }
 
 export async function GET() {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const supabase = await createClient();
 
   // Fetch from subpilar, include pilar and nested pertanyaan (+ buktiDukung)

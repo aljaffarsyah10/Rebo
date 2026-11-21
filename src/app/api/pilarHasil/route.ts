@@ -1,8 +1,23 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function PUT(request: Request) {
   try {
+    const { userId, sessionClaims } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const role = (sessionClaims?.metadata as { role?: string } | undefined)
+      ?.role;
+    if (role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Forbidden: Hanya admin yang dapat mengubah skor' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     console.error('[API /api/pilarHasil] PUT body:', body);
     const { id_pilarHasil, skor_pilarHasil } = body;

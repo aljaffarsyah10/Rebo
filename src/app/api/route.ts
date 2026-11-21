@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 
-// POST handler - create a new record. All fields required.
+// POST handler - create or upsert a record.
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     console.error('[API /api] POST body:', body);
     const {
@@ -78,6 +84,11 @@ export async function POST(request: Request) {
 // update payload will include only provided fields to avoid overwriting with undefined.
 export async function PUT(request: Request) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     console.error('[API /api] PUT body:', body);
     const {

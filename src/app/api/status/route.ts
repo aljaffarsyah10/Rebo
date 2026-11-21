@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 
 // POST: update status for a bukti
 async function postHandler(request: Request) {
   try {
+    const { userId, sessionClaims } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id_pertanyaan, status } = body;
 
@@ -11,6 +17,21 @@ async function postHandler(request: Request) {
       return NextResponse.json(
         { error: 'id_pertanyaan dan status wajib diisi' },
         { status: 400 }
+      );
+    }
+
+    // Role validation: Approve and Reject actions are restricted to admin
+    const isApproveReject =
+      /disetujui|approve|approved|ditolak|reject|rejected/i.test(status);
+    const role = (sessionClaims?.metadata as { role?: string } | undefined)
+      ?.role;
+    if (isApproveReject && role !== 'admin') {
+      return NextResponse.json(
+        {
+          error:
+            'Forbidden: Hanya admin yang dapat menyetujui atau menolak bukti'
+        },
+        { status: 403 }
       );
     }
 
@@ -69,6 +90,11 @@ async function postHandler(request: Request) {
 // GET: return list of status options from statusBukti table
 async function getHandler() {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('statusBukti')

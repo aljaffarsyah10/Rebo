@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { checkRole } from '@/utils/roles';
 import { SearchUsers } from './SearchUsers';
 import { clerkClient } from '@clerk/nextjs/server';
-import { removeRole, setRole } from './_actions';
 import AdminActions from './AdminActions';
 import {
   Card,
@@ -12,15 +11,14 @@ import {
   CardDescription,
   CardFooter
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
 
 export default async function AdminDashboard(params: {
   searchParams: Promise<{ search?: string }>;
 }) {
-  if (!checkRole('admin')) {
-    redirect('/');
+  if (!(await checkRole('admin'))) {
+    redirect('/rebo/overview');
   }
 
   const query = (await params.searchParams).search;
