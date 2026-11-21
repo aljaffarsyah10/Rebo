@@ -8,6 +8,7 @@ import { ThemeSelector } from '../theme-selector';
 import { ModeToggle } from './ThemeToggle/theme-toggle';
 import CtaPanduan from './cta-panduan';
 import CtaGithub from './cta-github';
+import PeriodeSwitcher from './periode-switcher';
 
 export default function Header() {
   return (
@@ -19,6 +20,7 @@ export default function Header() {
       </div>
 
       <div className='flex items-center gap-2 px-4'>
+        <PeriodeSwitcher />
         <CtaPanduan />
         <CtaGithub />
         <div className='hidden md:flex'>

@@ -40,6 +40,12 @@ export const navItems: NavItem[] = [
         shortcut: ['u', 's']
       },
       {
+        title: 'Manajemen Periode',
+        url: '/rebo/admin/periode',
+        icon: 'calendar',
+        shortcut: ['p', 'e']
+      },
+      {
         title: 'GDrive Generator',
         url: '/rebo/admin/gdrive-generator',
         icon: 'folder',
