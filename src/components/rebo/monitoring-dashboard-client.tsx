@@ -35,8 +35,8 @@ import {
   ChevronDown,
   ChevronRight,
   TrendingUp,
-  Download,
-  Award
+  Award,
+  FileSpreadsheet
 } from 'lucide-react';
 import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
 import type { MonitoringDashboardData, PeriodeEvaluasi } from '@/types/rebo';
@@ -160,16 +160,20 @@ export default function MonitoringDashboardClient({
               </Button>
             </Link>
 
-            <Link href='/api/download'>
+            <a
+              href={`/api/export/lke${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`}
+              target='_blank'
+              rel='noopener noreferrer'
+            >
               <Button
                 variant='outline'
                 size='sm'
-                className='h-9 border-slate-300 bg-white/80 shadow-xs hover:bg-white dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800'
+                className='h-9 border-emerald-300 bg-emerald-50/90 text-emerald-800 shadow-xs hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-200 dark:hover:bg-emerald-900/80'
               >
-                <Download className='mr-1.5 h-3.5 w-3.5' />
-                Ekspor LKE
+                <FileSpreadsheet className='mr-1.5 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+                📊 Unduh Kertas Kerja LKE (Excel)
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ import {
 // 1. Zod Validation Schemas
 // ==============================================================================
 
-export const verifikasiSchema = z
+const verifikasiSchema = z
   .object({
     id_pertanyaan: z.string().min(1, 'ID Pertanyaan wajib diisi.'),
     id_periode: z.string().optional(),

@@ -27,7 +27,8 @@ import {
   Award,
   UserCheck,
   Folder,
-  History
+  History,
+  FileSpreadsheet
 } from 'lucide-react';
 
 export default async function AdminDashboard(params: {
@@ -107,6 +108,15 @@ export default async function AdminDashboard(params: {
                   <History className='h-3.5 w-3.5 text-purple-600 dark:text-purple-400' />
                   Audit Trail & Log Aktivitas
                 </Link>
+                <a
+                  href='/api/export/lke'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50/90 px-3.5 py-1.5 text-xs font-semibold text-emerald-800 shadow-sm hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-200 dark:hover:bg-emerald-900/80'
+                >
+                  <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+                  📊 Unduh Kertas Kerja LKE (Excel)
+                </a>
               </div>
             </div>
 

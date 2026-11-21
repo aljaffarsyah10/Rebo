@@ -17,7 +17,7 @@ import {
 // 1. Zod Validation Schemas
 // ==============================================================================
 
-export const dokumenItemSchema = z.object({
+const dokumenItemSchema = z.object({
   id: z.string().optional(),
   nama_dokumen: z.string().trim().min(1, 'Nama berkas dokumen wajib diisi.'),
   file_url: z
@@ -29,7 +29,7 @@ export const dokumenItemSchema = z.object({
   tipe_dokumen: z.string().optional().nullable()
 });
 
-export const submitBuktiSchema = z.object({
+const submitBuktiSchema = z.object({
   id_pertanyaan: z.string().min(1, 'ID Pertanyaan wajib diisi.'),
   id_periode: z.string().optional(),
   id_kategori: z.string().optional().nullable(),

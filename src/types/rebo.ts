@@ -322,3 +322,78 @@ export interface Subpilar {
   pertanyaan?: Pertanyaan[];
   [key: string]: any;
 }
+
+// ==============================================================================
+// REBO V2: Digital Archive (Arsip Digital) Data Models
+// ==============================================================================
+
+export type KategoriArsip =
+  | 'SK_TIM'
+  | 'RENCANA_AKSI'
+  | 'SOP_INOVASI'
+  | 'LKE_RESMI'
+  | 'PEDOMAN';
+
+export interface ArsipDokumen {
+  id: string;
+  judul_dokumen: string;
+  kategori: KategoriArsip;
+  tahun: number;
+  file_url: string;
+  nomor_surat?: string | null;
+  keterangan?: string | null;
+  uploaded_by: string;
+  created_at?: string;
+}
+
+export interface KategoriArsipInfo {
+  code: KategoriArsip;
+  label: string;
+  badgeClass: string;
+  iconName: string;
+  description: string;
+}
+
+export const KATEGORI_ARSIP_MAP: Record<KategoriArsip, KategoriArsipInfo> = {
+  SK_TIM: {
+    code: 'SK_TIM',
+    label: 'SK Tim Kerja ZI',
+    badgeClass:
+      'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300',
+    iconName: 'ShieldCheck',
+    description: 'Surat Keputusan Kepala BPS penetapan Tim Pembangunan ZI/RB'
+  },
+  RENCANA_AKSI: {
+    code: 'RENCANA_AKSI',
+    label: 'Rencana Aksi & Kerja',
+    badgeClass:
+      'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300',
+    iconName: 'Target',
+    description: 'Road map rencana aksi dan target capaian Zona Integritas'
+  },
+  SOP_INOVASI: {
+    code: 'SOP_INOVASI',
+    label: 'SOP & Inovasi Layanan',
+    badgeClass:
+      'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300',
+    iconName: 'Sparkles',
+    description: 'Standar Operasional Prosedur & Inovasi Pelayanan Publik'
+  },
+  LKE_RESMI: {
+    code: 'LKE_RESMI',
+    label: 'LKE / LHE Resmi',
+    badgeClass:
+      'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300',
+    iconName: 'FileSpreadsheet',
+    description:
+      'Lembar Kerja Evaluasi & Laporan Hasil Evaluasi TPI/KemenPAN-RB'
+  },
+  PEDOMAN: {
+    code: 'PEDOMAN',
+    label: 'Pedoman & Juknis',
+    badgeClass:
+      'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-300',
+    iconName: 'BookOpen',
+    description: 'Peraturan MenPAN-RB, Petunjuk Teknis, dan Buku Saku BPS RI'
+  }
+};
