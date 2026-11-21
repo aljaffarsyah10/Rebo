@@ -85,8 +85,13 @@ export default function AppSidebar() {
           <SidebarMenu>
             {navItems
               .filter((item) => {
-                // Hide Admin Dashboard unless user is admin
-                if (item.title === 'Admin Dashboard') {
+                // Hide Admin items unless user is admin
+                if (
+                  item.title === 'Admin' ||
+                  item.title === 'Admin Dashboard' ||
+                  item.url.includes('/admin') ||
+                  item.items?.some((sub) => sub.url.includes('/admin'))
+                ) {
                   return !!user && user.publicMetadata?.role === 'admin';
                 }
                 return true;

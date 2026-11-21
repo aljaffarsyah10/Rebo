@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { checkRole } from '@/utils/roles';
 import { SearchUsers } from './SearchUsers';
 import { clerkClient } from '@clerk/nextjs/server';
@@ -19,7 +20,14 @@ import {
   getPilarInfo,
   type UserRole
 } from '@/lib/auth/rbac';
-import { ShieldCheck, Users, Layers, Award, UserCheck } from 'lucide-react';
+import {
+  ShieldCheck,
+  Users,
+  Layers,
+  Award,
+  UserCheck,
+  Folder
+} from 'lucide-react';
 
 export default async function AdminDashboard(params: {
   searchParams: Promise<{ search?: string }>;
@@ -74,6 +82,24 @@ export default async function AdminDashboard(params: {
                 Koordinator, Operator, TPI), dan penugasan pilar kerja Zona
                 Integritas BPS Kab. Sitaro.
               </p>
+
+              {/* Admin Subnav */}
+              <div className='mt-4 flex flex-wrap items-center gap-2'>
+                <Link
+                  href='/rebo/admin'
+                  className='inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700'
+                >
+                  <Users className='h-3.5 w-3.5' />
+                  Manajemen Pengguna & RBAC
+                </Link>
+                <Link
+                  href='/rebo/admin/gdrive-generator'
+                  className='inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800'
+                >
+                  <Folder className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+                  GDrive Generator per Indikator
+                </Link>
+              </div>
             </div>
 
             {/* Search Bar */}

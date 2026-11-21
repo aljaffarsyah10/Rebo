@@ -19,12 +19,25 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Admin Dashboard',
+    title: 'Admin',
     url: '/rebo/admin',
     icon: 'settings',
-    isActive: false,
+    isActive: true,
     shortcut: ['a', 'a'],
-    items: []
+    items: [
+      {
+        title: 'Manajemen Pengguna',
+        url: '/rebo/admin',
+        icon: 'userPen',
+        shortcut: ['u', 's']
+      },
+      {
+        title: 'GDrive Generator',
+        url: '/rebo/admin/gdrive-generator',
+        icon: 'folder',
+        shortcut: ['g', 'd']
+      }
+    ]
   },
   {
     title: 'Form Bukti Dukung RB',
