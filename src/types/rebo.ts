@@ -132,6 +132,132 @@ export interface AuditLog {
   user_name?: string | null;
   role?: string | null;
   created_at?: string;
+  // Optional enriched fields
+  pertanyaan_info?: {
+    id_pertanyaan?: string;
+    kode_indikator?: string;
+    uraian_singkat?: string;
+    pilar_nama?: string;
+  } | null;
+}
+
+// ==============================================================================
+// REBO V2: Phase 7 Monitoring, Kanban & Audit Data Models
+// ==============================================================================
+
+export interface MonitoringKPIData {
+  totalPertanyaan: number;
+  totalSelesai: number;
+  totalRevisi: number;
+  totalMenungguReview: number;
+  totalBelumDiisi: number;
+  persentaseKelengkapan: number;
+  totalNilaiMandiri: number;
+  totalNilaiVerifikasi: number;
+  totalNilaiMaksimal: number;
+  persentaseSkorMandiri: number;
+  persentaseSkorVerifikasi: number;
+  totalSkorPilarHasil: number;
+}
+
+export interface SubpilarProgressItem {
+  id_subpilar: string;
+  nama_subpilar: string;
+  totalPertanyaan: number;
+  belumDiisi: number;
+  menungguReview: number;
+  disetujui: number;
+  perluRevisi: number;
+  persentaseSelesai: number;
+  nilaiMandiri: number;
+  nilaiVerifikasi: number;
+  nilaiMaksimal: number;
+}
+
+export interface PilarProgressItem {
+  id_pilar: string;
+  nama_pilar: string;
+  kode_pilar: string;
+  area: string;
+  totalPertanyaan: number;
+  belumDiisi: number;
+  menungguReview: number;
+  disetujui: number;
+  perluRevisi: number;
+  persentaseSelesai: number;
+  nilaiMandiri: number;
+  nilaiVerifikasi: number;
+  nilaiMaksimal: number;
+  subpilars: SubpilarProgressItem[];
+}
+
+export interface StatusDistributionItem {
+  name: string;
+  value: number;
+  color: string;
+  code: StatusKelengkapan;
+}
+
+export interface PilarBarChartItem {
+  name: string;
+  fullName: string;
+  pilarId: string;
+  skorMandiri: number;
+  skorVerifikasi: number;
+  skorMaksimal: number;
+  persentaseSelesai: number;
+}
+
+export interface MonitoringDashboardData {
+  periode: PeriodeEvaluasi | null;
+  kpi: MonitoringKPIData;
+  pilars: PilarProgressItem[];
+  statusDistribution: StatusDistributionItem[];
+  barChartData: PilarBarChartItem[];
+}
+
+export interface KanbanIndicatorCard {
+  id_pertanyaan: string;
+  id_pertanyaan_periode?: string;
+  kode_indikator: string;
+  uraian_pertanyaan: string;
+  uraian_singkat: string;
+  pilar_id: string;
+  pilar_nama: string;
+  pilar_kode: string;
+  subpilar_id: string;
+  subpilar_nama: string;
+  status_kelengkapan: StatusKelengkapan;
+  catatan_koordinator?: string | null;
+  catatan_operator?: string | null;
+  verified_by?: string | null;
+  verified_at?: string | null;
+  nilai_mandiri: number;
+  nilai_verifikasi: number;
+  nilai_maksimal: number;
+  gdrive_folder_url?: string | null;
+  total_dokumen: number;
+  dokumen_files: Array<{
+    id?: string;
+    nama_dokumen: string;
+    file_url: string;
+    tipe_dokumen?: string | null;
+  }>;
+}
+
+export interface KanbanBoardData {
+  periode: PeriodeEvaluasi | null;
+  cards: {
+    perluRevisi: KanbanIndicatorCard[];
+    menungguReview: KanbanIndicatorCard[];
+    disetujui: KanbanIndicatorCard[];
+  };
+  totalCount: number;
+  counts: {
+    perluRevisi: number;
+    menungguReview: number;
+    disetujui: number;
+  };
 }
 
 // ==============================================================================

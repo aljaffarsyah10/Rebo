@@ -13,7 +13,8 @@ import {
   Users,
   Target,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Kanban
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -190,11 +191,17 @@ export default function Overview() {
           <CardDescription>Akses fitur utama dengan satu klik</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className='grid gap-4 md:grid-cols-2'>
+          <div className='grid gap-4 md:grid-cols-3'>
             <Link href='/rebo/formRB/pemenuhan'>
               <Button className='w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'>
                 <FileText className='mr-2 h-4 w-4' />
-                Input Bukti Dukung Baru
+                Input Bukti Baru
+              </Button>
+            </Link>
+            <Link href='/rebo/kanban'>
+              <Button className='w-full justify-start bg-gradient-to-r from-rose-600 to-amber-600 text-white hover:from-rose-700 hover:to-amber-700'>
+                <Kanban className='mr-2 h-4 w-4' />
+                Kanban Tindak Lanjut
               </Button>
             </Link>
             <Link href='/rebo/pilarHasil'>

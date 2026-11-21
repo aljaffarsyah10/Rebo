@@ -32,7 +32,8 @@ import {
   IconLayoutKanban,
   IconBrandGithub,
   IconPlayerPlay,
-  IconFolder
+  IconFolder,
+  IconHistory
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -70,5 +71,6 @@ export const Icons = {
   video: IconPlayerPlay,
   twitter: IconBrandTwitter,
   check: IconCheck,
-  folder: IconFolder
+  folder: IconFolder,
+  history: IconHistory
 };

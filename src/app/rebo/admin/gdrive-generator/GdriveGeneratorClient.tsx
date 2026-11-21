@@ -49,7 +49,8 @@ import {
   ChevronRight,
   Edit3,
   Globe2,
-  Download
+  Download,
+  History
 } from 'lucide-react';
 import type { PeriodeEvaluasi } from '@/types/rebo';
 
@@ -299,6 +300,16 @@ export default function GdriveGeneratorClient({
         </div>
 
         <div className='flex items-center gap-2'>
+          <Link href='/rebo/admin/audit-log'>
+            <Button
+              variant='outline'
+              size='sm'
+              className='gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950/40'
+            >
+              <History className='h-3.5 w-3.5' />
+              Audit Trail
+            </Button>
+          </Link>
           <Button
             variant='outline'
             size='sm'

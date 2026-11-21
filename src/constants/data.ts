@@ -19,6 +19,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Kanban Tindak Lanjut',
+    url: '/rebo/kanban',
+    icon: 'kanban',
+    isActive: false,
+    shortcut: ['k', 'k'],
+    items: []
+  },
+  {
     title: 'Admin',
     url: '/rebo/admin',
     icon: 'settings',
@@ -36,6 +44,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/admin/gdrive-generator',
         icon: 'folder',
         shortcut: ['g', 'd']
+      },
+      {
+        title: 'Audit Log & Riwayat',
+        url: '/rebo/admin/audit-log',
+        icon: 'page',
+        shortcut: ['a', 'l']
       }
     ]
   },

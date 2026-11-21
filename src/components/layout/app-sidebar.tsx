@@ -92,7 +92,8 @@ export default function AppSidebar() {
                   item.url.includes('/admin') ||
                   item.items?.some((sub) => sub.url.includes('/admin'))
                 ) {
-                  return !!user && user.publicMetadata?.role === 'admin';
+                  const userRole = user?.publicMetadata?.role;
+                  return !!user && (userRole === 'admin' || userRole === 'tpi');
                 }
                 return true;
               })

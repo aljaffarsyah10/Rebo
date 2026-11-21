@@ -26,7 +26,8 @@ import {
   Layers,
   Award,
   UserCheck,
-  Folder
+  Folder,
+  History
 } from 'lucide-react';
 
 export default async function AdminDashboard(params: {
@@ -98,6 +99,13 @@ export default async function AdminDashboard(params: {
                 >
                   <Folder className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
                   GDrive Generator per Indikator
+                </Link>
+                <Link
+                  href='/rebo/admin/audit-log'
+                  className='inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800'
+                >
+                  <History className='h-3.5 w-3.5 text-purple-600 dark:text-purple-400' />
+                  Audit Trail & Log Aktivitas
                 </Link>
               </div>
             </div>
