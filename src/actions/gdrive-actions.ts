@@ -2,7 +2,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { getCurrentUserSession, isAdmin } from '@/lib/auth/rbac';
+import { getCurrentUserSession } from '@/lib/auth/session';
+import { isAdmin } from '@/lib/auth/rbac';
 import { revalidatePath } from 'next/cache';
 import {
   generateIndicatorPath,

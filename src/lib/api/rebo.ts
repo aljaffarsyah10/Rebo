@@ -235,9 +235,15 @@ export async function fetchBuktiByPertanyaanIds(
           return {
             id_bukti: row.id,
             id_pertanyaan: row.id_pertanyaan,
+            id_pertanyaan_periode: row.id,
             link_bukti: firstDoc?.file_url ?? row.gdrive_folder_url ?? null,
+            gdrive_folder_url: row.gdrive_folder_url ?? null,
+            gdrive_folder_id: row.gdrive_folder_id ?? null,
+            dokumen_bukti: row.dokumen_bukti ?? [],
             id_kategori: row.id_kategori ?? null,
             nilai_akhir: row.nilai_mandiri ?? 0,
+            nilai_mandiri: row.nilai_mandiri ?? 0,
+            nilai_verifikasi: row.nilai_verifikasi ?? 0,
             status: String(row.status_kelengkapan ?? 0),
             status_kelengkapan: row.status_kelengkapan ?? 0,
             nama_status:
@@ -249,6 +255,7 @@ export async function fetchBuktiByPertanyaanIds(
                     ? 'Perlu Revisi'
                     : 'Belum Diisi',
             catatan_user: row.catatan_operator ?? null,
+            catatan_operator: row.catatan_operator ?? null,
             catatan_koordinator: row.catatan_koordinator ?? null,
             created_at: row.created_at ?? null,
             updated_at: row.updated_at ?? null
@@ -269,11 +276,47 @@ export async function fetchBuktiByPertanyaanIds(
 
   if (error) throw error;
 
-  const mapped = (data || []).map((row: any) => ({
-    ...row,
-    status_kelengkapan: row.status_kelengkapan ?? null,
-    nama_status: row.statusBukti?.nama_status ?? null
-  }));
+  const mapped = (data || []).map((row: any) => {
+    const isFolder =
+      row.link_bukti &&
+      (row.link_bukti.includes('drive.google.com/drive/folders') ||
+        row.link_bukti.includes('/folders/'));
+    const initialDocs = row.link_bukti
+      ? [
+          {
+            id: `legacy-${row.id_bukti || row.id_pertanyaan}`,
+            id_pertanyaan_periode: row.id_bukti,
+            nama_dokumen: 'Berkas Bukti Dukung',
+            file_url: row.link_bukti,
+            tipe_dokumen: 'Dokumen',
+            uploaded_by: 'Operator'
+          }
+        ]
+      : [];
+
+    return {
+      ...row,
+      id_pertanyaan_periode: row.id_bukti,
+      gdrive_folder_url: isFolder ? row.link_bukti : null,
+      dokumen_bukti: initialDocs,
+      nilai_mandiri: row.nilai_akhir ?? 0,
+      catatan_operator: row.catatan_user ?? null,
+      status_kelengkapan:
+        row.status_kelengkapan !== null && row.status_kelengkapan !== undefined
+          ? Number(row.status_kelengkapan)
+          : row.status === 'Disetujui' ||
+              row.statusBukti?.nama_status === 'Disetujui'
+            ? 2
+            : row.status === 'Menunggu Review' ||
+                row.statusBukti?.nama_status === 'Dikirim'
+              ? 1
+              : row.status === 'Perlu Revisi' ||
+                  row.statusBukti?.nama_status === 'Ditolak'
+                ? 3
+                : 0,
+      nama_status: row.statusBukti?.nama_status ?? row.status ?? 'Belum Diisi'
+    };
+  });
 
   return (mapped as BuktiDukung[]) || [];
 }

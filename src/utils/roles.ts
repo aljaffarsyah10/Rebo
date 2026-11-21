@@ -7,3 +7,4 @@ export const checkRole = async (role: Roles): Promise<boolean> => {
 };
 
 export * from '@/lib/auth/rbac';
+export * from '@/lib/auth/session';

@@ -1,257 +1,704 @@
-import React from 'react';
-import { upsertBukti } from '@/lib/api/rebo';
+'use client';
+
+import React, { useState, useEffect, useTransition } from 'react';
 import { toast } from 'sonner';
+import {
+  FileText,
+  Plus,
+  Trash2,
+  ExternalLink,
+  Save,
+  Send,
+  Lock,
+  Paperclip,
+  CheckCircle2,
+  AlertTriangle
+} from 'lucide-react';
+import { submitBuktiAction, deleteDokumenBukti } from '@/actions/bukti-actions';
+import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+
+const TIPE_DOKUMEN_OPTIONS = [
+  'Surat Keputusan (SK)',
+  'Notula Rapat',
+  'Daftar Hadir',
+  'Undangan',
+  'Laporan Pelaksanaan',
+  'SOP / Pedoman',
+  'Dokumentasi / Foto',
+  'Tangkapan Layar Sistem',
+  'Lainnya'
+];
 
 type Props = {
-  pertanyaan: any;
-  buktiDukungMap: Record<string, any>;
-  setBuktiDukungMap: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  pertanyaan: Pertanyaan;
+  bukti?: BuktiDukung | null;
+  buktiDukungMap?: Record<string, BuktiDukung>;
+  setBuktiDukungMap?: React.Dispatch<
+    React.SetStateAction<Record<string, BuktiDukung>>
+  >;
+  canEdit?: boolean;
+  canVerify?: boolean;
+  activePeriodeId?: string;
+  targetPilarId?: string;
+  onUpsertSuccess?: (idPertanyaan: string, freshData: any) => void;
   onUpsert?: (payload: Partial<any>, form?: HTMLFormElement) => Promise<any>;
 };
 
 export default function BuktiForm({
   pertanyaan,
+  bukti,
   buktiDukungMap,
   setBuktiDukungMap,
+  canEdit = true,
+  activePeriodeId,
+  targetPilarId,
+  onUpsertSuccess,
   onUpsert
 }: Props) {
-  async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
+  const currentBukti =
+    bukti || (buktiDukungMap ? buktiDukungMap[pertanyaan.id_pertanyaan] : null);
+
+  // 1. Local state for form fields
+  const [selectedKategori, setSelectedKategori] = useState<string>(
+    currentBukti?.id_kategori ? String(currentBukti.id_kategori) : ''
+  );
+  const [catatanOperator, setCatatanOperator] = useState<string>(
+    currentBukti?.catatan_operator ?? currentBukti?.catatan_user ?? ''
+  );
+
+  // 2. Documents state
+  const [dokumenList, setDokumenList] = useState<
+    Array<{
+      id?: string;
+      nama_dokumen: string;
+      file_url: string;
+      tipe_dokumen?: string | null;
+      uploaded_by?: string;
+      uploaded_at?: string;
+    }>
+  >([]);
+
+  // 3. Inline new document input state
+  const [newDocNama, setNewDocNama] = useState('');
+  const [newDocUrl, setNewDocUrl] = useState('');
+  const [newDocTipe, setNewDocTipe] = useState('Notula Rapat');
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  const [isPending, startTransition] = useTransition();
+  const [submittingType, setSubmittingType] = useState<
+    'draft' | 'review' | null
+  >(null);
+
+  // Synchronize initial data from props
+  useEffect(() => {
+    if (currentBukti) {
+      if (currentBukti.id_kategori != null) {
+        setSelectedKategori(String(currentBukti.id_kategori));
+      }
+      if (
+        currentBukti.catatan_operator != null ||
+        currentBukti.catatan_user != null
+      ) {
+        setCatatanOperator(
+          currentBukti.catatan_operator ?? currentBukti.catatan_user ?? ''
+        );
+      }
+
+      // Populate dokumen list
+      if (currentBukti.dokumen_bukti && currentBukti.dokumen_bukti.length > 0) {
+        setDokumenList(
+          currentBukti.dokumen_bukti.map((d: DokumenBukti) => ({
+            id: d.id,
+            nama_dokumen: d.nama_dokumen,
+            file_url: d.file_url,
+            tipe_dokumen: d.tipe_dokumen,
+            uploaded_by: d.uploaded_by,
+            uploaded_at: d.uploaded_at
+          }))
+        );
+      } else if (
+        currentBukti.link_bukti &&
+        !currentBukti.link_bukti.includes('/drive/folders')
+      ) {
+        // Fallback: create 1 legacy entry if link_bukti is a file
+        setDokumenList([
+          {
+            id: `legacy-${currentBukti.id_bukti || pertanyaan.id_pertanyaan}`,
+            nama_dokumen: 'Berkas Bukti Dukung',
+            file_url: currentBukti.link_bukti,
+            tipe_dokumen: 'Dokumen',
+            uploaded_by: 'Operator'
+          }
+        ]);
+      }
+    }
+  }, [currentBukti, pertanyaan.id_pertanyaan]);
+
+  // Derived realtime score
+  const selectedKategoriObj = pertanyaan.kategoriPenilaian?.find(
+    (k: any) => String(k.id_kategori) === selectedKategori
+  );
+  const currentNilaiMandiri =
+    selectedKategoriObj?.nilai ??
+    currentBukti?.nilai_mandiri ??
+    currentBukti?.nilai_akhir ??
+    0;
+
+  // Add document to temporary list
+  function handleAddDocument(e: React.FormEvent) {
     e.preventDefault();
-    // Use values from buktiDukungMap (populated from DB by parent) so inputs reflect DB state
-    const currentMap = buktiDukungMap[pertanyaan.id_pertanyaan] || {};
-    const selectedKategoriValue =
-      currentMap.id_kategori !== undefined && currentMap.id_kategori !== null
-        ? currentMap.id_kategori
-        : '';
-    const linkValue = currentMap.link_bukti || '';
-
-    if (
-      (pertanyaan.kategoriPenilaian?.length || 0) > 0 &&
-      !selectedKategoriValue
-    ) {
-      // require category for API
-      toast.error('Pilih kategori penilaian sebelum Update.');
+    if (!newDocNama.trim()) {
+      toast.error('Masukkan nama berkas dokumen.');
       return;
     }
-    if (!linkValue) {
-      toast.error('Masukkan link bukti dukung sebelum Update.');
+    if (!newDocUrl.trim()) {
+      toast.error('Masukkan URL berkas Google Drive.');
       return;
     }
 
-    // derive nilai_akhir from selected kategori if possible
-    const selectedKategori = pertanyaan.kategoriPenilaian?.find(
-      (k: any) =>
-        k.id_kategori?.toString() === selectedKategoriValue?.toString()
-    );
-    const nilai_akhir = selectedKategori ? selectedKategori.nilai : null;
+    try {
+      // Basic URL verification
+      const parsed = new URL(newDocUrl.trim());
+      if (!parsed.protocol.startsWith('http')) {
+        toast.error('URL berkas harus diawali dengan http:// atau https://');
+        return;
+      }
+    } catch {
+      toast.error('URL berkas Google Drive tidak valid.');
+      return;
+    }
 
-    const payload: any = {
-      id_pertanyaan: pertanyaan.id_pertanyaan,
-      id_kategori: selectedKategoriValue || null,
-      link_bukti: linkValue || null,
-      nilai_akhir,
-      catatan_user: currentMap.catatan_user || null,
-      catatan_koordinator: currentMap.catatan_koordinator || null
+    const newDoc = {
+      id: `temp-${Date.now()}`,
+      nama_dokumen: newDocNama.trim(),
+      file_url: newDocUrl.trim(),
+      tipe_dokumen: newDocTipe,
+      uploaded_by: 'Operator (Belum Disimpan)',
+      uploaded_at: new Date().toISOString()
     };
 
-    if (onUpsert) {
-      const res = await onUpsert(payload, undefined);
-      if (res && res.success) {
-        // optionally update local map
-        setBuktiDukungMap((prev) => ({
-          ...prev,
-          [pertanyaan.id_pertanyaan]: {
-            ...(prev[pertanyaan.id_pertanyaan] || {}),
-            ...payload
-          }
-        }));
-      }
-    } else {
-      // fallback to local API helper
-      try {
-        const res = await upsertBukti(payload);
-        if (res && res.success) {
-          setBuktiDukungMap((prev) => ({
-            ...prev,
-            [pertanyaan.id_pertanyaan]: {
-              ...(prev[pertanyaan.id_pertanyaan] || {}),
-              ...payload
-            }
-          }));
-        } else {
-          console.error('Upsert failed', res);
-          toast.error('Gagal menyimpan bukti.');
-        }
-      } catch (err) {
-        console.error('Upsert error', err);
-        toast.error('Terjadi error saat menyimpan bukti.');
+    setDokumenList((prev) => [...prev, newDoc]);
+    setNewDocNama('');
+    setNewDocUrl('');
+    setShowAddForm(false);
+    toast.success(`Berkas "${newDoc.nama_dokumen}" ditambahkan ke draf.`);
+  }
+
+  // Remove document
+  async function handleRemoveDocument(index: number) {
+    const doc = dokumenList[index];
+    if (!doc) return;
+
+    // If it's a real persisted database document, call delete server action
+    if (
+      doc.id &&
+      !doc.id.startsWith('temp-') &&
+      !doc.id.startsWith('legacy-')
+    ) {
+      const confirmDelete = window.confirm(
+        `Apakah Anda yakin ingin menghapus berkas "${doc.nama_dokumen}" secara permanen?`
+      );
+      if (!confirmDelete) return;
+
+      const deleteRes = await deleteDokumenBukti(doc.id);
+      if (deleteRes.success) {
+        toast.success(deleteRes.message || 'Berkas berhasil dihapus.');
+      } else {
+        toast.error(deleteRes.error || 'Gagal menghapus berkas.');
+        return;
       }
     }
-  }
-  return (
-    <>
-      <form onSubmit={handleUpdate} className='space-y-2'>
-        {pertanyaan.kategoriPenilaian &&
-          pertanyaan.kategoriPenilaian.length > 0 && (
-            <div className='mb-2'>
-              <label
-                htmlFor={`kategori-${pertanyaan.id_pertanyaan}`}
-                className={`block text-sm font-semibold ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300'}`}
-              >
-                Kategori Penilaian
-              </label>
-              <select
-                id={`kategori-${pertanyaan.id_pertanyaan}`}
-                name={`kategori-${pertanyaan.id_pertanyaan}`}
-                value={
-                  buktiDukungMap[pertanyaan.id_pertanyaan] &&
-                  buktiDukungMap[pertanyaan.id_pertanyaan].id_kategori != null
-                    ? String(
-                        buktiDukungMap[pertanyaan.id_pertanyaan].id_kategori
-                      )
-                    : ''
-                }
-                className={`focus:ring-opacity-50 w-full rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
-                onChange={(e) => {
-                  const updatedMap = { ...buktiDukungMap };
-                  if (!updatedMap[pertanyaan.id_pertanyaan])
-                    updatedMap[pertanyaan.id_pertanyaan] = {};
-                  updatedMap[pertanyaan.id_pertanyaan].id_kategori =
-                    e.target.value;
-                  setBuktiDukungMap(updatedMap);
-                }}
-              >
-                <option value=''>Pilih kategori penilaian...</option>
-                {pertanyaan.kategoriPenilaian.map((kategori: any) => (
-                  <option
-                    key={kategori.id_kategori}
-                    value={String(kategori.id_kategori)}
-                  >
-                    {kategori.uraian_kategori}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
-        <div>
-          <label
-            htmlFor={`bukti-${pertanyaan.id_pertanyaan}`}
-            className={`block text-sm font-semibold ${buktiDukungMap[pertanyaan.id_pertanyaan] ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300'}`}
-          >
-            Link Bukti Dukung
-          </label>
-          <div className='flex gap-2'>
-            <input
-              type='url'
-              id={`bukti-${pertanyaan.id_pertanyaan}`}
-              name={`bukti-${pertanyaan.id_pertanyaan}`}
-              placeholder='https://contoh.com/dokumen-bukti'
-              defaultValue={
-                buktiDukungMap[pertanyaan.id_pertanyaan]?.link_bukti || ''
-              }
-              onChange={(e) => {
-                const updatedMap = { ...buktiDukungMap };
-                if (!updatedMap[pertanyaan.id_pertanyaan])
-                  updatedMap[pertanyaan.id_pertanyaan] = {};
-                updatedMap[pertanyaan.id_pertanyaan].link_bukti =
-                  e.target.value;
-                setBuktiDukungMap(updatedMap);
-              }}
-              className={`focus:ring-opacity-50 w-full flex-1 rounded-lg border border-blue-300 bg-white px-4 py-3 text-sm text-blue-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none dark:border-blue-700 dark:bg-gray-800 dark:text-blue-200`}
-            />
+    setDokumenList((prev) => prev.filter((_, idx) => idx !== index));
+  }
+
+  // Handle Save (Draft or Submit for Review)
+  async function handleSave(submitForReview: boolean) {
+    if (!canEdit) {
+      toast.error('Anda tidak memiliki wewenang untuk mengubah data ini.');
+      return;
+    }
+
+    if (submitForReview) {
+      if (
+        (pertanyaan.kategoriPenilaian?.length || 0) > 0 &&
+        !selectedKategori
+      ) {
+        toast.error(
+          'Pilih opsi penilaian mandiri terlebih dahulu sebelum mengajukan verifikasi.'
+        );
+        return;
+      }
+      if (dokumenList.length === 0) {
+        toast.error(
+          'Tambahkan minimal 1 berkas bukti dukung sebelum mengajukan verifikasi.'
+        );
+        return;
+      }
+    }
+
+    setSubmittingType(submitForReview ? 'review' : 'draft');
+
+    startTransition(async () => {
+      try {
+        const payload = {
+          id_pertanyaan: pertanyaan.id_pertanyaan,
+          id_periode: activePeriodeId,
+          id_kategori: selectedKategori || null,
+          catatan_operator: catatanOperator.trim() || null,
+          dokumen_list: dokumenList.map((d) => ({
+            id:
+              d.id && !d.id.startsWith('temp-') && !d.id.startsWith('legacy-')
+                ? d.id
+                : undefined,
+            nama_dokumen: d.nama_dokumen,
+            file_url: d.file_url,
+            tipe_dokumen: d.tipe_dokumen || null
+          })),
+          submit_for_review: submitForReview
+        };
+
+        const res = await submitBuktiAction(payload);
+
+        if (res.success) {
+          toast.success(res.message || 'Data berhasil disimpan.');
+
+          // Update parent state if setBuktiDukungMap is present
+          if (setBuktiDukungMap) {
+            setBuktiDukungMap((prev) => {
+              const prevItem = prev[pertanyaan.id_pertanyaan] || {};
+              const updatedItem: BuktiDukung = {
+                ...prevItem,
+                id_pertanyaan: pertanyaan.id_pertanyaan,
+                id_kategori: selectedKategori || null,
+                nilai_mandiri: currentNilaiMandiri,
+                nilai_akhir: currentNilaiMandiri,
+                catatan_operator: catatanOperator.trim() || null,
+                catatan_user: catatanOperator.trim() || null,
+                status_kelengkapan:
+                  res.newStatus ??
+                  (submitForReview ? 1 : (prevItem.status_kelengkapan ?? 0)),
+                status: submitForReview
+                  ? 'Menunggu Review'
+                  : (prevItem.status ?? 'Belum Diisi'),
+                nama_status: submitForReview
+                  ? 'Menunggu Review'
+                  : (prevItem.nama_status ?? 'Belum Diisi'),
+                dokumen_bukti:
+                  res.data?.dokumen_bukti ?? (dokumenList as DokumenBukti[])
+              };
+              return {
+                ...prev,
+                [pertanyaan.id_pertanyaan]: updatedItem
+              };
+            });
+          }
+
+          if (onUpsertSuccess && res.data) {
+            onUpsertSuccess(pertanyaan.id_pertanyaan, res.data);
+          }
+
+          // Legacy callback support
+          if (onUpsert) {
+            onUpsert({
+              id_pertanyaan: pertanyaan.id_pertanyaan,
+              id_kategori: selectedKategori,
+              nilai_akhir: currentNilaiMandiri,
+              catatan_user: catatanOperator
+            });
+          }
+        } else {
+          toast.error(res.error || 'Gagal menyimpan bukti dukung.');
+        }
+      } catch (err: any) {
+        // eslint-disable-next-line no-console
+        console.error('Error in handleSave:', err);
+        toast.error('Terjadi kesalahan saat memproses penyimpanan.');
+      } finally {
+        setSubmittingType(null);
+      }
+    });
+  }
+
+  return (
+    <div className='mt-4 space-y-6'>
+      {/* RBAC Read-Only Banner */}
+      {!canEdit && (
+        <div className='flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'>
+          <Lock className='h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400' />
+          <div>
+            <span className='font-semibold'>Mode Baca Saja (Read-Only): </span>
+            Anda tidak memiliki wewenang untuk mengisi/mengubah bukti pada Pilar{' '}
+            {targetPilarId || 'ini'}. Formulir ini hanya dapat diedit oleh
+            Operator Pilar yang ditugaskan atau Super Admin.
           </div>
         </div>
-        {/* Catatan user textarea */}
-        <div>
-          <label
-            htmlFor={`catatan-${pertanyaan.id_pertanyaan}`}
-            className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
-          >
-            Catatan User
-          </label>
-          <textarea
-            id={`catatan-${pertanyaan.id_pertanyaan}`}
-            name={`catatan-${pertanyaan.id_pertanyaan}`}
-            defaultValue={
-              buktiDukungMap[pertanyaan.id_pertanyaan]?.catatan_user || ''
-            }
-            placeholder='Tambahkan catatan atau komentar...'
-            onChange={(e) => {
-              const updatedMap = { ...buktiDukungMap };
-              if (!updatedMap[pertanyaan.id_pertanyaan])
-                updatedMap[pertanyaan.id_pertanyaan] = {};
-              updatedMap[pertanyaan.id_pertanyaan].catatan_user =
-                e.target.value;
-              setBuktiDukungMap(updatedMap);
-            }}
-            className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
-            rows={3}
-          />
-        </div>
+      )}
 
-        {/* Catatan Koordinator RB textarea */}
-        <div>
-          <label
-            htmlFor={`catatan-koordinator-${pertanyaan.id_pertanyaan}`}
-            className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
-          >
-            Catatan Koordinator RB
-          </label>
-          <textarea
-            id={`catatan-koordinator-${pertanyaan.id_pertanyaan}`}
-            name={`catatan-koordinator-${pertanyaan.id_pertanyaan}`}
-            defaultValue={
-              buktiDukungMap[pertanyaan.id_pertanyaan]?.catatan_koordinator ||
-              ''
-            }
-            placeholder='Catatan koordinator...'
-            onChange={(e) => {
-              const updatedMap = { ...buktiDukungMap };
-              if (!updatedMap[pertanyaan.id_pertanyaan])
-                updatedMap[pertanyaan.id_pertanyaan] = {};
-              updatedMap[pertanyaan.id_pertanyaan].catatan_koordinator =
-                e.target.value;
-              setBuktiDukungMap(updatedMap);
-            }}
-            className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
-            rows={3}
-          />
-        </div>
+      {/* 1. SECTION: PENILAIAN MANDIRI (SELF-ASSESSMENT) */}
+      {pertanyaan.kategoriPenilaian &&
+        pertanyaan.kategoriPenilaian.length > 0 && (
+          <div className='rounded-xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-700 dark:bg-gray-800/80'>
+            <div className='mb-3 flex items-center justify-between'>
+              <label className='flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100'>
+                <CheckCircle2 className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+                <span>Penilaian Mandiri (Self-Assessment)</span>
+              </label>
+              <div className='flex items-center gap-1.5 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'>
+                <span>Skor Mandiri:</span>
+                <span className='font-bold'>
+                  {currentNilaiMandiri.toFixed(2)}
+                </span>
+              </div>
+            </div>
 
-        {/* Secondary Update button below */}
-        <div className='pt-1'>
-          <button
-            type='submit'
-            className='inline-flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-md transition duration-150 hover:scale-[1.02] hover:from-indigo-700 hover:to-indigo-800 focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95 disabled:cursor-not-allowed disabled:opacity-50'
-            disabled={
-              !(
-                (pertanyaan.kategoriPenilaian?.length
-                  ? Boolean(
-                      buktiDukungMap[pertanyaan.id_pertanyaan]?.id_kategori
-                    )
-                  : true) &&
-                Boolean(buktiDukungMap[pertanyaan.id_pertanyaan]?.link_bukti)
-              )
-            }
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-4 w-4'
-              viewBox='0 0 20 20'
-              fill='currentColor'
-              aria-hidden='true'
+            <p className='mb-3 text-xs text-gray-500 dark:text-gray-400'>
+              Pilih kategori penilaian yang paling mencerminkan kondisi
+              pemenuhan bukti dukung di unit kerja:
+            </p>
+
+            <div className='space-y-2'>
+              {pertanyaan.kategoriPenilaian.map(
+                (kategori: any, idx: number) => {
+                  const isSelected =
+                    String(kategori.id_kategori) === selectedKategori;
+                  const optionLetter = String.fromCharCode(65 + idx); // A, B, C, D...
+
+                  return (
+                    <div
+                      key={kategori.id_kategori}
+                      onClick={() => {
+                        if (canEdit && !isPending) {
+                          setSelectedKategori(String(kategori.id_kategori));
+                        }
+                      }}
+                      className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-all ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50/80 shadow-xs dark:border-blue-500 dark:bg-blue-900/30'
+                          : 'border-gray-200 bg-gray-50/50 hover:bg-gray-100/70 dark:border-gray-700 dark:bg-gray-800/40 dark:hover:bg-gray-700/50'
+                      } ${!canEdit ? 'cursor-not-allowed opacity-80' : ''}`}
+                    >
+                      <input
+                        type='radio'
+                        id={`kategori-${pertanyaan.id_pertanyaan}-${kategori.id_kategori}`}
+                        name={`kategori-radio-${pertanyaan.id_pertanyaan}`}
+                        value={String(kategori.id_kategori)}
+                        checked={isSelected}
+                        disabled={!canEdit || isPending}
+                        onChange={() =>
+                          setSelectedKategori(String(kategori.id_kategori))
+                        }
+                        className='mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500'
+                      />
+                      <div className='flex-1'>
+                        <div className='flex items-center justify-between gap-2'>
+                          <span className='text-sm font-semibold text-gray-800 dark:text-gray-200'>
+                            Opsi {optionLetter}
+                          </span>
+                          <span className='rounded bg-gray-200/80 px-2 py-0.5 text-xs font-bold text-gray-700 dark:bg-gray-700 dark:text-gray-300'>
+                            Nilai:{' '}
+                            {typeof kategori.nilai === 'number'
+                              ? kategori.nilai.toFixed(2)
+                              : '-'}
+                          </span>
+                        </div>
+                        <p className='mt-0.5 text-xs text-gray-600 dark:text-gray-400'>
+                          {kategori.uraian_kategori}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        )}
+
+      {/* 2. SECTION: DOKUMEN BUKTI DUKUNG (MULTI-EVIDENCE) */}
+      <div className='rounded-xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-700 dark:bg-gray-800/80'>
+        <div className='mb-3 flex items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <Paperclip className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+            <h4 className='text-sm font-bold text-gray-900 dark:text-gray-100'>
+              Berkas Bukti Dukung (Multi-Evidence)
+            </h4>
+            <Badge variant='secondary' className='text-xs'>
+              {dokumenList.length} Berkas
+            </Badge>
+          </div>
+
+          {canEdit && !showAddForm && (
+            <Button
+              type='button'
+              size='sm'
+              variant='outline'
+              onClick={() => setShowAddForm(true)}
+              disabled={isPending}
+              className='h-8 text-xs font-semibold'
             >
-              <path
-                fillRule='evenodd'
-                d='M16.707 5.293a1 1 0 00-1.414 0L9 11.586 6.707 9.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z'
-                clipRule='evenodd'
-              />
-            </svg>
-            <span>Update</span>
-          </button>
+              <Plus className='mr-1.5 h-3.5 w-3.5' />
+              Tambah Berkas
+            </Button>
+          )}
         </div>
-      </form>
-    </>
+
+        <p className='mb-3 text-xs text-gray-500 dark:text-gray-400'>
+          Daftar tautan spesifik file Google Drive yang menjadi bukti dukung
+          pemenuhan indikator ini (misal: Notula Rapat, Daftar Hadir, SK Tim
+          Kerja):
+        </p>
+
+        {/* Existing / Uploaded Documents List */}
+        {dokumenList.length === 0 && !showAddForm ? (
+          <div className='rounded-lg border border-dashed border-gray-300 bg-gray-50/50 p-6 text-center dark:border-gray-700 dark:bg-gray-900/30'>
+            <FileText className='mx-auto h-8 w-8 text-gray-400 dark:text-gray-500' />
+            <p className='mt-2 text-xs font-medium text-gray-600 dark:text-gray-400'>
+              Belum ada berkas bukti dukung yang ditambahkan.
+            </p>
+            {canEdit && (
+              <Button
+                type='button'
+                size='sm'
+                variant='outline'
+                onClick={() => setShowAddForm(true)}
+                className='mt-3 text-xs'
+              >
+                <Plus className='mr-1 h-3.5 w-3.5' />
+                Tambah Berkas Sekarang
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className='space-y-2.5'>
+            {dokumenList.map((doc, idx) => (
+              <div
+                key={doc.id || `doc-${idx}`}
+                className='flex flex-col justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50/70 p-3 text-sm transition-all sm:flex-row sm:items-center dark:border-gray-700 dark:bg-gray-800/50'
+              >
+                <div className='flex min-w-0 flex-1 items-start gap-3'>
+                  <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'>
+                    <FileText className='h-4 w-4' />
+                  </div>
+                  <div className='min-w-0 flex-1'>
+                    <div className='flex flex-wrap items-center gap-2'>
+                      <span className='truncate font-semibold text-gray-800 dark:text-gray-200'>
+                        {doc.nama_dokumen}
+                      </span>
+                      {doc.tipe_dokumen && (
+                        <span className='text-2xs rounded border border-indigo-200 bg-indigo-50 px-2 py-0.5 font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'>
+                          {doc.tipe_dokumen}
+                        </span>
+                      )}
+                      {doc.id?.startsWith('temp-') && (
+                        <span className='py-0.2 text-2xs rounded bg-amber-100 px-1.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300'>
+                          Belum Disimpan
+                        </span>
+                      )}
+                    </div>
+                    <div className='mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400'>
+                      <a
+                        href={doc.file_url}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='inline-flex max-w-xs items-center gap-1 truncate text-blue-600 hover:underline dark:text-blue-400'
+                      >
+                        <span className='truncate'>{doc.file_url}</span>
+                        <ExternalLink className='h-3 w-3 shrink-0' />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <div className='flex shrink-0 items-center gap-2 self-end sm:self-center'>
+                  <a
+                    href={doc.file_url}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                  >
+                    <ExternalLink className='h-3.5 w-3.5' />
+                    <span>Buka File</span>
+                  </a>
+
+                  {canEdit && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => handleRemoveDocument(idx)}
+                      disabled={isPending}
+                      className='h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40'
+                      title='Hapus Berkas'
+                    >
+                      <Trash2 className='h-4 w-4' />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Inline Add Document Form */}
+        {showAddForm && canEdit && (
+          <form
+            onSubmit={handleAddDocument}
+            className='mt-4 rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-950/20'
+          >
+            <h5 className='mb-3 text-xs font-bold tracking-wider text-blue-900 uppercase dark:text-blue-200'>
+              Tambah Dokumen Bukti Baru
+            </h5>
+
+            <div className='mb-3 grid grid-cols-1 gap-3 md:grid-cols-2'>
+              <div>
+                <label className='mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300'>
+                  Nama Dokumen / Berkas <span className='text-rose-500'>*</span>
+                </label>
+                <input
+                  type='text'
+                  value={newDocNama}
+                  onChange={(e) => setNewDocNama(e.target.value)}
+                  placeholder='Contoh: Notula Rapat Pembentukan Tim, SK Tim Kerja, dll.'
+                  className='w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
+                  required
+                />
+              </div>
+
+              <div>
+                <label className='mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300'>
+                  Tipe Dokumen
+                </label>
+                <select
+                  value={newDocTipe}
+                  onChange={(e) => setNewDocTipe(e.target.value)}
+                  className='w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
+                >
+                  {TIPE_DOKUMEN_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className='mb-3'>
+              <label className='mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300'>
+                URL Google Drive Berkas <span className='text-rose-500'>*</span>
+              </label>
+              <input
+                type='url'
+                value={newDocUrl}
+                onChange={(e) => setNewDocUrl(e.target.value)}
+                placeholder='https://drive.google.com/file/d/...'
+                className='w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
+                required
+              />
+              <p className='text-2xs mt-1 text-gray-500 dark:text-gray-400'>
+                💡 Pastikan berkas Google Drive disetel ke izin lihat:
+                &quot;Siapa saja yang memiliki link&quot; atau dibagikan ke
+                domain @bps.go.id.
+              </p>
+            </div>
+
+            <div className='flex items-center justify-end gap-2'>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                onClick={() => setShowAddForm(false)}
+                className='h-8 text-xs'
+              >
+                Batal
+              </Button>
+              <Button
+                type='submit'
+                size='sm'
+                className='h-8 bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700'
+              >
+                <Plus className='mr-1 h-3.5 w-3.5' />
+                Masukkan ke Daftar
+              </Button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* 3. SECTION: CATATAN OPERATOR */}
+      <div className='rounded-xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-700 dark:bg-gray-800/80'>
+        <label
+          htmlFor={`catatan-op-${pertanyaan.id_pertanyaan}`}
+          className='mb-1.5 block text-sm font-bold text-gray-900 dark:text-gray-100'
+        >
+          Catatan Penjelasan Bukti (Operator Tim Kerja)
+        </label>
+        <p className='mb-2 text-xs text-gray-500 dark:text-gray-400'>
+          Uraikan ringkasan tindak lanjut pemenuhan, poin penting dokumen bukti,
+          atau catatan khusus untuk dievaluasi oleh Koordinator/TPI:
+        </p>
+        <textarea
+          id={`catatan-op-${pertanyaan.id_pertanyaan}`}
+          rows={3}
+          value={catatanOperator}
+          onChange={(e) => setCatatanOperator(e.target.value)}
+          disabled={!canEdit || isPending}
+          placeholder='Tambahkan catatan penjelasan bukti dukung di sini...'
+          className='w-full rounded-lg border border-gray-300 bg-white p-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:disabled:bg-gray-800'
+        />
+      </div>
+
+      {/* 4. SECTION: CATATAN KOORDINATOR (PROTECTED READ-ONLY FOR OPERATOR) */}
+      {(currentBukti?.catatan_koordinator ||
+        currentBukti?.status_kelengkapan === 3) && (
+        <div className='rounded-xl border border-rose-200 bg-rose-50/70 p-4 dark:border-rose-900/60 dark:bg-rose-950/20'>
+          <div className='mb-1.5 flex items-center gap-2'>
+            <AlertTriangle className='h-4 w-4 text-rose-600 dark:text-rose-400' />
+            <h5 className='text-xs font-bold tracking-wider text-rose-900 uppercase dark:text-rose-300'>
+              Catatan / Rekomendasi Koordinator & TPI
+            </h5>
+            <span className='text-2xs ml-auto inline-flex items-center gap-1 rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-800 dark:bg-rose-900/50 dark:text-rose-300'>
+              <Lock className='h-3 w-3' />
+              Read-Only
+            </span>
+          </div>
+          <p className='text-xs leading-relaxed font-medium whitespace-pre-wrap text-rose-800 dark:text-rose-200'>
+            {currentBukti?.catatan_koordinator ||
+              'Terdapat permintaan revisi pada bukti dukung ini. Silakan periksa kelengkapan dokumen.'}
+          </p>
+        </div>
+      )}
+
+      {/* 5. ACTION BUTTONS */}
+      {canEdit && (
+        <div className='flex flex-wrap items-center justify-end gap-3 pt-2'>
+          <Button
+            type='button'
+            variant='outline'
+            disabled={isPending}
+            onClick={() => handleSave(false)}
+            className='h-10 border-gray-300 px-5 text-xs font-semibold hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800'
+          >
+            <Save className='mr-1.5 h-4 w-4' />
+            {isPending && submittingType === 'draft'
+              ? 'Menyimpan...'
+              : 'Simpan Draf'}
+          </Button>
+
+          <Button
+            type='button'
+            disabled={isPending}
+            onClick={() => handleSave(true)}
+            className='h-10 bg-gradient-to-r from-blue-600 to-indigo-600 px-6 text-xs font-semibold text-white shadow-xs hover:from-blue-700 hover:to-indigo-700'
+          >
+            <Send className='mr-1.5 h-4 w-4' />
+            {isPending && submittingType === 'review'
+              ? 'Mengajukan...'
+              : 'Kirim & Ajukan Verifikasi'}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

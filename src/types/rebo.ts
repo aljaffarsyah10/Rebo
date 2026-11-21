@@ -141,13 +141,20 @@ export interface AuditLog {
 export interface BuktiDukung {
   id_bukti?: string;
   id_pertanyaan: string;
+  id_pertanyaan_periode?: string;
   link_bukti?: string | null;
+  gdrive_folder_url?: string | null;
+  gdrive_folder_id?: string | null;
+  dokumen_bukti?: DokumenBukti[];
   id_kategori?: string | null;
   nilai_akhir?: number | null;
+  nilai_mandiri?: number | null;
+  nilai_verifikasi?: number | null;
   status?: string | null;
   status_kelengkapan?: string | number | null;
   nama_status?: string | null;
   catatan_user?: string | null;
+  catatan_operator?: string | null;
   catatan_koordinator?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
