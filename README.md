@@ -308,6 +308,25 @@ Setelah server berjalan (`http://localhost:3000`), Anda dapat langsung mengakses
 
 ---
 
+## 📲 Layanan Notifikasi WhatsApp (REBO WA Gateway)
+
+Sistem REBO V2 dilengkapi modul notifikasi WhatsApp otomatis gratis tanpa biaya API Meta resmi (menggunakan engine Baileys Multi-Device yang di-host di Render):
+
+### 1. Siapa Nomor Pengirimnya?
+- **Nomor Pengirim (Bot REBO):** Adalah nomor WhatsApp mana pun (nomor HP kantor BPS Sitaro, nomor cadangan/khusus bot, atau nomor pribadi PIC IT) yang **di-scan pada halaman QR Code** (`https://<service-anda>.onrender.com/qr`).
+- Nomor tersebut bertindak sebagai gateway sentral yang bertugas mengirimkan pesan otomatis keluar ke seluruh tim kerja.
+
+### 2. Siapa Nomor Penerimanya & Bagaimana Mekanismenya?
+- **Tidak bergantung pada akun Clerk:** Clerk hanya digunakan untuk autentikasi login via email (`@bps.go.id` / Google). Nomor WhatsApp penerima tidak disimpan di Clerk.
+- **Dikelola fleksibel di Database Supabase (`public.kontak_pilar`):**
+  - Setiap pilar (Pilar 1 s.d. Pilar 6) dan Tim Verifikator memiliki PIC penanggung jawab.
+  - Admin dapat memperbarui nomor WhatsApp penerima kapan saja melalui menu:
+    👉 **Admin ➔ Notifikasi & Kontak WA** (`/rebo/admin/kontak`).
+  - Saat ada usulan bukti dukung baru, sistem mengambil nomor kontak Tim Verifikator.
+  - Saat bukti dukung disetujui atau memerlukan revisi, sistem mengambil nomor kontak PIC Pilar terkait untuk dikirimkan pesan peringatan beserta rincian catatannya.
+
+---
+
 ## ⚙️ Environment Variables
 
 Berikut daftar variabel lingkungan yang dibutuhkan pada `.env.local`:

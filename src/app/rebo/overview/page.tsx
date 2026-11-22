@@ -10,13 +10,13 @@ import {
   FileSpreadsheet,
   FolderSync,
   RefreshCw,
-  CalendarCheck,
   TrendingUp,
   Layers,
   BookOpen,
   Lock,
   Activity,
-  CheckCircle2
+  CheckCircle2,
+  MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -392,7 +392,7 @@ export default function Overview() {
             </div>
           </Card>
 
-          {/* Card 4: Generator Google Drive (KHUSUS ADMIN) */}
+          {/* Card 4: Generator GDrive & Manajemen Periode (KHUSUS ADMIN - GABUNGAN) */}
           <Card className='group flex flex-col justify-between border-amber-300/80 bg-amber-50/25 p-4 transition-all duration-200 hover:border-amber-400 hover:shadow-md dark:border-amber-800/60 dark:bg-amber-950/15'>
             <div className='space-y-2.5'>
               <div className='flex items-center justify-between'>
@@ -409,27 +409,37 @@ export default function Overview() {
 
               <div>
                 <h3 className='text-sm font-bold text-slate-800 dark:text-slate-100'>
-                  Generator Struktur Google Drive
+                  Generator GDrive &amp; Manajemen Periode
                 </h3>
                 <p className='mt-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400'>
-                  1 Indikator = 1 Folder Khusus Standar
+                  Siklus Multi-Tahun &amp; Struktur Folder Baku
                 </p>
               </div>
 
               <p className='text-xs leading-relaxed text-slate-600 dark:text-slate-300'>
-                Provisioning otomatis seluruh pohon folder Google Drive resmi
-                instansi per indikator evaluasi dengan satu klik via skrip GAS.
+                Pengaturan siklus evaluasi multi-periode (2025, 2026), fitur
+                kloning indikator satu klik, proteksi arsip lampau, serta
+                provisioning hierarki folder Google Drive resmi instansi.
               </p>
             </div>
 
-            <div className='pt-3.5'>
-              <Link href='/rebo/admin/gdrive-generator'>
+            <div className='flex items-center gap-2 pt-3.5'>
+              <Link href='/rebo/admin/periode' className='flex-1'>
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-8 w-full border-amber-300 bg-white/80 text-xs font-semibold text-amber-800 hover:border-amber-400 hover:bg-amber-100/70 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40'
+                  className='h-8 w-full border-amber-300 bg-white/90 text-[11px] font-semibold text-amber-800 hover:border-amber-400 hover:bg-amber-100/70 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40'
                 >
-                  Buka Generator GDrive <ArrowRight className='ml-1 h-3 w-3' />
+                  Periode
+                </Button>
+              </Link>
+              <Link href='/rebo/admin/gdrive-generator' className='flex-1'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='h-8 w-full border-amber-300 bg-white/90 text-[11px] font-semibold text-amber-800 hover:border-amber-400 hover:bg-amber-100/70 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40'
+                >
+                  GDrive <ArrowRight className='ml-1 h-3 w-3' />
                 </Button>
               </Link>
             </div>
@@ -478,44 +488,46 @@ export default function Overview() {
             </div>
           </Card>
 
-          {/* Card 6: Manajemen Periode & 1-Click Clone (KHUSUS ADMIN) */}
-          <Card className='group flex flex-col justify-between border-amber-300/80 bg-amber-50/25 p-4 transition-all duration-200 hover:border-amber-400 hover:shadow-md dark:border-amber-800/60 dark:bg-amber-950/15'>
+          {/* Card 6: Notifikasi WhatsApp Otomatis (PENGGANTI) */}
+          <Card className='group flex flex-col justify-between border-slate-200/70 bg-white/80 p-4 transition-all duration-200 hover:border-emerald-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-emerald-700'>
             <div className='space-y-2.5'>
               <div className='flex items-center justify-between'>
-                <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200'>
-                  <CalendarCheck className='h-4.5 w-4.5' />
+                <div className='flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100/80 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'>
+                  <MessageSquare className='h-4.5 w-4.5' />
                 </div>
-                <div className='flex items-center space-x-1.5'>
-                  <Badge className='border-amber-400/80 bg-amber-500/15 px-2 py-0 text-[10px] font-bold text-amber-700 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-300'>
-                    <Lock className='mr-1 h-2.5 w-2.5' />
-                    Khusus Admin
-                  </Badge>
-                </div>
+                <Badge
+                  variant='outline'
+                  className='border-emerald-200 bg-emerald-50/80 px-2 py-0 text-[10px] font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                >
+                  Otomasi Notifikasi
+                </Badge>
               </div>
 
               <div>
                 <h3 className='text-sm font-bold text-slate-800 dark:text-slate-100'>
-                  Manajemen Periode &amp; Duplikasi
+                  Notifikasi WhatsApp Otomatis
                 </h3>
-                <p className='mt-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400'>
-                  Siklus Multi-Tahun Tanpa Data Tertimpa
+                <p className='mt-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400'>
+                  Pengingat Tenggat &amp; Pembaruan Status Real-Time
                 </p>
               </div>
 
               <p className='text-xs leading-relaxed text-slate-600 dark:text-slate-300'>
-                Pengaturan siklus evaluasi multi-periode tahunan (2025, 2026),
-                fitur kloning indikator satu klik, dan proteksi arsip.
+                Pengingat otomatis batas waktu (*deadline reminder*), konfirmasi
+                pengunggahan bukti, serta info catatan revisi dikirim langsung
+                ke WhatsApp penanggung jawab pilar.
               </p>
             </div>
 
             <div className='pt-3.5'>
-              <Link href='/rebo/admin/periode'>
+              <Link href='/rebo/admin/kontak'>
                 <Button
                   variant='outline'
                   size='sm'
-                  className='h-8 w-full border-amber-300 bg-white/80 text-xs font-semibold text-amber-800 hover:border-amber-400 hover:bg-amber-100/70 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40'
+                  className='h-8 w-full border-slate-200 bg-emerald-50/40 text-xs font-semibold text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100/60 dark:border-slate-700 dark:bg-emerald-950/20 dark:text-emerald-300 dark:hover:bg-emerald-900/40'
                 >
-                  Kelola Periode <ArrowRight className='ml-1 h-3 w-3' />
+                  Kelola Kontak &amp; Notif{' '}
+                  <ArrowRight className='ml-1 h-3 w-3' />
                 </Button>
               </Link>
             </div>
