@@ -1,33 +1,90 @@
-import Link from 'next/link';
 import PageContainer from '@/components/layout/page-container';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription
-} from '@/components/ui/card';
 import PremiumCard from '@/components/ui/premium-card';
 import PilarCollapse from '@/components/rebo/pilar-collapse';
+import RBStructureGraph from '@/components/rebo/rb-structure-graph';
+import { createClient } from '@/lib/supabase/server';
+import { ExternalLink, FolderGit2 } from 'lucide-react';
+import {
+  DEFAULT_AREAS_DATA,
+  DEFAULT_PILAR_HASIL_DATA
+} from '@/constants/rb-structure-default';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Informasi Zona Integritas'
+  title: 'Informasi & Struktur Hierarki Zona Integritas'
 };
 
-export default function InformasiPage() {
+export default async function InformasiPage() {
   const gdriveLink =
     'https://drive.google.com/drive/folders/1GgIbNOoKb98xNtBXZcqyYahFAdd4ZtF_?usp=sharing';
+
+  let areasData: any[] = [];
+  let pilarHasilData: any[] = [];
+
+  try {
+    const supabase = await createClient();
+    const [areasRes, pilarHasilRes] = await Promise.all([
+      supabase
+        .from('area')
+        .select(
+          `
+          id_area,
+          nama_area,
+          pilar (
+            id_pilar,
+            nama_pilar,
+            subpilar (
+              id_subpilar,
+              nama_subpilar,
+              pertanyaan (
+                id_pertanyaan,
+                deskripsi_pertanyaan,
+                uraian_buktidukung,
+                kategoriPenilaian (
+                  id_kategori,
+                  uraian_kategori,
+                  nilai
+                )
+              )
+            )
+          )
+        `
+        )
+        .order('id_area', { ascending: true }),
+      supabase
+        .from('pilarHasil')
+        .select('*')
+        .order('id_pilarHasil', { ascending: true })
+    ]);
+
+    if (areasRes.data && areasRes.data.length > 0) {
+      areasData = areasRes.data;
+    } else {
+      areasData = DEFAULT_AREAS_DATA;
+    }
+    if (pilarHasilRes.data && pilarHasilRes.data.length > 0) {
+      pilarHasilData = pilarHasilRes.data;
+    } else {
+      pilarHasilData = DEFAULT_PILAR_HASIL_DATA;
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching RB structure for Informasi page:', err);
+    areasData = DEFAULT_AREAS_DATA;
+    pilarHasilData = DEFAULT_PILAR_HASIL_DATA;
+  }
+
   return (
     <PageContainer>
-      <div className='container mx-auto max-w-4xl py-6'>
-        <div className='-mx-6 rounded-3xl bg-gradient-to-b from-slate-50/60 to-white/60 p-6 shadow-sm'>
+      <div className='container mx-auto max-w-6xl space-y-8 py-6'>
+        {/* Intro Card */}
+        <div className='rounded-3xl bg-gradient-to-b from-slate-50/60 to-white/60 p-6 shadow-sm dark:from-slate-900/40 dark:to-slate-950'>
           <PremiumCard
-            title={'Informasi: Pembangunan Zona Integritas'}
-            description={
-              'Panduan singkat mengenai konsep dan komponen pembangunan Zona Integritas (ZI) Reformasi Birokrasi.'
-            }
+            title='Informasi: Pembangunan Zona Integritas'
+            description='Panduan komprehensif konsep, hierarki, dan komponen pembangunan Zona Integritas (ZI) Reformasi Birokrasi BPS.'
           >
-            <p className='mb-4 leading-relaxed'>
+            <p className='mb-4 leading-relaxed text-slate-700 dark:text-slate-300'>
               Pembangunan zona integritas bukanlah semata tentang kepatuhan pada
               peraturan, tetapi juga sebuah komitmen untuk menciptakan
               lingkungan kerja yang bersih, transparan, dan berintegritas. Pada
@@ -37,7 +94,7 @@ export default function InformasiPage() {
               pelayanan publik prima.
             </p>
 
-            <p className='mb-4 leading-relaxed'>
+            <p className='leading-relaxed text-slate-700 dark:text-slate-300'>
               Reformasi birokrasi di BPS bertujuan mewujudkan tata kelola yang
               efektif, efisien, bersih, dan bebas KKN melalui pembangunan Zona
               Integritas (ZI) menuju WBK/WBBM. Upaya ini menghadapi kendala
@@ -46,75 +103,125 @@ export default function InformasiPage() {
               diperlukan pedoman khusus pembangunan ZI di BPS agar reformasi
               birokrasi dapat berjalan lebih terarah dan optimal.
             </p>
+          </PremiumCard>
+        </div>
 
-            <h2 className='mt-6 mb-2 text-xl font-semibold'>Pengertian Umum</h2>
-            <div className='mb-6 rounded-xl border border-slate-100 bg-white p-4 shadow-md'>
-              <ol className='list-inside list-decimal space-y-2 text-slate-700'>
+        {/* ============================================================================== */}
+        {/* FITUR UTAMA: GRAPH & STRUKTUR HIERARKI RB */}
+        {/* ============================================================================== */}
+        <section className='space-y-4'>
+          <div className='flex items-center gap-2'>
+            <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm'>
+              <FolderGit2 className='h-4 w-4' />
+            </div>
+            <div>
+              <h2 className='text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100'>
+                Bagan & Struktur Hierarki Reformasi Birokrasi
+              </h2>
+              <p className='text-xs text-slate-500'>
+                Eksplorasi grafis interaktif mulai dari Komponen Utama hingga
+                Indikator / Pertanyaan LKE dan Bukti Dukung.
+              </p>
+            </div>
+          </div>
+
+          <RBStructureGraph
+            areasData={areasData}
+            pilarHasilData={pilarHasilData}
+          />
+        </section>
+
+        {/* Pengertian Umum & Komponen Pengungkit Accordions */}
+        <div className='rounded-3xl bg-gradient-to-b from-slate-50/60 to-white/60 p-6 shadow-sm dark:from-slate-900/40 dark:to-slate-950'>
+          <PremiumCard
+            title='Pedoman & Pengertian Umum ZI'
+            description='Definisi dan istilah resmi dalam kerangka evaluasi PMPRB dan Zona Integritas.'
+          >
+            <h3 className='mt-2 mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100'>
+              Pengertian Umum
+            </h3>
+            <div className='mb-6 rounded-xl border border-slate-100 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900'>
+              <ol className='list-inside list-decimal space-y-2 text-sm text-slate-700 dark:text-slate-300'>
                 <li>
-                  Zona Integritas (ZI) adalah instansi pemerintah yang pimpinan
-                  dan jajarannya telah berkomitmen untuk mewujudkan Wilayah
-                  Bebas dari Korupsi/Wilayah Birokrasi Bersih dan Melayani
-                  melalui reformasi birokrasi.
+                  <strong className='font-semibold'>
+                    Zona Integritas (ZI)
+                  </strong>
+                  : instansi pemerintah yang pimpinan dan jajarannya telah
+                  berkomitmen untuk mewujudkan Wilayah Bebas dari
+                  Korupsi/Wilayah Birokrasi Bersih dan Melayani melalui
+                  reformasi birokrasi.
                 </li>
                 <li>
-                  Wilayah Bebas dari Korupsi (WBK) adalah predikat yang
-                  diberikan kepada unit/satuan kerja yang telah berhasil
-                  melaksanakan reformasi birokrasi dengan baik.
+                  <strong className='font-semibold'>
+                    Wilayah Bebas dari Korupsi (WBK)
+                  </strong>
+                  : predikat yang diberikan kepada unit/satuan kerja yang telah
+                  berhasil melaksanakan reformasi birokrasi dengan baik.
                 </li>
                 <li>
-                  Wilayah Birokrasi Bersih dan Melayani (WBBM) adalah predikat
-                  untuk unit/satuan kerja yang telah melaksanakan reformasi
-                  birokrasi dengan sangat baik.
+                  <strong className='font-semibold'>
+                    Wilayah Birokrasi Bersih dan Melayani (WBBM)
+                  </strong>
+                  : predikat untuk unit/satuan kerja yang telah melaksanakan
+                  reformasi birokrasi dengan sangat baik.
                 </li>
                 <li>
-                  Unit Kerja: serendah-rendahnya eselon II yang menyelenggarakan
+                  <strong className='font-semibold'>Unit Kerja</strong>:
+                  serendah-rendahnya eselon II yang menyelenggarakan layanan.
+                </li>
+                <li>
+                  <strong className='font-semibold'>Satker</strong>:
+                  serendah-rendahnya unit Eselon III yang menyelenggarakan
                   layanan.
                 </li>
                 <li>
-                  Satker: serendah-rendahnya unit Eselon III yang
-                  menyelenggarakan layanan.
+                  <strong className='font-semibold'>
+                    Tim Pembinaan Pembangunan ZI
+                  </strong>
+                  : tim yang dibentuk oleh BPS untuk pembinaan dan pendampingan
+                  (contoh: Biro Perencanaan untuk BPS).
                 </li>
                 <li>
-                  Tim Pembinaan Pembangunan ZI: tim yang dibentuk oleh BPS untuk
-                  pembinaan dan pendampingan (contoh: Biro Perencanaan untuk
-                  BPS).
-                </li>
-                <li>
-                  Tim Penanggung Jawab Kegiatan (PJK) Evaluasi Pembangunan ZI:
-                  melakukan koordinasi evaluasi pembangunan ZI (contoh:
+                  <strong className='font-semibold'>
+                    Tim Penanggung Jawab Kegiatan (PJK) Evaluasi
+                  </strong>
+                  : melakukan koordinasi evaluasi pembangunan ZI (contoh:
                   Inspektorat Wilayah III di BPS).
                 </li>
                 <li>
-                  Tim Penilai Internal (TPI): tim internal yang melakukan
-                  evaluasi dan memberikan rekomendasi bagi unit yang sedang
-                  membangun ZI.
+                  <strong className='font-semibold'>
+                    Tim Penilai Internal (TPI)
+                  </strong>
+                  : tim internal yang melakukan evaluasi dan memberikan
+                  rekomendasi bagi unit yang sedang membangun ZI.
                 </li>
                 <li>
-                  Tim Penilai Pendahuluan (TPP): ditetapkan pada level provinsi
-                  untuk menilai dan merekomendasikan satker sebelum diusulkan ke
-                  TPI.
+                  <strong className='font-semibold'>
+                    Tim Penilai Pendahuluan (TPP)
+                  </strong>
+                  : ditetapkan pada level provinsi untuk menilai dan
+                  merekomendasikan satker sebelum diusulkan ke TPI.
                 </li>
                 <li>
-                  Tim Penilai Mandiri (TPM): tim untuk penilaian mandiri dalam
-                  proses memperoleh predikat WBK.
+                  <strong className='font-semibold'>
+                    Tim Penilai Mandiri (TPM)
+                  </strong>
+                  : tim untuk penilaian mandiri dalam proses memperoleh predikat
+                  WBK.
                 </li>
                 <li>
-                  Tim Penilai Nasional (TPN): tim nasional yang terdiri dari
-                  kementerian terkait dan instansi pemerintah lain untuk
-                  evaluasi ZI.
+                  <strong className='font-semibold'>
+                    Tim Penilai Nasional (TPN)
+                  </strong>
+                  : tim nasional yang terdiri dari KemenPAN-RB, KPK, Ombudsman
+                  RI dan instansi pemerintah lain untuk evaluasi ZI.
                 </li>
               </ol>
             </div>
 
-            <p className='mb-4'>
-              Pembangunan ZI mencakup dua komponen: pengungkit dan hasil.
-              Komponen pengungkit fokus pada tata kelola internal, sementara
-              komponen hasil menilai dampak yang dirasakan stakeholder.
-            </p>
-
-            <h2 className='mt-6 mb-2 text-xl font-semibold'>
-              Komponen Pengungkit
-            </h2>
+            <h3 className='mt-6 mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100'>
+              Rincian 6 Komponen Pengungkit
+            </h3>
 
             <PilarCollapse
               title='1. Manajemen Perubahan'
@@ -170,7 +277,7 @@ export default function InformasiPage() {
               </p>
               <ul className='ml-4 list-inside list-disc'>
                 <li>Meningkatnya kinerja instansi pemerintah.</li>
-                <li>Meningkatnya akuntabilitas instansi Pemerintah..</li>
+                <li>Meningkatnya akuntabilitas instansi Pemerintah.</li>
               </ul>
             </PilarCollapse>
 
@@ -209,9 +316,10 @@ export default function InformasiPage() {
           </PremiumCard>
         </div>
 
-        <div className='mb-8 flex flex-col gap-2 rounded-xl border bg-gradient-to-br from-blue-100 via-white to-blue-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:border-gray-700 dark:bg-gradient-to-br dark:from-blue-900 dark:via-gray-900 dark:to-gray-900'>
-          <div className='flex items-center gap-2'>
-            <span className='inline-flex items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-700 p-1 shadow'>
+        {/* Link GDrive Buku Pedoman */}
+        <div className='flex flex-col gap-2 rounded-2xl border bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 shadow-md transition-all duration-300 hover:shadow-lg dark:border-gray-800 dark:from-blue-950/40 dark:via-gray-900 dark:to-gray-900'>
+          <div className='flex items-center gap-2.5'>
+            <span className='inline-flex items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 p-1.5 shadow'>
               <svg
                 width='20'
                 height='20'
@@ -234,21 +342,25 @@ export default function InformasiPage() {
                 />
               </svg>
             </span>
-            <span className='text-base font-semibold text-gray-700 dark:text-gray-300'>
-              Link GDrive Buku Pedoman
+            <span className='text-base font-semibold text-gray-800 dark:text-gray-200'>
+              Repositori & Buku Pedoman Zona Integritas
             </span>
           </div>
-          <a
-            href={gdriveLink}
-            target='_blank'
-            rel='noopener noreferrer'
-            className='mt-2 inline-block rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2 text-sm font-bold text-white shadow-md transition-all duration-200 hover:scale-105 hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-800 dark:hover:to-blue-900 dark:focus:ring-offset-gray-900'
-          >
-            Buka Folder GDrive
-          </a>
-          <p className='mt-2 text-xs text-gray-500 dark:text-gray-400'>
-            Folder berisi seluruh dokumen Pedoman RB.
+          <p className='text-xs text-gray-600 dark:text-gray-400'>
+            Akses seluruh dokumen pedoman teknis, template eviden, PermenPAN-RB,
+            dan buku saku ZI BPS RI.
           </p>
+          <div className='mt-2'>
+            <a
+              href={gdriveLink}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:from-blue-700 hover:to-indigo-700'
+            >
+              <span>Buka Folder Google Drive Pedoman</span>
+              <ExternalLink className='h-3.5 w-3.5' />
+            </a>
+          </div>
         </div>
       </div>
     </PageContainer>

@@ -36,7 +36,7 @@ export default async function SubpilarPage(props: PageProps) {
     .select(
       `
       *,
-      pilar (id_pilar, nama_pilar, kode_pilar)
+      pilar (id_pilar, nama_pilar)
     `
     )
     .order('id_subpilar', { ascending: true });

@@ -108,8 +108,6 @@ export async function createPilar(rawInput: PilarInput) {
     const newRecord = {
       id_pilar: assignedId,
       nama_pilar: validated.nama_pilar,
-      kode_pilar: validated.kode_pilar || `Pilar ${assignedId}`,
-      deskripsi_pilar: validated.deskripsi_pilar || '',
       id_area: validated.id_area
     };
 
@@ -178,8 +176,6 @@ export async function updatePilar(
 
     const updatePayload = {
       nama_pilar: validated.nama_pilar,
-      kode_pilar: validated.kode_pilar || `Pilar ${targetId}`,
-      deskripsi_pilar: validated.deskripsi_pilar || '',
       id_area: validated.id_area
     };
 
@@ -341,7 +337,6 @@ export async function createSubpilar(rawInput: SubpilarInput) {
     const newRecord = {
       id_subpilar: assignedId,
       nama_subpilar: validated.nama_subpilar,
-      deskripsi_subpilar: validated.deskripsi_subpilar || '',
       id_pilar: Number(validated.id_pilar)
     };
 
@@ -412,7 +407,6 @@ export async function updateSubpilar(
 
     const updatePayload = {
       nama_subpilar: validated.nama_subpilar,
-      deskripsi_subpilar: validated.deskripsi_subpilar || '',
       id_pilar: Number(validated.id_pilar)
     };
 
@@ -557,27 +551,36 @@ export async function createPertanyaan(rawInput: PertanyaanInput) {
     const supabase = await createClient();
 
     // Cek apakah ID pertanyaan sudah terpakai
+    let assignedId = Number(validated.id_pertanyaan);
+    if (isNaN(assignedId)) {
+      const { data: maxRow } = await supabase
+        .from('pertanyaan')
+        .select('id_pertanyaan')
+        .order('id_pertanyaan', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      assignedId =
+        (maxRow?.id_pertanyaan ? Number(maxRow.id_pertanyaan) : 0) + 1;
+    }
+
     const { data: existing } = await supabase
       .from('pertanyaan')
       .select('id_pertanyaan')
-      .eq('id_pertanyaan', validated.id_pertanyaan)
+      .eq('id_pertanyaan', assignedId)
       .maybeSingle();
 
     if (existing) {
       return {
         success: false,
-        error: `Kode/ID Pertanyaan "${validated.id_pertanyaan}" sudah digunakan. Gunakan ID unik lainnya.`
+        error: `Kode/ID Pertanyaan "${assignedId}" sudah digunakan. Gunakan ID unik lainnya.`
       };
     }
 
     const newRecord = {
-      id_pertanyaan: validated.id_pertanyaan,
-      uraian_pertanyaan: validated.uraian_pertanyaan,
-      uraian_singkat:
-        validated.uraian_singkat ||
-        validated.uraian_pertanyaan.substring(0, 100),
+      id_pertanyaan: assignedId,
       deskripsi_pertanyaan:
-        validated.deskripsi_pertanyaan || validated.uraian_pertanyaan,
+        validated.uraian_pertanyaan || validated.deskripsi_pertanyaan || '',
+      uraian_buktidukung: validated.uraian_singkat || '',
       id_subpilar: Number(validated.id_subpilar)
     };
 
@@ -663,11 +666,12 @@ export async function updatePertanyaan(
     }
 
     const supabase = await createClient();
+    const targetId = Number(idPertanyaan);
 
     const { data: oldData } = await supabase
       .from('pertanyaan')
       .select('*')
-      .eq('id_pertanyaan', idPertanyaan)
+      .eq('id_pertanyaan', targetId)
       .maybeSingle();
 
     if (!oldData) {
@@ -675,14 +679,15 @@ export async function updatePertanyaan(
     }
 
     const updatePayload: Record<string, any> = {};
-    if (rawInput.uraian_pertanyaan !== undefined) {
-      updatePayload.uraian_pertanyaan = rawInput.uraian_pertanyaan;
+    if (
+      rawInput.uraian_pertanyaan !== undefined ||
+      rawInput.deskripsi_pertanyaan !== undefined
+    ) {
+      updatePayload.deskripsi_pertanyaan =
+        rawInput.uraian_pertanyaan || rawInput.deskripsi_pertanyaan || '';
     }
     if (rawInput.uraian_singkat !== undefined) {
-      updatePayload.uraian_singkat = rawInput.uraian_singkat;
-    }
-    if (rawInput.deskripsi_pertanyaan !== undefined) {
-      updatePayload.deskripsi_pertanyaan = rawInput.deskripsi_pertanyaan;
+      updatePayload.uraian_buktidukung = rawInput.uraian_singkat;
     }
     if (rawInput.id_subpilar !== undefined) {
       updatePayload.id_subpilar = Number(rawInput.id_subpilar);
@@ -691,7 +696,7 @@ export async function updatePertanyaan(
     const { data, error } = await supabase
       .from('pertanyaan')
       .update(updatePayload)
-      .eq('id_pertanyaan', idPertanyaan)
+      .eq('id_pertanyaan', targetId)
       .select()
       .single();
 
@@ -742,34 +747,29 @@ export async function deletePertanyaan(idPertanyaan: string) {
     }
 
     const supabase = await createClient();
+    const targetId = Number(idPertanyaan);
 
     const { data: oldData } = await supabase
       .from('pertanyaan')
       .select('*')
-      .eq('id_pertanyaan', idPertanyaan)
+      .eq('id_pertanyaan', targetId)
       .maybeSingle();
 
     if (!oldData) {
       return { success: false, error: 'Pertanyaan tidak ditemukan.' };
     }
 
-    // Hapus relasi pertanyaan_periode dan kategoriPenilaian terlebih dahulu untuk keamanan
-    await supabase.from('dokumen_bukti').delete().match({
-      id_pertanyaan_periode: idPertanyaan
-    });
+    // Hapus relasi di tabel buktiDukung dan kategoriPenilaian terlebih dahulu untuk integritas referensial
+    await supabase.from('buktiDukung').delete().eq('id_pertanyaan', targetId);
     await supabase
       .from('kategoriPenilaian')
       .delete()
-      .eq('id_pertanyaan', idPertanyaan);
-    await supabase
-      .from('pertanyaan_periode')
-      .delete()
-      .eq('id_pertanyaan', idPertanyaan);
+      .eq('id_pertanyaan', targetId);
 
     const { error } = await supabase
       .from('pertanyaan')
       .delete()
-      .eq('id_pertanyaan', idPertanyaan);
+      .eq('id_pertanyaan', targetId);
 
     if (error) {
       console.error('[MASTER-DATA] Error deleting pertanyaan:', error.message);
@@ -825,13 +825,22 @@ export async function createKategoriPenilaian(
     const validated = KategoriPenilaianSchema.parse(rawInput);
     const supabase = await createClient();
 
-    const assignedId =
-      validated.id_kategori ||
-      `kat_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    let assignedId: number;
+    if (validated.id_kategori && !isNaN(Number(validated.id_kategori))) {
+      assignedId = Number(validated.id_kategori);
+    } else {
+      const { data: maxRow } = await supabase
+        .from('kategoriPenilaian')
+        .select('id_kategori')
+        .order('id_kategori', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      assignedId = (maxRow?.id_kategori ? Number(maxRow.id_kategori) : 0) + 1;
+    }
 
     const newRecord = {
       id_kategori: assignedId,
-      id_pertanyaan: validated.id_pertanyaan,
+      id_pertanyaan: Number(validated.id_pertanyaan),
       uraian_kategori: validated.uraian_kategori,
       nilai: validated.nilai
     };
@@ -894,11 +903,12 @@ export async function updateKategoriPenilaian(
     }
 
     const supabase = await createClient();
+    const targetId = Number(idKategori);
 
     const { data: oldData } = await supabase
       .from('kategoriPenilaian')
       .select('*')
-      .eq('id_kategori', idKategori)
+      .eq('id_kategori', targetId)
       .maybeSingle();
 
     const updatePayload = {
@@ -909,7 +919,7 @@ export async function updateKategoriPenilaian(
     const { data: updated, error } = await supabase
       .from('kategoriPenilaian')
       .update(updatePayload)
-      .eq('id_kategori', idKategori)
+      .eq('id_kategori', targetId)
       .select()
       .single();
 
@@ -963,17 +973,18 @@ export async function deleteKategoriPenilaian(idKategori: string) {
     }
 
     const supabase = await createClient();
+    const targetId = Number(idKategori);
 
     const { data: oldData } = await supabase
       .from('kategoriPenilaian')
       .select('*')
-      .eq('id_kategori', idKategori)
+      .eq('id_kategori', targetId)
       .maybeSingle();
 
     const { error } = await supabase
       .from('kategoriPenilaian')
       .delete()
-      .eq('id_kategori', idKategori);
+      .eq('id_kategori', targetId);
 
     if (error) {
       console.error(

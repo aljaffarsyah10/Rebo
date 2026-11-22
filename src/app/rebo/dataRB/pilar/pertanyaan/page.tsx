@@ -36,14 +36,13 @@ export default async function PertanyaanPage(props: PageProps) {
     .order('id_subpilar', { ascending: true });
 
   // 2. Ambil master pertanyaan berjenjang beserta subpilar, pilar, dan opsi kategoriPenilaian
-  const { data: pertanyaanData, error } = await supabase
+  const { data: rawPertanyaanData, error } = await supabase
     .from('pertanyaan')
     .select(
       `
       id_pertanyaan,
-      uraian_pertanyaan,
-      uraian_singkat,
       deskripsi_pertanyaan,
+      uraian_buktidukung,
       id_subpilar,
       subpilar (
         id_subpilar,
@@ -65,9 +64,26 @@ export default async function PertanyaanPage(props: PageProps) {
     console.error('Error fetching pertanyaan master:', error.message);
   }
 
+  const mappedPertanyaans = (rawPertanyaanData || []).map((q: any) => ({
+    ...q,
+    id_pertanyaan: String(q.id_pertanyaan),
+    uraian_pertanyaan: q.deskripsi_pertanyaan || '',
+    uraian_singkat:
+      q.uraian_buktidukung ||
+      (q.deskripsi_pertanyaan ? q.deskripsi_pertanyaan.substring(0, 100) : ''),
+    deskripsi_pertanyaan: q.deskripsi_pertanyaan || '',
+    kategoriPenilaian: (q.kategoriPenilaian || []).map((k: any) => ({
+      ...k,
+      id_kategori: String(k.id_kategori),
+      id_pertanyaan: String(k.id_pertanyaan),
+      uraian_kategori: k.uraian_kategori || '',
+      nilai: Number(k.nilai || 0)
+    }))
+  }));
+
   return (
     <PertanyaanManagerClient
-      initialPertanyaans={(pertanyaanData as any) || []}
+      initialPertanyaans={mappedPertanyaans}
       subpilars={subpilarsData || []}
       pilars={pilarsData || []}
       isAdmin={isSuperAdmin}

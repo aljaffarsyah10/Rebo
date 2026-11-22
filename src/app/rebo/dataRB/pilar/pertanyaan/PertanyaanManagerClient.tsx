@@ -235,7 +235,14 @@ export default function PertanyaanManagerClient({
             : undefined;
 
           const newItem: PertanyaanItem = {
-            ...(res.data as PertanyaanItem),
+            id_pertanyaan: String(res.data.id_pertanyaan),
+            uraian_pertanyaan:
+              res.data.deskripsi_pertanyaan || formUraian.trim(),
+            uraian_singkat:
+              res.data.uraian_buktidukung || formSingkat.trim() || undefined,
+            deskripsi_pertanyaan:
+              res.data.deskripsi_pertanyaan || formUraian.trim(),
+            id_subpilar: Number(formSubpilar),
             subpilar: matchedSp
               ? {
                   id_subpilar: matchedSp.id_subpilar,
@@ -285,7 +292,15 @@ export default function PertanyaanManagerClient({
               item.id_pertanyaan === activePertanyaan.id_pertanyaan
                 ? {
                     ...item,
-                    ...(res.data as PertanyaanItem),
+                    uraian_pertanyaan:
+                      res.data.deskripsi_pertanyaan || formUraian.trim(),
+                    uraian_singkat:
+                      res.data.uraian_buktidukung ||
+                      formSingkat.trim() ||
+                      undefined,
+                    deskripsi_pertanyaan:
+                      res.data.deskripsi_pertanyaan || formUraian.trim(),
+                    id_subpilar: Number(formSubpilar),
                     subpilar: matchedSp
                       ? {
                           id_subpilar: matchedSp.id_subpilar,
@@ -609,12 +624,16 @@ export default function PertanyaanManagerClient({
                           {q.uraian_pertanyaan}
                         </CardTitle>
 
-                        {q.uraian_singkat &&
-                          q.uraian_singkat !== q.uraian_pertanyaan && (
-                            <CardDescription className='line-clamp-2 text-xs'>
+                        {q.uraian_singkat && (
+                          <div className='mt-2.5 rounded-md border border-amber-200/70 bg-amber-50/60 p-2.5 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200'>
+                            <span className='mb-1 block text-[11px] font-semibold text-amber-800 dark:text-amber-400'>
+                              Panduan Bukti Dukung:
+                            </span>
+                            <p className='text-xs leading-relaxed whitespace-pre-line'>
                               {q.uraian_singkat}
-                            </CardDescription>
-                          )}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Right Action buttons */}
@@ -792,13 +811,14 @@ export default function PertanyaanManagerClient({
 
                 <div className='space-y-1.5'>
                   <Label htmlFor='uraianSingkat'>
-                    Uraian Singkat (Label Tab / Form)
+                    Panduan Bukti Dukung (Kebutuhan Dokumen)
                   </Label>
-                  <Input
+                  <Textarea
                     id='uraianSingkat'
                     value={formSingkat}
                     onChange={(e) => setFormSingkat(e.target.value)}
-                    placeholder='Ringkasan pendek pertanyaan...'
+                    placeholder='Contoh: (i) Undangan, notula rapat... (ii) Dokumen PK yang ditandatangani...'
+                    rows={3}
                   />
                 </div>
               </div>
