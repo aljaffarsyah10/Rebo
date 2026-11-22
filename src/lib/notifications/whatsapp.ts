@@ -225,3 +225,124 @@ _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
 }
 
 export const formatSubmissionMessage = formatBuktiSubmittedNotification;
+
+/**
+ * Template Pesan Notifikasi Pengingat Deadline LKE untuk PIC Pilar
+ */
+export interface DeadlineReminderParams {
+  namaPic: string;
+  namaPilar: string;
+  pilarId: number;
+  tahun: number;
+  tanggalSelesaiFormatted: string;
+  sisaHari: number;
+  belumDiisi: number;
+  perluRevisi: number;
+  menungguReview: number;
+  disetujui: number;
+  total: number;
+  persenDisetujui: number;
+  appUrl?: string;
+}
+
+export function formatDeadlineReminderMessage(
+  params: DeadlineReminderParams
+): string {
+  const baseAppUrl =
+    params.appUrl || process.env.APP_URL || 'https://rebo.sitarokab.bps.go.id';
+  const urgencyIcon =
+    params.sisaHari <= 3 ? '🚨' : params.sisaHari <= 7 ? '⚠️' : '⏰';
+  const sisaHariText =
+    params.sisaHari <= 0
+      ? '*BATAS WAKTU HARI INI / TELAH LEWAT*'
+      : `*Sisa ${params.sisaHari} Hari lagi*`;
+
+  return `${urgencyIcon} *[REBO V2 - PENGINGAT DEADLINE LKE ZI/RB]*
+
+Halo Yth. *${params.namaPic}*,
+Koordinator *${params.namaPilar}*
+
+Mengingatkan kembali batas waktu pengumpulan dan pemenuhan dokumen Lembar Kerja Evaluasi (LKE) ZI/RB BPS Kabupaten Kepulauan Sitaro Tahun ${params.tahun}:
+
+📅 *Tenggat Waktu:* ${params.tanggalSelesaiFormatted} (${sisaHariText})
+
+📊 *Status Capaian ${params.namaPilar}:*
+• ⚪ Belum Diisi: *${params.belumDiisi}* indikator
+• 🔴 Perlu Revisi: *${params.perluRevisi}* indikator
+• 🟡 Menunggu Review: *${params.menungguReview}* indikator
+• 🟢 Telah Disetujui: *${params.disetujui}* dari *${params.total}* indikator (${params.persenDisetujui}%)
+
+⚠️ Mohon perkenan Bapak/Ibu untuk segera mengunggah kelengkapan dokumen dan menyelesaikan revisi sebelum batas waktu berakhir.
+
+🔗 Akses formulir & tindak lanjut:
+${baseAppUrl}/rebo/kanban
+
+_Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
+}
+
+/**
+ * Template Pesan Notifikasi Rekapitulasi Progres LKE untuk Admin & Pimpinan
+ */
+export interface WeeklyRecapParams {
+  tahun: number;
+  namaPeriode: string;
+  tanggalSelesaiFormatted: string;
+  sisaHari: number;
+  globalStats: {
+    total: number;
+    disetujui: number;
+    menungguReview: number;
+    perluRevisi: number;
+    belumDiisi: number;
+    persenDisetujui: number;
+  };
+  pilarList: Array<{
+    pilarId: number;
+    namaPilar: string;
+    persenDisetujui: number;
+    belumDiisi: number;
+    perluRevisi: number;
+    disetujui: number;
+    total: number;
+  }>;
+  appUrl?: string;
+}
+
+export function formatWeeklyRecapMessage(params: WeeklyRecapParams): string {
+  const baseAppUrl =
+    params.appUrl || process.env.APP_URL || 'https://rebo.sitarokab.bps.go.id';
+  const sisaHariText =
+    params.sisaHari <= 0
+      ? '*Batas Waktu Berakhir*'
+      : `Sisa ${params.sisaHari} Hari`;
+
+  const pilarLines = params.pilarList
+    .map(
+      (p, i) =>
+        `${i + 1}. *${p.namaPilar}*: ${p.persenDisetujui}% (Disetujui: ${p.disetujui}/${p.total}, Belum: ${p.belumDiisi}, Revisi: ${p.perluRevisi})`
+    )
+    .join('\n');
+
+  return `📊 *[REBO V2 - REKAPITULASI PROGRES LKE ZI/RB]*
+
+Yth. Pimpinan & Tim Pengarah ZI/RB BPS Kabupaten Kepulauan Sitaro,
+
+Berikut ringkasan progres pemenuhan Lembar Kerja Evaluasi (LKE) ZI/RB Periode *${params.namaPeriode}*:
+
+📅 *Batas Waktu:* ${params.tanggalSelesaiFormatted} (${sisaHariText})
+🎯 *Progress Keseluruhan:* *${params.globalStats.disetujui}/${params.globalStats.total}* Indikator Disetujui (*${params.globalStats.persenDisetujui}%*)
+
+🏛️ *Rincian Capaian per Pilar:*
+${pilarLines}
+
+📌 *Status Akumulasi:*
+• 🟢 Disetujui: *${params.globalStats.disetujui}* indikator
+• 🟡 Menunggu Review: *${params.globalStats.menungguReview}* indikator
+• 🔴 Perlu Revisi: *${params.globalStats.perluRevisi}* indikator
+• ⚪ Belum Diisi: *${params.globalStats.belumDiisi}* indikator
+
+🔗 Pantau dashboard pemantauan real-time:
+${baseAppUrl}/rebo/monitoring
+
+_Laporan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
+}

@@ -14,11 +14,11 @@
 ### 1. Konfigurasi Lingkungan & Konektivitas
 - [x] **Setup WhatsApp Gateway Service:** Engine Baileys + Express REST API di `services/wa-gateway`.
 - [x] **Pemasangan QR Scanner Web UI:** Endpoint `/qr` untuk kemudahan pairing akun WhatsApp bot.
-- [ ] **Konfigurasi Environment Variables:**
+- [x] **Konfigurasi Environment Variables:**
   - Tambahkan `WHATSAPP_GATEWAY_URL` di `.env.local` lokal dan Vercel Environment Variables (`https://<nama-service>.onrender.com`).
   - Tambahkan `WHATSAPP_API_KEY` (opsional jika mengaktifkan proteksi API key).
-- [ ] **Keep-Alive Worker untuk Render Free Tier:**
-  - Pasang ping otomatis via Cron-job.org atau Vercel Cron ke endpoint `https://<nama-service>.onrender.com/health` tiap 10-14 menit agar instance gateway tidak tertidur (*sleep*).
+- [x] **Keep-Alive Worker untuk Render Free Tier:**
+  - Pasang ping otomatis via GitHub Actions (`.github/workflows/keep_alive.yml`), script `scripts/keep_alive.js`, dan route API `/api/cron/keep-alive` ke endpoint `https://<nama-service>.onrender.com/health` tiap 12 menit agar instance gateway tidak tertidur (*sleep*) 24/7 dan Supabase tetap aktif.
 
 ### 2. Pengelolaan Data Nomor HP & Profil Pengguna
 - [x] **Kolom Nomor Telepon & Schema Tabel Kontak:**
@@ -37,9 +37,10 @@
 - [x] **Notifikasi Penolakan / Perlu Revisi (Verifikator ➔ PIC):**
   - Kirim notifikasi prioritas tinggi ke PIC saat bukti ditolak dengan status `REVISION_REQUIRED`.
   - *Isi Template:* Rincian catatan revisi verifikator + tenggat waktu perbaikan + link langsung ke indikator terkait.
-- [ ] **Notifikasi Pengingat Deadline & Rekapitulasi Berkala:**
-  - Pengingat otomatis H-30, H-14, H-7 menjelang batas waktu evaluasi jika masih ada indikator berstatus `Belum Diisi` atau `Perlu Revisi`.
+- [x] **Notifikasi Pengingat Deadline & Rekapitulasi Berkala:**
+  - Pengingat otomatis H-30, H-14, H-7, H-3, H-1 menjelang batas waktu evaluasi jika masih ada indikator berstatus `Belum Diisi` atau `Perlu Revisi`.
   - Rekap mingguan progres pilar ke Admin / Pimpinan BPS Sitaro.
+  - Implementasi engine: `src/lib/notifications/reminders.ts`, API endpoint `/api/cron/wa-reminders`, dan CLI runner `scripts/send_wa_reminders.js`.
 
 ### 4. Pengujian & Observabilitas
 - [ ] **Uji Coba Pengiriman Pesan Nyata (End-to-End):**
@@ -70,8 +71,8 @@
   - [ ] Hitung estimasi skor akhir berdasarkan bukti yang sudah valid serta tandai indikator berbobot tinggi yang belum optimal.
 
 ### 3. Otomasi Pengingat & Tindak Lanjut
-- [ ] **Early Warning Deadline System:**
-  - [ ] Notifikasi pengingat otomatis (jadwal H-30, H-14, H-7 jelang batas pengumpulan pusat) untuk PIC pilar yang indikatornya belum lengkap.
+- [x] **Early Warning Deadline System:**
+  - [x] Notifikasi pengingat otomatis (jadwal H-30, H-14, H-7, H-3, H-1 jelang batas pengumpulan pusat) untuk PIC pilar yang indikatornya belum lengkap.
 - [ ] **Auto-Card Kanban dari Catatan Revisi:**
   - [ ] Setiap catatan penolakan/revisi dari verifikator internal otomatis terbuat sebagai kartu tugas di Kanban Board tindak lanjut.
 

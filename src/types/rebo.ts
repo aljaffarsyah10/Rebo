@@ -81,6 +81,8 @@ export interface PeriodeEvaluasi {
   id: string;
   tahun: number;
   nama_periode: string;
+  tanggal_mulai?: string | null;
+  tanggal_selesai?: string | null;
   is_active: boolean;
   is_locked: boolean;
   created_at?: string;
