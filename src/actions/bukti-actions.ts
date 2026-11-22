@@ -12,6 +12,10 @@ import {
   type PertanyaanPeriode,
   type StatusKelengkapan
 } from '@/types/rebo';
+import {
+  sendWhatsAppMessage,
+  formatSubmissionMessage
+} from '@/lib/notifications/whatsapp';
 
 // ==============================================================================
 // 1. Zod Validation Schemas
@@ -94,7 +98,9 @@ export async function submitBuktiAction(
     // 3. Dapatkan pilar pemilik pertanyaan untuk memvalidasi izin edit RBAC
     const { data: qData, error: qError } = await supabase
       .from('pertanyaan')
-      .select('id_pertanyaan, id_subpilar, subpilar (id_subpilar, id_pilar)')
+      .select(
+        'id_pertanyaan, deskripsi_pertanyaan, id_subpilar, subpilar (id_subpilar, id_pilar, pilar (id_pilar, nama_pilar))'
+      )
       .eq('id_pertanyaan', validated.id_pertanyaan)
       .maybeSingle();
 
@@ -384,6 +390,40 @@ export async function submitBuktiAction(
     const successMessage = validated.submit_for_review
       ? 'Bukti dukung dan penilaian mandiri berhasil disimpan serta diajukan untuk review koordinator.'
       : 'Draf bukti dukung dan penilaian mandiri berhasil disimpan.';
+
+    // 15. Notifikasi WhatsApp otomatis ke Koordinator jika diajukan untuk review
+    if (validated.submit_for_review) {
+      try {
+        const qDesc =
+          (qData as any)?.deskripsi_pertanyaan ||
+          `Indikator ${validated.id_pertanyaan}`;
+        const pName =
+          (qData as any)?.subpilar?.pilar?.nama_pilar ||
+          `Pilar ${targetPilarId || ''}`;
+        const msg = formatSubmissionMessage({
+          indikatorKode: String(validated.id_pertanyaan),
+          namaIndikator: qDesc,
+          pilarNama: pName,
+          namaOperator:
+            session.fullName || session.email || 'Operator Tim Kerja',
+          totalDokumen: validated.dokumen_list.length
+        });
+
+        if (process.env.WA_GATEWAY_URL && process.env.WA_DEFAULT_RECEIVER) {
+          sendWhatsAppMessage({
+            phone: process.env.WA_DEFAULT_RECEIVER,
+            message: msg
+          }).catch((err) =>
+            console.warn('[WA-NOTIFICATION] Async error:', err)
+          );
+        }
+      } catch (waErr) {
+        console.warn(
+          '[WA-NOTIFICATION] Warning creating submission notification:',
+          waErr
+        );
+      }
+    }
 
     return {
       success: true,

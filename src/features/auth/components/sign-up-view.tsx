@@ -1,166 +1,190 @@
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { SignUp as ClerkSignUpForm } from '@clerk/nextjs';
-import { GitHubLogoIcon } from '@radix-ui/react-icons';
-import { IconStar } from '@tabler/icons-react';
-import { Metadata } from 'next';
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { SignUp as ClerkSignUpForm } from '@clerk/nextjs';
+import {
+  FolderSync,
+  ShieldCheck,
+  BarChart3,
+  RefreshCw,
+  Award
+} from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Authentication',
-  description: 'Authentication forms built using the components.'
-};
-
-export default function SignUpViewPage({ stars }: { stars: number }) {
+export default function SignUpViewPage() {
   return (
-    <div className='relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0'>
-      <Link
-        href='/examples/authentication'
-        className={cn(
-          buttonVariants({ variant: 'ghost' }),
-          'absolute top-4 right-4 z-30 hidden md:top-8 md:right-8'
-        )}
-      >
-        Sign Up
-      </Link>
-      <div className='relative hidden h-full flex-col overflow-hidden bg-gradient-to-br from-[#023047] via-[#023047]/95 to-[#034469] p-10 text-white lg:flex dark:border-r'>
-        <div className='absolute inset-0 bg-gradient-to-br from-[#023047]/90 via-[#023047]/80 to-[#034469]/90' />
-        {/* Enhanced Decorative elements */}
-        <div className='absolute top-0 left-0 h-full w-full'>
-          <div className='absolute top-10 left-10 h-32 w-32 animate-pulse rounded-full bg-[#fb8500]/10 blur-xl'></div>
-          <div className='absolute right-20 bottom-20 h-40 w-40 animate-pulse rounded-full bg-[#ffb703]/15 blur-2xl'></div>
-          <div className='absolute top-1/2 left-1/4 h-24 w-24 animate-pulse rounded-full bg-[#fb8500]/20 blur-lg'></div>
-          <div className='absolute top-1/3 right-1/3 h-16 w-16 animate-pulse rounded-full bg-[#ffb703]/10 blur-lg'></div>
-          <div className='absolute bottom-1/3 left-1/2 h-20 w-20 animate-pulse rounded-full bg-[#fb8500]/15 blur-xl'></div>
+    <div className='bg-background relative flex h-screen w-full flex-col overflow-hidden lg:grid lg:grid-cols-12'>
+      {/* Kolom Kiri: Hero & Branding BPS Sitaro */}
+      <div className='relative hidden flex-col justify-between overflow-hidden border-r border-[#00487a]/40 bg-gradient-to-br from-[#002744] via-[#00385F] to-[#011C31] p-8 text-white lg:col-span-7 lg:flex xl:col-span-7 xl:p-10'>
+        <div className='pointer-events-none absolute inset-0'>
+          <div className='absolute -top-16 -left-16 h-72 w-72 rounded-full bg-[#f59e0b]/15 blur-3xl'></div>
+          <div className='absolute right-0 bottom-0 h-80 w-80 rounded-full bg-[#00558f]/30 blur-3xl'></div>
         </div>
-        <div className='relative z-20 flex items-center text-lg font-medium'>
-          {/* Logo dengan efek glow yang enhanced */}
-          <div className='group relative z-20 flex items-center text-lg font-medium'>
-            <div className='relative'>
-              {/* <Image
-                src='/assets/rebo_white.png'
-                alt='Logo'
-                width={120}
-                height={120}
-                className='mr-4 rounded-xl shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-1'
-              /> */}
-              <div className='absolute -inset-2 rounded-xl bg-gradient-to-r from-[#fb8500]/30 via-[#ffb703]/25 to-[#fb8500]/30 opacity-30 blur-lg transition-all duration-500 group-hover:opacity-60 group-hover:blur-xl'></div>
-              <div className='absolute -inset-1 rounded-xl bg-gradient-to-r from-[#ffb703]/20 to-[#fb8500]/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100'></div>
+
+        {/* Bagian Atas */}
+        <div className='relative z-10 flex items-center justify-between'>
+          <div className='flex items-center space-x-3.5'>
+            <div className='relative flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 p-1.5 shadow-md backdrop-blur-md'>
+              <Image
+                src='/assets/logo_rebo.png'
+                alt='Logo REBO'
+                width={40}
+                height={40}
+                className='object-contain'
+                priority
+              />
             </div>
-            <div className='flex flex-col space-y-1'>
-              <span className='bg-gradient-to-r from-white via-[#ffb703] to-white bg-clip-text text-3xl font-black text-transparent drop-shadow-lg'>
-                REBO
-              </span>
-              <span className='text-sm font-semibold tracking-wide text-[#ffb703]/90'>
-                Reformasi Birokrasi
-              </span>
-              <div className='h-0.5 w-full rounded-full bg-gradient-to-r from-[#fb8500] to-transparent'></div>
+            <div>
+              <div className='flex items-center space-x-2'>
+                <span className='text-2xl font-black tracking-tight text-white drop-shadow-sm'>
+                  REBO <span className='text-[#f59e0b]'>V2</span>
+                </span>
+                <span className='rounded-full border border-white/20 bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white/90'>
+                  Pendaftaran
+                </span>
+              </div>
+              <p className='text-xs font-medium text-slate-300'>
+                Badan Pusat Statistik Kab. Kepulauan Siau Tagulandang Biaro
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href='/rebo/informasi'
+            className='inline-flex items-center space-x-1.5 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white'
+          >
+            <span>Pusat Informasi</span>
+          </Link>
+        </div>
+
+        {/* Bagian Tengah */}
+        <div className='relative z-10 my-auto space-y-5 py-4'>
+          <div className='space-y-1.5'>
+            <div className='inline-flex items-center space-x-2 rounded-full border border-[#f59e0b]/30 bg-[#f59e0b]/20 px-3 py-1 text-xs font-semibold text-[#f59e0b]'>
+              <Award className='h-3.5 w-3.5' />
+              <span>Pendaftaran Akun Tim Kerja</span>
+            </div>
+            <h1 className='text-2xl leading-tight font-extrabold tracking-tight text-white xl:text-3xl'>
+              Bergabung dengan Tim Zona Integritas BPS Sitaro
+            </h1>
+            <p className='max-w-xl text-xs leading-relaxed text-slate-300 xl:text-sm'>
+              Daftarkan akun resmi untuk berkontribusi dalam pemenuhan bukti
+              dukung LKE, verifikasi pilar, dan percepatan target WBK/WBBM.
+            </p>
+          </div>
+
+          {/* Grid Fitur */}
+          <div className='grid max-w-xl grid-cols-2 gap-3'>
+            <div className='rounded-xl border border-white/15 bg-white/[0.07] p-3 backdrop-blur-md'>
+              <div className='mb-1 flex items-center space-x-2 text-[#f59e0b]'>
+                <FolderSync className='h-4 w-4' />
+                <h2 className='text-xs font-bold text-white'>
+                  Akses LKE Sesuai Peran
+                </h2>
+              </div>
+              <p className='text-[11px] leading-snug text-slate-300'>
+                Akses terarah bagi Operator, Koordinator Pilar, dan Verifikator
+                TPI.
+              </p>
+            </div>
+
+            <div className='rounded-xl border border-white/15 bg-white/[0.07] p-3 backdrop-blur-md'>
+              <div className='mb-1 flex items-center space-x-2 text-[#38bdf8]'>
+                <ShieldCheck className='h-4 w-4' />
+                <h2 className='text-xs font-bold text-white'>
+                  Keamanan Terpusat
+                </h2>
+              </div>
+              <p className='text-[11px] leading-snug text-slate-300'>
+                Autentikasi aman terintegrasi dengan proteksi sesi Clerk &
+                Supabase.
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Quote section moved higher up */}
-        <div className='relative z-20 mt-16 flex flex-1 items-center'>
-          <div className='w-full'>
-            <div className='group relative overflow-hidden rounded-3xl border border-[#ffb703]/20 bg-gradient-to-br from-[#023047]/20 to-[#023047]/10 p-8 backdrop-blur-md transition-all duration-300 hover:border-[#fb8500]/30 hover:from-[#023047]/25 hover:to-[#023047]/15'>
-              <div className='absolute inset-0 bg-gradient-to-br from-[#fb8500]/5 to-[#ffb703]/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100'></div>
-              <blockquote className='relative space-y-6'>
-                <div className='flex items-start space-x-4'>
-                  <div className='mt-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#fb8500] to-[#ffb703]'>
-                    <svg
-                      className='h-4 w-4 text-[#023047]'
-                      fill='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path d='M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z' />
-                    </svg>
-                  </div>
-                  <div className='flex-1'>
-                    <p className='bg-gradient-to-r from-white via-[#ffb703] to-white bg-clip-text text-2xl leading-relaxed font-bold text-transparent'>
-                      Rebo - Zona Integritas Reformasi Birokrasi
-                    </p>
-                  </div>
-                </div>
-
-                <footer className='flex items-center justify-between'>
-                  <div className='flex items-center space-x-3'>
-                    <div className='flex items-center space-x-2'>
-                      <div className='h-3 w-3 animate-pulse rounded-full bg-gradient-to-r from-[#fb8500] to-[#ffb703]'></div>
-                      <div className='h-2 w-2 animate-pulse rounded-full bg-[#ffb703]/60'></div>
-                      <div className='h-1.5 w-1.5 animate-pulse rounded-full bg-[#fb8500]/40'></div>
-                    </div>
-                    <span className='bg-gradient-to-r from-[#ffb703] to-white bg-clip-text font-semibold text-transparent'>
-                      BPS Siau Tagulandang Biaro
-                    </span>
-                  </div>
-                  <div className='flex space-x-1'>
-                    <div className='h-1 w-8 rounded-full bg-gradient-to-r from-[#fb8500] to-transparent'></div>
-                    <div className='h-1 w-6 rounded-full bg-gradient-to-r from-[#ffb703] to-transparent'></div>
-                    <div className='h-1 w-4 rounded-full bg-gradient-to-r from-[#fb8500] to-transparent'></div>
-                  </div>
-                </footer>
-              </blockquote>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom decorative element */}
-        <div className='relative z-20 mt-8'>
-          <div className='flex items-center justify-center space-x-2'>
-            <div className='h-px w-16 bg-gradient-to-r from-transparent to-[#fb8500]'></div>
-            <div className='h-2 w-2 rounded-full bg-[#ffb703]'></div>
-            <div className='h-px w-32 bg-gradient-to-r from-[#fb8500] via-[#ffb703] to-[#fb8500]'></div>
-            <div className='h-2 w-2 rounded-full bg-[#fb8500]'></div>
-            <div className='h-px w-16 bg-gradient-to-r from-[#fb8500] to-transparent'></div>
-          </div>
+        {/* Bagian Bawah */}
+        <div className='relative z-10 flex items-center justify-between border-t border-white/15 pt-3 text-xs text-slate-300'>
+          <p className='max-w-md text-[11px] text-slate-300/90 italic'>
+            &ldquo;Integritas adalah melakukan hal yang benar, bahkan ketika
+            tidak ada yang melihat.&rdquo;
+          </p>
+          <span className='text-[11px] text-slate-400'>
+            BPS Sitaro &bull; 2026
+          </span>
         </div>
       </div>
-      <div className='flex h-full items-center justify-center bg-gradient-to-br from-orange-50/50 via-amber-50/30 to-yellow-50/20 p-4 lg:p-8 dark:from-[#023047]/20 dark:via-[#023047]/10 dark:to-[#034469]/5'>
-        <div className='flex w-full max-w-lg flex-col items-center justify-center space-y-10'>
-          {/* Enhanced Welcome section */}
-          <div className='space-y-4 text-center'>
-            <div className='relative'>
-              <h1 className='bg-gradient-to-r from-[#023047] via-[#fb8500] to-[#ffb703] bg-clip-text text-4xl font-black text-transparent drop-shadow-sm'>
-                Bergabung dengan Kami
-              </h1>
-              <div className='absolute -bottom-1 left-1/2 h-1 w-32 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#fb8500] to-[#ffb703]'></div>
+
+      {/* Kolom Kanan: Card Register Clerk */}
+      <div className='col-span-12 flex h-full flex-col items-center justify-center overflow-hidden bg-slate-50/80 px-4 py-4 sm:px-8 lg:col-span-5 xl:col-span-5 dark:bg-slate-950/80'>
+        <div className='my-auto flex w-full max-w-[400px] flex-col items-center justify-center space-y-4'>
+          {/* Header Mobile */}
+          <div className='flex flex-col items-center space-y-2 pb-1 text-center lg:hidden'>
+            <div className='flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-white p-1.5 shadow-md dark:border-slate-800 dark:bg-slate-900'>
+              <Image
+                src='/assets/logo_rebo.png'
+                alt='Logo REBO'
+                width={38}
+                height={38}
+                className='object-contain'
+                priority
+              />
             </div>
-            <p className='text-lg font-medium text-[#023047] dark:text-gray-300'>
-              Buat akun baru untuk memulai perjalanan Anda
-            </p>
-            <div className='flex items-center justify-center space-x-2'>
-              <div className='h-1 w-1 rounded-full bg-[#fb8500]'></div>
-              <div className='h-1 w-8 rounded-full bg-gradient-to-r from-[#fb8500] to-[#ffb703]'></div>
-              <div className='h-1 w-1 rounded-full bg-[#ffb703]'></div>
+            <div>
+              <h1 className='text-xl font-black tracking-tight text-slate-900 dark:text-white'>
+                REBO <span className='text-[#f59e0b]'>V2</span>
+              </h1>
+              <p className='text-xs text-slate-500 dark:text-slate-400'>
+                Buat Akun Tim Kerja
+              </p>
             </div>
           </div>
 
-          <ClerkSignUpForm
-            initialValues={{
-              emailAddress: 'your_mail+clerk_test@example.com'
-            }}
-          />
-
-          <div className='relative'>
-            <p className='text-muted-foreground px-8 text-center text-sm leading-relaxed'>
-              Dengan melanjutkan, Anda menyetujui{' '}
-              <Link
-                href='/terms'
-                className='hover:text-primary relative font-semibold text-[#023047] underline decoration-2 underline-offset-4 transition-all duration-300 hover:text-[#fb8500] hover:decoration-[#fb8500] dark:text-[#ffb703] dark:hover:text-[#fb8500] dark:hover:decoration-[#fb8500]'
-              >
-                Syarat Layanan
-              </Link>{' '}
-              dan{' '}
-              <Link
-                href='/privacy'
-                className='hover:text-primary relative font-semibold text-[#023047] underline decoration-2 underline-offset-4 transition-all duration-300 hover:text-[#fb8500] hover:decoration-[#fb8500] dark:text-[#ffb703] dark:hover:text-[#fb8500] dark:hover:decoration-[#fb8500]'
-              >
-                Kebijakan Privasi
-              </Link>{' '}
-              kami.
+          {/* Header Ringkas di Desktop */}
+          <div className='hidden space-y-0.5 text-center lg:block'>
+            <h2 className='text-xl font-bold tracking-tight text-slate-900 dark:text-white'>
+              Buat Akun Baru
+            </h2>
+            <p className='text-xs text-slate-500 dark:text-slate-400'>
+              Daftar untuk mengakses sistem evaluasi REBO
             </p>
-            <div className='absolute -bottom-4 left-1/2 h-px w-32 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#fb8500] to-transparent'></div>
+          </div>
+
+          <div className='flex w-full justify-center'>
+            <ClerkSignUpForm
+              appearance={{
+                elements: {
+                  rootBox: 'w-full',
+                  card: 'shadow-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 w-full',
+                  headerTitle:
+                    'text-lg font-bold text-slate-800 dark:text-slate-100',
+                  headerSubtitle: 'text-xs text-slate-500 dark:text-slate-400',
+                  socialButtonsBlockButton:
+                    'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium py-2',
+                  formButtonPrimary:
+                    'bg-[#003366] hover:bg-[#002244] text-white text-xs font-semibold py-2.5 shadow-sm transition-all duration-200',
+                  footerActionLink:
+                    'text-[#003366] hover:text-[#fb8500] dark:text-amber-400 font-semibold text-xs',
+                  formFieldInput:
+                    'rounded-lg border-slate-200 dark:border-slate-700 text-xs py-2 focus:border-[#003366] focus:ring-1 focus:ring-[#003366]',
+                  formFieldLabel:
+                    'text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1',
+                  footer: 'bg-transparent pt-3 mt-1'
+                }
+              }}
+            />
+          </div>
+
+          <div className='space-y-1 pt-1 text-center'>
+            <p className='text-[11px] text-slate-500 dark:text-slate-400'>
+              Sudah memiliki akun?{' '}
+              <Link
+                href='/auth/sign-in'
+                className='font-semibold text-[#003366] underline underline-offset-2 hover:text-[#f59e0b] dark:text-amber-400'
+              >
+                Masuk di sini
+              </Link>
+            </p>
           </div>
         </div>
       </div>
