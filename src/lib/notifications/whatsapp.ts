@@ -41,8 +41,10 @@ export async function sendWhatsAppMessage(
   payload: WhatsAppNotificationPayload
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const gatewayUrl = process.env.WA_GATEWAY_URL;
-    const gatewayApiKey = process.env.WA_GATEWAY_API_KEY || '';
+    let gatewayUrl =
+      process.env.WHATSAPP_GATEWAY_URL || process.env.WA_GATEWAY_URL;
+    const gatewayApiKey =
+      process.env.WHATSAPP_API_KEY || process.env.WA_GATEWAY_API_KEY || '';
 
     if (!payload.phone) {
       return { success: false, error: 'Nomor WhatsApp tujuan tidak tersedia.' };
@@ -58,6 +60,12 @@ export async function sendWhatsAppMessage(
       return {
         success: true
       };
+    }
+
+    // Pastikan endpoint mengarah ke /send-message jika hanya berupa base URL
+    gatewayUrl = gatewayUrl.replace(/\/+$/, '');
+    if (!gatewayUrl.endsWith('/send-message')) {
+      gatewayUrl += '/send-message';
     }
 
     // Kirim request ke WA Gateway (kompatibel dengan format umum Baileys/WPPConnect/Fonnte)

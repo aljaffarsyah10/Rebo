@@ -12,23 +12,41 @@ const path = require('path');
 
 function getEnvConfig() {
   const envPath = path.join(__dirname, '..', '.env.local');
-  let gatewayUrl = 'http://localhost:8000/send-message';
-  let defaultReceiver = '';
+  let gatewayUrl =
+    process.env.WHATSAPP_GATEWAY_URL ||
+    process.env.WA_GATEWAY_URL ||
+    'http://localhost:8000';
+  let defaultReceiver = process.env.WA_DEFAULT_RECEIVER || '';
+  let apiKey =
+    process.env.WHATSAPP_API_KEY || process.env.WA_GATEWAY_API_KEY || '';
 
   if (fs.existsSync(envPath)) {
     const content = fs.readFileSync(envPath, 'utf8');
-    const urlMatch = content.match(/WA_GATEWAY_URL=["']?([^"'\r\n]+)["']?/);
+    const urlMatch = content.match(
+      /(?:WHATSAPP_GATEWAY_URL|WA_GATEWAY_URL)=["']?([^"'\r\n]+)["']?/
+    );
     const receiverMatch = content.match(
-      /WA_DEFAULT_RECEIVER=["']?([^"'\r\n]+)["']?/
+      /(?:WHATSAPP_DEFAULT_RECEIVER|WA_DEFAULT_RECEIVER)=["']?([^"'\r\n]+)["']?/
+    );
+    const keyMatch = content.match(
+      /(?:WHATSAPP_API_KEY|WA_GATEWAY_API_KEY)=["']?([^"'\r\n]+)["']?/
     );
     if (urlMatch) gatewayUrl = urlMatch[1];
     if (receiverMatch) defaultReceiver = receiverMatch[1];
+    if (keyMatch) apiKey = keyMatch[1];
   }
-  return { gatewayUrl, defaultReceiver };
+
+  // Normalisasi URL: tambahkan /send-message jika belum ada
+  gatewayUrl = gatewayUrl.replace(/\/+$/, '');
+  if (!gatewayUrl.endsWith('/send-message')) {
+    gatewayUrl += '/send-message';
+  }
+
+  return { gatewayUrl, defaultReceiver, apiKey };
 }
 
 async function main() {
-  const { gatewayUrl, defaultReceiver } = getEnvConfig();
+  const { gatewayUrl, defaultReceiver, apiKey } = getEnvConfig();
   const targetPhone = process.argv[2] || defaultReceiver;
   const customMessage = process.argv[3];
 
@@ -63,7 +81,10 @@ _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
   try {
     const response = await fetch(gatewayUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {})
+      },
       body: JSON.stringify({
         phone: targetPhone,
         message: messageToSend
