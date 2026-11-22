@@ -81,6 +81,7 @@ export interface PilarHasilItem {
 interface RBStructureGraphProps {
   areasData?: AreaItem[];
   pilarHasilData?: PilarHasilItem[];
+  showHero?: boolean;
 }
 
 // Icon helper per pilar
@@ -141,7 +142,8 @@ const getPilarColor = (index: number) => {
 
 export default function RBStructureGraph({
   areasData = [],
-  pilarHasilData = []
+  pilarHasilData = [],
+  showHero = true
 }: RBStructureGraphProps) {
   // Active Tab
   const [activeTab, setActiveTab] = useState<'diagram' | 'tree' | 'matriks'>(
@@ -263,101 +265,110 @@ export default function RBStructureGraph({
   return (
     <div className='w-full space-y-6'>
       {/* ============================================================================== */}
-      {/* 1. Header Banner & High-Level Metric Cards */}
+      {/* 1. Header Banner & High-Level Metric Cards (Optional) */}
       {/* ============================================================================== */}
-      <div className='relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-6 text-white shadow-xl dark:border-slate-800'>
-        {/* Glow decoration */}
-        <div className='pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl' />
-        <div className='pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl' />
+      {showHero && (
+        <div className='relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-6 text-white shadow-xl dark:border-slate-800'>
+          {/* Glow decoration */}
+          <div className='pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl' />
+          <div className='pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl' />
 
-        <div className='relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-          <div className='space-y-1.5'>
-            <div className='inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300'>
-              <Network className='h-3.5 w-3.5 text-blue-400' />
-              Arsitektur & Pohon Indikator Reformasi Birokrasi (RB)
+          <div className='relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+            <div className='space-y-1.5'>
+              <div className='inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300'>
+                <Network className='h-3.5 w-3.5 text-blue-400' />
+                Arsitektur & Pohon Indikator Reformasi Birokrasi (RB)
+              </div>
+              <h2 className='text-2xl font-bold tracking-tight text-white md:text-3xl'>
+                Struktur Hierarki Penilaian Zona Integritas (ZI)
+              </h2>
+              <p className='max-w-2xl text-sm text-slate-300'>
+                Peta komprehensif mulai dari tingkat Komponen Utama (Pengungkit
+                & Hasil), Area (Pemenuhan & Reform), 6 Pilar RB, Sub-Pilar,
+                hingga Indikator / Pertanyaan LKE dan Dokumen Bukti Dukung.
+              </p>
             </div>
-            <h2 className='text-2xl font-bold tracking-tight text-white md:text-3xl'>
-              Struktur Hierarki Penilaian Zona Integritas (ZI)
-            </h2>
-            <p className='max-w-2xl text-sm text-slate-300'>
-              Peta komprehensif mulai dari tingkat Komponen Utama (Pengungkit &
-              Hasil), Area (Pemenuhan & Reform), 6 Pilar RB, Sub-Pilar, hingga
-              Indikator / Pertanyaan LKE dan Dokumen Bukti Dukung.
-            </p>
+
+            <div className='flex flex-wrap items-center gap-2'>
+              <Badge
+                variant='outline'
+                className='border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-300'
+              >
+                <CheckCircle2 className='mr-1.5 h-3.5 w-3.5' /> Total Bobot:
+                100%
+              </Badge>
+              <Badge
+                variant='outline'
+                className='border-blue-400/40 bg-blue-500/20 px-3 py-1 text-xs font-medium text-blue-300'
+              >
+                <FileCheck className='mr-1.5 h-3.5 w-3.5' />{' '}
+                {stats.totalPertanyaan} Indikator LKE
+              </Badge>
+            </div>
           </div>
 
-          <div className='flex flex-wrap items-center gap-2'>
-            <Badge
-              variant='outline'
-              className='border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-300'
-            >
-              <CheckCircle2 className='mr-1.5 h-3.5 w-3.5' /> Total Bobot: 100%
-            </Badge>
-            <Badge
-              variant='outline'
-              className='border-blue-400/40 bg-blue-500/20 px-3 py-1 text-xs font-medium text-blue-300'
-            >
-              <FileCheck className='mr-1.5 h-3.5 w-3.5' />{' '}
-              {stats.totalPertanyaan} Indikator LKE
-            </Badge>
+          {/* 6 Quick Metric Badges in grid */}
+          <div className='relative z-10 mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6'>
+            <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
+              <div className='text-xs font-medium text-slate-400'>Komponen</div>
+              <div className='mt-1 text-xl font-bold text-white'>2</div>
+              <div className='text-[11px] text-blue-400'>
+                Pengungkit & Hasil
+              </div>
+            </div>
+
+            <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
+              <div className='text-xs font-medium text-slate-400'>
+                Area Pengungkit
+              </div>
+              <div className='mt-1 text-xl font-bold text-white'>
+                {stats.totalArea}
+              </div>
+              <div className='text-[11px] text-indigo-400'>
+                Pemenuhan & Reform
+              </div>
+            </div>
+
+            <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
+              <div className='text-xs font-medium text-slate-400'>Pilar RB</div>
+              <div className='mt-1 text-xl font-bold text-white'>6</div>
+              <div className='text-[11px] text-purple-400'>Pilar Utama</div>
+            </div>
+
+            <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
+              <div className='text-xs font-medium text-slate-400'>
+                Sub-Pilar
+              </div>
+              <div className='mt-1 text-xl font-bold text-white'>
+                {stats.totalSubpilar}
+              </div>
+              <div className='text-[11px] text-emerald-400'>Kegiatan Pokok</div>
+            </div>
+
+            <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
+              <div className='text-xs font-medium text-slate-400'>
+                Pertanyaan LKE
+              </div>
+              <div className='mt-1 text-xl font-bold text-white'>
+                {stats.totalPertanyaan}
+              </div>
+              <div className='text-[11px] text-amber-400'>
+                Indikator Evaluasi
+              </div>
+            </div>
+
+            <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
+              <div className='text-xs font-medium text-slate-400'>
+                Pilar Hasil
+              </div>
+              <div className='mt-1 text-xl font-bold text-white'>
+                {stats.totalPilarHasil}
+              </div>
+              <div className='text-[11px] text-rose-400'>Dampak & Survei</div>
+            </div>
           </div>
         </div>
-
-        {/* 6 Quick Metric Badges in grid */}
-        <div className='relative z-10 mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6'>
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
-            <div className='text-xs font-medium text-slate-400'>Komponen</div>
-            <div className='mt-1 text-xl font-bold text-white'>2</div>
-            <div className='text-[11px] text-blue-400'>Pengungkit & Hasil</div>
-          </div>
-
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
-            <div className='text-xs font-medium text-slate-400'>
-              Area Pengungkit
-            </div>
-            <div className='mt-1 text-xl font-bold text-white'>
-              {stats.totalArea}
-            </div>
-            <div className='text-[11px] text-indigo-400'>
-              Pemenuhan & Reform
-            </div>
-          </div>
-
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
-            <div className='text-xs font-medium text-slate-400'>Pilar RB</div>
-            <div className='mt-1 text-xl font-bold text-white'>6</div>
-            <div className='text-[11px] text-purple-400'>Pilar Utama</div>
-          </div>
-
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
-            <div className='text-xs font-medium text-slate-400'>Sub-Pilar</div>
-            <div className='mt-1 text-xl font-bold text-white'>
-              {stats.totalSubpilar}
-            </div>
-            <div className='text-[11px] text-emerald-400'>Kegiatan Pokok</div>
-          </div>
-
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
-            <div className='text-xs font-medium text-slate-400'>
-              Pertanyaan LKE
-            </div>
-            <div className='mt-1 text-xl font-bold text-white'>
-              {stats.totalPertanyaan}
-            </div>
-            <div className='text-[11px] text-amber-400'>Indikator Evaluasi</div>
-          </div>
-
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10'>
-            <div className='text-xs font-medium text-slate-400'>
-              Pilar Hasil
-            </div>
-            <div className='mt-1 text-xl font-bold text-white'>
-              {stats.totalPilarHasil}
-            </div>
-            <div className='text-[11px] text-rose-400'>Dampak & Survei</div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* ============================================================================== */}
       {/* 2. Navigation Tabs (Bagan Visual, Pohon Struktur, Matriks) */}

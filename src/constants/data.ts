@@ -19,14 +19,6 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Kanban Tindak Lanjut',
-    url: '/rebo/kanban',
-    icon: 'kanban',
-    isActive: false,
-    shortcut: ['k', 'k'],
-    items: []
-  },
-  {
     title: 'Admin',
     url: '/rebo/admin',
     icon: 'settings',
@@ -116,6 +108,14 @@ export const navItems: NavItem[] = [
         shortcut: ['q', 'q']
       }
     ]
+  },
+  {
+    title: 'Kanban Tindak Lanjut',
+    url: '/rebo/kanban',
+    icon: 'kanban',
+    isActive: false,
+    shortcut: ['k', 'k'],
+    items: []
   },
   {
     title: 'Arsip',
