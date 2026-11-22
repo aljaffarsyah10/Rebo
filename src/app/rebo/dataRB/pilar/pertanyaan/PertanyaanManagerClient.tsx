@@ -16,13 +16,7 @@ import {
   Layers
 } from 'lucide-react';
 import PageContainer from '@/components/layout/page-container';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -64,17 +58,17 @@ import {
 } from '@/actions/master-data-actions';
 
 interface KategoriItem {
-  id_kategori: string;
-  id_pertanyaan: string;
+  id_kategori: number;
+  id_pertanyaan: number;
+  kode_kategori?: string | null;
   uraian_kategori: string;
   nilai: number;
 }
 
 interface PertanyaanItem {
-  id_pertanyaan: string;
-  uraian_pertanyaan: string;
-  uraian_singkat?: string | null;
-  deskripsi_pertanyaan?: string | null;
+  id_pertanyaan: number;
+  deskripsi_pertanyaan: string;
+  uraian_buktidukung?: string | null;
   id_subpilar: number;
   subpilar?: {
     id_subpilar: number;
@@ -131,22 +125,24 @@ export default function PertanyaanManagerClient({
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [activePertanyaan, setActivePertanyaan] =
     useState<PertanyaanItem | null>(null);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   // Form Pertanyaan Fields
   const [formIdPertanyaan, setFormIdPertanyaan] = useState('');
-  const [formUraian, setFormUraian] = useState('');
-  const [formSingkat, setFormSingkat] = useState('');
   const [formDeskripsi, setFormDeskripsi] = useState('');
-  const [formSubpilar, setFormSubpilar] = useState<string>('');
+  const [formBuktiDukung, setFormBuktiDukung] = useState('');
+  const [formSubpilar, setFormSubpilar] = useState<string>(
+    subpilars[0] ? String(subpilars[0].id_subpilar) : '1'
+  );
 
   // Dialog Kategori / Bobot Opsi States
   const [kategoriDialogOpen, setKategoriDialogOpen] = useState(false);
   const [kategoriTargetPertanyaan, setKategoriTargetPertanyaan] =
     useState<PertanyaanItem | null>(null);
+  const [newKatKode, setNewKatKode] = useState('');
   const [newKatUraian, setNewKatUraian] = useState('');
   const [newKatNilai, setNewKatNilai] = useState('1.0');
-  const [editingKatId, setEditingKatId] = useState<string | null>(null);
+  const [editingKatId, setEditingKatId] = useState<number | null>(null);
 
   // Subpilar options filtered by selected pilar
   const availableSubpilars =
@@ -157,10 +153,10 @@ export default function PertanyaanManagerClient({
   // Filtered and Paginated
   const filtered = items.filter((item) => {
     const matchSearch =
-      item.id_pertanyaan.toLowerCase().includes(search.toLowerCase()) ||
-      item.uraian_pertanyaan.toLowerCase().includes(search.toLowerCase()) ||
-      (item.uraian_singkat &&
-        item.uraian_singkat.toLowerCase().includes(search.toLowerCase()));
+      String(item.id_pertanyaan).includes(search) ||
+      item.deskripsi_pertanyaan.toLowerCase().includes(search.toLowerCase()) ||
+      (item.uraian_buktidukung &&
+        item.uraian_buktidukung.toLowerCase().includes(search.toLowerCase()));
 
     const matchPilar =
       filterPilar === 'ALL' || String(item.subpilar?.id_pilar) === filterPilar;
@@ -181,51 +177,61 @@ export default function PertanyaanManagerClient({
   const openCreateModal = () => {
     setDialogMode('create');
     setActivePertanyaan(null);
-    setFormIdPertanyaan('');
-    setFormUraian('');
-    setFormSingkat('');
+    const nextId =
+      items.length > 0
+        ? Math.max(...items.map((q) => Number(q.id_pertanyaan) || 0)) + 1
+        : 1;
+    setFormIdPertanyaan(String(nextId));
     setFormDeskripsi('');
-    setFormSubpilar(subpilars[0] ? String(subpilars[0].id_subpilar) : '1');
+    setFormBuktiDukung('');
+    setFormSubpilar(
+      filterSubpilar !== 'ALL'
+        ? filterSubpilar
+        : subpilars[0]
+          ? String(subpilars[0].id_subpilar)
+          : '1'
+    );
     setDialogPertanyaanOpen(true);
   };
 
   const openEditModal = (item: PertanyaanItem) => {
     setDialogMode('edit');
     setActivePertanyaan(item);
-    setFormIdPertanyaan(item.id_pertanyaan);
-    setFormUraian(item.uraian_pertanyaan);
-    setFormSingkat(item.uraian_singkat || '');
-    setFormDeskripsi(item.deskripsi_pertanyaan || '');
+    setFormIdPertanyaan(String(item.id_pertanyaan));
+    setFormDeskripsi(item.deskripsi_pertanyaan);
+    setFormBuktiDukung(item.uraian_buktidukung || '');
     setFormSubpilar(String(item.id_subpilar));
     setDialogPertanyaanOpen(true);
   };
 
   const handlePertanyaanSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formUraian.trim()) {
-      toast.error('Uraian pertanyaan wajib diisi.');
+
+    const trimmedDeskripsi = formDeskripsi.trim();
+    if (!trimmedDeskripsi || trimmedDeskripsi.length < 5) {
+      toast.error('Deskripsi pertanyaan minimal 5 karakter.');
       return;
     }
 
     startTransition(async () => {
       if (dialogMode === 'create') {
-        if (!formIdPertanyaan.trim()) {
-          toast.error('Kode/ID pertanyaan wajib diisi.');
+        const idNum = parseInt(formIdPertanyaan, 10);
+        if (isNaN(idNum) || idNum <= 0) {
+          toast.error('ID pertanyaan harus berupa angka positif.');
           return;
         }
 
         const payload: PertanyaanInput = {
-          id_pertanyaan: formIdPertanyaan.trim(),
-          uraian_pertanyaan: formUraian.trim(),
-          uraian_singkat: formSingkat.trim() || undefined,
-          deskripsi_pertanyaan: formDeskripsi.trim() || undefined,
+          id_pertanyaan: idNum,
+          deskripsi_pertanyaan: trimmedDeskripsi,
+          uraian_buktidukung: formBuktiDukung.trim() || undefined,
           id_subpilar: Number(formSubpilar)
         };
 
         const res = await createPertanyaan(payload);
         if (res.success && res.data) {
           toast.success(
-            `Pertanyaan "${res.data.id_pertanyaan}" berhasil ditambahkan!`
+            `Pertanyaan #${res.data.id_pertanyaan} berhasil ditambahkan!`
           );
           const matchedSp = subpilars.find(
             (s) => s.id_subpilar === Number(formSubpilar)
@@ -235,13 +241,11 @@ export default function PertanyaanManagerClient({
             : undefined;
 
           const newItem: PertanyaanItem = {
-            id_pertanyaan: String(res.data.id_pertanyaan),
-            uraian_pertanyaan:
-              res.data.deskripsi_pertanyaan || formUraian.trim(),
-            uraian_singkat:
-              res.data.uraian_buktidukung || formSingkat.trim() || undefined,
+            id_pertanyaan: Number(res.data.id_pertanyaan),
             deskripsi_pertanyaan:
-              res.data.deskripsi_pertanyaan || formUraian.trim(),
+              res.data.deskripsi_pertanyaan || trimmedDeskripsi,
+            uraian_buktidukung:
+              res.data.uraian_buktidukung || formBuktiDukung.trim() || null,
             id_subpilar: Number(formSubpilar),
             subpilar: matchedSp
               ? {
@@ -266,9 +270,8 @@ export default function PertanyaanManagerClient({
         }
       } else if (dialogMode === 'edit' && activePertanyaan) {
         const payload = {
-          uraian_pertanyaan: formUraian.trim(),
-          uraian_singkat: formSingkat.trim() || undefined,
-          deskripsi_pertanyaan: formDeskripsi.trim() || undefined,
+          deskripsi_pertanyaan: trimmedDeskripsi,
+          uraian_buktidukung: formBuktiDukung.trim() || null,
           id_subpilar: Number(formSubpilar)
         };
 
@@ -278,7 +281,7 @@ export default function PertanyaanManagerClient({
         );
         if (res.success && res.data) {
           toast.success(
-            `Pertanyaan "${activePertanyaan.id_pertanyaan}" berhasil diperbarui!`
+            `Pertanyaan #${activePertanyaan.id_pertanyaan} berhasil diperbarui!`
           );
           const matchedSp = subpilars.find(
             (s) => s.id_subpilar === Number(formSubpilar)
@@ -292,14 +295,12 @@ export default function PertanyaanManagerClient({
               item.id_pertanyaan === activePertanyaan.id_pertanyaan
                 ? {
                     ...item,
-                    uraian_pertanyaan:
-                      res.data.deskripsi_pertanyaan || formUraian.trim(),
-                    uraian_singkat:
-                      res.data.uraian_buktidukung ||
-                      formSingkat.trim() ||
-                      undefined,
                     deskripsi_pertanyaan:
-                      res.data.deskripsi_pertanyaan || formUraian.trim(),
+                      res.data.deskripsi_pertanyaan || trimmedDeskripsi,
+                    uraian_buktidukung:
+                      res.data.uraian_buktidukung ||
+                      formBuktiDukung.trim() ||
+                      null,
                     id_subpilar: Number(formSubpilar),
                     subpilar: matchedSp
                       ? {
@@ -331,7 +332,7 @@ export default function PertanyaanManagerClient({
     startTransition(async () => {
       const res = await deletePertanyaan(deleteTargetId);
       if (res.success) {
-        toast.success(`Pertanyaan "${deleteTargetId}" berhasil dihapus.`);
+        toast.success(`Pertanyaan #${deleteTargetId} berhasil dihapus.`);
         setItems((prev) =>
           prev.filter((q) => q.id_pertanyaan !== deleteTargetId)
         );
@@ -348,6 +349,7 @@ export default function PertanyaanManagerClient({
 
   const openKategoriModal = (item: PertanyaanItem) => {
     setKategoriTargetPertanyaan(item);
+    setNewKatKode('');
     setNewKatUraian('');
     setNewKatNilai('1.0');
     setEditingKatId(null);
@@ -357,13 +359,15 @@ export default function PertanyaanManagerClient({
   const handleAddOrUpdateKategori = (e: React.FormEvent) => {
     e.preventDefault();
     if (!kategoriTargetPertanyaan) return;
-    if (!newKatUraian.trim()) {
-      toast.error('Uraian opsi jawaban wajib diisi.');
+
+    const trimmedUraian = newKatUraian.trim();
+    if (!trimmedUraian || trimmedUraian.length < 2) {
+      toast.error('Uraian opsi jawaban minimal 2 karakter.');
       return;
     }
     const parsedNilai = parseFloat(newKatNilai);
-    if (isNaN(parsedNilai) || parsedNilai < 0) {
-      toast.error('Nilai bobot minimal 0.');
+    if (isNaN(parsedNilai) || parsedNilai < 0 || parsedNilai > 10) {
+      toast.error('Nilai bobot harus antara 0 sampai 10.');
       return;
     }
 
@@ -371,8 +375,9 @@ export default function PertanyaanManagerClient({
       if (editingKatId) {
         // Update kategori
         const res = await updateKategoriPenilaian(editingKatId, {
-          uraian_kategori: newKatUraian.trim(),
-          nilai: parsedNilai
+          uraian_kategori: trimmedUraian,
+          nilai: parsedNilai,
+          kode_kategori: newKatKode.trim() || null
         });
 
         if (res.success && res.data) {
@@ -380,13 +385,22 @@ export default function PertanyaanManagerClient({
           const updatedKats = (
             kategoriTargetPertanyaan.kategoriPenilaian || []
           ).map((k) =>
-            k.id_kategori === editingKatId ? (res.data as KategoriItem) : k
+            k.id_kategori === editingKatId
+              ? {
+                  id_kategori: Number(res.data.id_kategori),
+                  id_pertanyaan: Number(res.data.id_pertanyaan),
+                  kode_kategori: res.data.kode_kategori || null,
+                  uraian_kategori: res.data.uraian_kategori,
+                  nilai: Number(res.data.nilai)
+                }
+              : k
           );
           updateTargetKategoriList(
             kategoriTargetPertanyaan.id_pertanyaan,
             updatedKats
           );
           setEditingKatId(null);
+          setNewKatKode('');
           setNewKatUraian('');
           setNewKatNilai('1.0');
         } else {
@@ -396,20 +410,29 @@ export default function PertanyaanManagerClient({
         // Create kategori
         const res = await createKategoriPenilaian({
           id_pertanyaan: kategoriTargetPertanyaan.id_pertanyaan,
-          uraian_kategori: newKatUraian.trim(),
+          kode_kategori: newKatKode.trim() || null,
+          uraian_kategori: trimmedUraian,
           nilai: parsedNilai
         });
 
         if (res.success && res.data) {
           toast.success('Opsi jawaban baru berhasil ditambahkan!');
+          const newKatItem: KategoriItem = {
+            id_kategori: Number(res.data.id_kategori),
+            id_pertanyaan: Number(res.data.id_pertanyaan),
+            kode_kategori: res.data.kode_kategori || null,
+            uraian_kategori: res.data.uraian_kategori,
+            nilai: Number(res.data.nilai)
+          };
           const updatedKats = [
             ...(kategoriTargetPertanyaan.kategoriPenilaian || []),
-            res.data as KategoriItem
+            newKatItem
           ];
           updateTargetKategoriList(
             kategoriTargetPertanyaan.id_pertanyaan,
             updatedKats
           );
+          setNewKatKode('');
           setNewKatUraian('');
           setNewKatNilai('1.0');
         } else {
@@ -419,7 +442,7 @@ export default function PertanyaanManagerClient({
     });
   };
 
-  const handleDeleteKategori = (idKategori: string) => {
+  const handleDeleteKategori = (idKategori: number) => {
     if (!kategoriTargetPertanyaan) return;
     startTransition(async () => {
       const res = await deleteKategoriPenilaian(idKategori);
@@ -439,7 +462,7 @@ export default function PertanyaanManagerClient({
   };
 
   const updateTargetKategoriList = (
-    idPertanyaan: string,
+    idPertanyaan: number,
     newKats: KategoriItem[]
   ) => {
     setKategoriTargetPertanyaan((prev) =>
@@ -465,7 +488,7 @@ export default function PertanyaanManagerClient({
                 <HelpCircle className='h-6 w-6' />
               </div>
               <h1 className='text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100'>
-                Master Data: Pertanyaan & Indikator LKE
+                Master Data: Pertanyaan &amp; Indikator LKE
               </h1>
             </div>
             <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
@@ -521,7 +544,7 @@ export default function PertanyaanManagerClient({
             <Search className='text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4' />
             <Input
               type='text'
-              placeholder='Cari kode atau uraian pertanyaan...'
+              placeholder='Cari nomor atau uraian pertanyaan...'
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -542,7 +565,7 @@ export default function PertanyaanManagerClient({
                   setPage(1);
                 }}
               >
-                <SelectTrigger className='h-9 w-[170px] text-xs'>
+                <SelectTrigger className='h-9 w-[180px] text-xs'>
                   <SelectValue placeholder='Pilar...' />
                 </SelectTrigger>
                 <SelectContent>
@@ -563,7 +586,7 @@ export default function PertanyaanManagerClient({
                 setPage(1);
               }}
             >
-              <SelectTrigger className='h-9 w-[210px] text-xs'>
+              <SelectTrigger className='h-9 w-[230px] text-xs'>
                 <SelectValue placeholder='Subpilar...' />
               </SelectTrigger>
               <SelectContent>
@@ -581,7 +604,7 @@ export default function PertanyaanManagerClient({
         {/* List Pertanyaan Items */}
         <div className='space-y-3'>
           {paginated.length === 0 ? (
-            <div className='text-muted-foreground rounded-lg border-2 border-dashed p-10 text-center'>
+            <div className='text-muted-foreground rounded-lg border-2 border-dashed p-10 text-center text-xs'>
               Tidak ditemukan pertanyaan evaluasi yang cocok dengan pencarian
               atau filter.
             </div>
@@ -606,7 +629,7 @@ export default function PertanyaanManagerClient({
                             variant='outline'
                             className='border-blue-300 bg-blue-50 font-mono text-xs font-bold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
                           >
-                            {q.id_pertanyaan}
+                            #{q.id_pertanyaan}
                           </Badge>
                           {q.subpilar?.pilar && (
                             <Badge variant='secondary' className='text-[10px]'>
@@ -621,16 +644,16 @@ export default function PertanyaanManagerClient({
                         </div>
 
                         <CardTitle className='text-base leading-snug font-semibold text-gray-900 dark:text-gray-100'>
-                          {q.uraian_pertanyaan}
+                          {q.deskripsi_pertanyaan}
                         </CardTitle>
 
-                        {q.uraian_singkat && (
+                        {q.uraian_buktidukung && (
                           <div className='mt-2.5 rounded-md border border-amber-200/70 bg-amber-50/60 p-2.5 text-xs text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200'>
                             <span className='mb-1 block text-[11px] font-semibold text-amber-800 dark:text-amber-400'>
                               Panduan Bukti Dukung:
                             </span>
                             <p className='text-xs leading-relaxed whitespace-pre-line'>
-                              {q.uraian_singkat}
+                              {q.uraian_buktidukung}
                             </p>
                           </div>
                         )}
@@ -677,7 +700,7 @@ export default function PertanyaanManagerClient({
                   <CardContent className='pt-0 pb-3'>
                     <div className='flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-2 dark:border-gray-800'>
                       <span className='text-muted-foreground mr-1 text-[11px] font-medium'>
-                        Pilihan Jawaban & Bobot:
+                        Pilihan Jawaban &amp; Bobot:
                       </span>
                       {kats.length === 0 ? (
                         <span className='text-[11px] text-amber-600 italic dark:text-amber-400'>
@@ -690,7 +713,17 @@ export default function PertanyaanManagerClient({
                             key={kat.id_kategori}
                             className='inline-flex items-center gap-1 rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                           >
-                            <span>{kat.uraian_kategori}</span>
+                            {kat.kode_kategori && (
+                              <span className='font-mono font-bold text-purple-700 dark:text-purple-300'>
+                                [{kat.kode_kategori}]
+                              </span>
+                            )}
+                            <span
+                              className='max-w-[180px] truncate'
+                              title={kat.uraian_kategori}
+                            >
+                              {kat.uraian_kategori}
+                            </span>
                             <span className='py-0.2 rounded bg-blue-100 px-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300'>
                               {kat.nilai}
                             </span>
@@ -761,13 +794,15 @@ export default function PertanyaanManagerClient({
               <div className='space-y-4 py-4'>
                 <div className='grid grid-cols-3 gap-3'>
                   <div className='space-y-1.5'>
-                    <Label htmlFor='idPertanyaan'>Kode / ID</Label>
+                    <Label htmlFor='idPertanyaan'>ID Pertanyaan</Label>
                     <Input
                       id='idPertanyaan'
+                      type='number'
+                      min={1}
                       value={formIdPertanyaan}
                       onChange={(e) => setFormIdPertanyaan(e.target.value)}
                       disabled={dialogMode === 'edit'}
-                      placeholder='misal: 1.1.1'
+                      placeholder='misal: 1'
                       required
                     />
                   </div>
@@ -796,13 +831,13 @@ export default function PertanyaanManagerClient({
                 </div>
 
                 <div className='space-y-1.5'>
-                  <Label htmlFor='uraianPertanyaan'>
-                    Uraian Pertanyaan Lengkap
+                  <Label htmlFor='deskripsiPertanyaan'>
+                    Deskripsi Pertanyaan / Indikator
                   </Label>
                   <Textarea
-                    id='uraianPertanyaan'
-                    value={formUraian}
-                    onChange={(e) => setFormUraian(e.target.value)}
+                    id='deskripsiPertanyaan'
+                    value={formDeskripsi}
+                    onChange={(e) => setFormDeskripsi(e.target.value)}
                     placeholder='Tuliskan rumusan lengkap pertanyaan evaluasi LKE...'
                     rows={4}
                     required
@@ -810,14 +845,14 @@ export default function PertanyaanManagerClient({
                 </div>
 
                 <div className='space-y-1.5'>
-                  <Label htmlFor='uraianSingkat'>
-                    Panduan Bukti Dukung (Kebutuhan Dokumen)
+                  <Label htmlFor='uraianBuktidukung'>
+                    Panduan Kebutuhan Bukti Dukung (Opsional)
                   </Label>
                   <Textarea
-                    id='uraianSingkat'
-                    value={formSingkat}
-                    onChange={(e) => setFormSingkat(e.target.value)}
-                    placeholder='Contoh: (i) Undangan, notula rapat... (ii) Dokumen PK yang ditandatangani...'
+                    id='uraianBuktidukung'
+                    value={formBuktiDukung}
+                    onChange={(e) => setFormBuktiDukung(e.target.value)}
+                    placeholder='Contoh: (i) Undangan, notula rapat... (ii) Dokumen SK yang disahkan...'
                     rows={3}
                   />
                 </div>
@@ -850,15 +885,11 @@ export default function PertanyaanManagerClient({
             <DialogHeader>
               <DialogTitle className='flex items-center gap-2 text-purple-700 dark:text-purple-300'>
                 <Sliders className='h-5 w-5' />
-                Opsi Pilihan Jawaban & Bobot Nilai
+                Opsi Pilihan Jawaban &amp; Bobot Nilai
               </DialogTitle>
               <DialogDescription>
-                Kode Indikator:{' '}
-                <strong className='font-mono text-gray-900 dark:text-gray-100'>
-                  {kategoriTargetPertanyaan?.id_pertanyaan}
-                </strong>
-                <br />
-                {kategoriTargetPertanyaan?.uraian_pertanyaan}
+                Indikator #{kategoriTargetPertanyaan?.id_pertanyaan}:{' '}
+                {kategoriTargetPertanyaan?.deskripsi_pertanyaan}
               </DialogDescription>
             </DialogHeader>
 
@@ -883,7 +914,9 @@ export default function PertanyaanManagerClient({
                       >
                         <div className='flex flex-1 items-center gap-2'>
                           <Badge className='bg-blue-600 px-2 text-xs font-bold hover:bg-blue-600'>
-                            {kat.nilai} Poin
+                            {kat.kode_kategori
+                              ? `[${kat.kode_kategori}] ${kat.nilai} Poin`
+                              : `${kat.nilai} Poin`}
                           </Badge>
                           <span className='text-xs font-medium text-gray-900 dark:text-gray-100'>
                             {kat.uraian_kategori}
@@ -898,6 +931,7 @@ export default function PertanyaanManagerClient({
                               className='text-muted-foreground h-7 w-7 hover:text-blue-600'
                               onClick={() => {
                                 setEditingKatId(kat.id_kategori);
+                                setNewKatKode(kat.kode_kategori || '');
                                 setNewKatUraian(kat.uraian_kategori);
                                 setNewKatNilai(String(kat.nilai));
                               }}
@@ -940,6 +974,7 @@ export default function PertanyaanManagerClient({
                         className='text-muted-foreground text-[10px] hover:underline'
                         onClick={() => {
                           setEditingKatId(null);
+                          setNewKatKode('');
                           setNewKatUraian('');
                           setNewKatNilai('1.0');
                         }}
@@ -950,7 +985,20 @@ export default function PertanyaanManagerClient({
                   </div>
 
                   <div className='grid grid-cols-4 gap-2'>
-                    <div className='col-span-3 space-y-1'>
+                    <div className='col-span-1 space-y-1'>
+                      <Label htmlFor='katKode' className='text-[11px]'>
+                        Kode (Opsional)
+                      </Label>
+                      <Input
+                        id='katKode'
+                        value={newKatKode}
+                        onChange={(e) => setNewKatKode(e.target.value)}
+                        placeholder='misal: A'
+                        className='h-8 font-mono text-xs uppercase'
+                        maxLength={10}
+                      />
+                    </div>
+                    <div className='col-span-2 space-y-1'>
                       <Label htmlFor='katUraian' className='text-[11px]'>
                         Uraian Jawaban
                       </Label>
@@ -958,7 +1006,7 @@ export default function PertanyaanManagerClient({
                         id='katUraian'
                         value={newKatUraian}
                         onChange={(e) => setNewKatUraian(e.target.value)}
-                        placeholder='contoh: Dokumen telah lengkap dan disahkan'
+                        placeholder='contoh: Dokumen telah disahkan'
                         className='h-8 text-xs'
                         required
                       />
@@ -970,7 +1018,7 @@ export default function PertanyaanManagerClient({
                       <Input
                         id='katNilai'
                         type='number'
-                        step='0.1'
+                        step='0.000001'
                         min={0}
                         max={10}
                         value={newKatNilai}
@@ -1020,10 +1068,7 @@ export default function PertanyaanManagerClient({
                 Hapus Pertanyaan Evaluasi?
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Tindakan ini akan menghapus pertanyaan master{' '}
-                <strong className='font-mono text-gray-900 dark:text-gray-100'>
-                  {deleteTargetId}
-                </strong>{' '}
+                Tindakan ini akan menghapus pertanyaan master #{deleteTargetId}{' '}
                 beserta seluruh relasi opsi penilaian dan pengisian bukti dukung
                 terkait di setiap periode evaluasi.
               </AlertDialogDescription>

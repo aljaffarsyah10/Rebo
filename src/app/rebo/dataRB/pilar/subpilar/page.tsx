@@ -2,7 +2,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUserSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/rbac';
-import SubpilarManagerClient from './SubpilarManagerClient';
+import SubpilarManagerClient, {
+  type SubpilarItem
+} from './SubpilarManagerClient';
 
 export const metadata = {
   title: 'Master Data Subpilar | REBO V2',
@@ -35,7 +37,9 @@ export default async function SubpilarPage(props: PageProps) {
     .from('subpilar')
     .select(
       `
-      *,
+      id_subpilar,
+      id_pilar,
+      nama_subpilar,
       pilar (id_pilar, nama_pilar)
     `
     )
@@ -45,9 +49,18 @@ export default async function SubpilarPage(props: PageProps) {
     console.error('Error fetching subpilars:', error.message);
   }
 
+  const mappedSubpilars: SubpilarItem[] = (subpilarsData || []).map(
+    (s: any) => ({
+      id_subpilar: Number(s.id_subpilar),
+      id_pilar: Number(s.id_pilar),
+      nama_subpilar: String(s.nama_subpilar),
+      pilar: Array.isArray(s.pilar) ? s.pilar[0] : s.pilar
+    })
+  );
+
   return (
     <SubpilarManagerClient
-      initialSubpilars={subpilarsData || []}
+      initialSubpilars={mappedSubpilars}
       pilars={pilarsData || []}
       isAdmin={isSuperAdmin}
       initialFilterPilar={initialFilterPilar}

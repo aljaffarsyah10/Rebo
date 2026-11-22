@@ -2,7 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUserSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/rbac';
-import PilarManagerClient from './PilarManagerClient';
+import PilarManagerClient, { type PilarItem } from './PilarManagerClient';
 
 export const metadata = {
   title: 'Master Data Pilar | REBO V2',
@@ -21,8 +21,10 @@ export default async function PilarPage() {
     .from('pilar')
     .select(
       `
-      *,
-      area (*)
+      id_pilar,
+      nama_pilar,
+      id_area,
+      area (id_area, nama_area)
     `
     )
     .order('id_pilar', { ascending: true });
@@ -31,10 +33,14 @@ export default async function PilarPage() {
     console.error('Error fetching pilars:', error.message);
   }
 
+  const mappedPilars: PilarItem[] = (pilarsData || []).map((p: any) => ({
+    id_pilar: Number(p.id_pilar),
+    nama_pilar: String(p.nama_pilar),
+    id_area: Number(p.id_area),
+    area: Array.isArray(p.area) ? p.area[0] : p.area
+  }));
+
   return (
-    <PilarManagerClient
-      initialPilars={pilarsData || []}
-      isAdmin={isSuperAdmin}
-    />
+    <PilarManagerClient initialPilars={mappedPilars} isAdmin={isSuperAdmin} />
   );
 }

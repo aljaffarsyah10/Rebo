@@ -8,43 +8,55 @@ import { getCurrentUserSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/rbac';
 
 // ==============================================================================
-// Schemas Validasi Master Data
+// Schemas Validasi Master Data Sesuai Struktur Database Supabase Asli
+// - pilar: id_pilar, nama_pilar, id_area
+// - subpilar: id_subpilar, id_pilar, nama_subpilar
+// - pertanyaan: id_pertanyaan, deskripsi_pertanyaan, id_subpilar, uraian_buktidukung
+// - kategoriPenilaian: id_kategori, id_pertanyaan, kode_kategori, nilai, uraian_kategori
 // ==============================================================================
 
 const PilarSchema = z.object({
   id_pilar: z.union([z.number(), z.string()]).optional(),
-  nama_pilar: z.string().min(3, 'Nama pilar minimal 3 karakter'),
-  kode_pilar: z.string().optional().nullable(),
-  deskripsi_pilar: z.string().optional().nullable(),
+  nama_pilar: z
+    .string()
+    .min(3, 'Nama pilar minimal 3 karakter')
+    .max(255, 'Nama pilar maksimal 255 karakter'),
   id_area: z.coerce
     .number()
-    .min(1, 'Area harus dipilih (1: Pemenuhan, 2: Reform)')
+    .min(1, 'Area harus dipilih (1: Pemenuhan, 2: Reform)'),
+  // Opsional untuk kompatibilitas jika dikirim dari form klien
+  kode_pilar: z.string().optional().nullable(),
+  deskripsi_pilar: z.string().optional().nullable()
 });
 
 const SubpilarSchema = z.object({
   id_subpilar: z.union([z.number(), z.string()]).optional(),
-  nama_subpilar: z.string().min(3, 'Nama subpilar minimal 3 karakter'),
-  deskripsi_subpilar: z.string().optional().nullable(),
-  id_pilar: z.coerce.number().min(1, 'Pilar induk harus dipilih')
+  nama_subpilar: z
+    .string()
+    .min(3, 'Nama subpilar minimal 3 karakter')
+    .max(255, 'Nama subpilar maksimal 255 karakter'),
+  id_pilar: z.coerce.number().min(1, 'Pilar induk harus dipilih'),
+  // Opsional untuk kompatibilitas jika dikirim dari form klien
+  deskripsi_subpilar: z.string().optional().nullable()
 });
 
 const PertanyaanSchema = z.object({
-  id_pertanyaan: z
-    .string()
-    .min(2, 'Kode/ID pertanyaan minimal 2 karakter')
-    .regex(
-      /^[a-zA-Z0-9_.-]+$/,
-      'ID pertanyaan hanya boleh huruf, angka, titik, strip atau underscore'
-    ),
-  uraian_pertanyaan: z.string().min(5, 'Uraian pertanyaan minimal 5 karakter'),
+  id_pertanyaan: z.union([z.number(), z.string()]).optional(),
+  deskripsi_pertanyaan: z.string().optional(),
+  uraian_pertanyaan: z.string().optional(),
+  uraian_buktidukung: z.string().optional().nullable(),
   uraian_singkat: z.string().optional().nullable(),
-  deskripsi_pertanyaan: z.string().optional().nullable(),
   id_subpilar: z.coerce.number().min(1, 'Subpilar harus dipilih')
 });
 
 const KategoriPenilaianSchema = z.object({
-  id_kategori: z.string().optional(),
-  id_pertanyaan: z.string().min(1, 'ID pertanyaan wajib diisi'),
+  id_kategori: z.union([z.number(), z.string()]).optional(),
+  id_pertanyaan: z.union([z.number(), z.string()]),
+  kode_kategori: z
+    .string()
+    .max(20, 'Kode kategori maksimal 20 karakter')
+    .optional()
+    .nullable(),
   uraian_kategori: z
     .string()
     .min(2, 'Uraian pilihan jawaban minimal 2 karakter'),
@@ -59,19 +71,19 @@ export type SubpilarInput = z.infer<typeof SubpilarSchema>;
 export type PertanyaanInput = z.infer<typeof PertanyaanSchema>;
 export type KategoriPenilaianInput = z.infer<typeof KategoriPenilaianSchema>;
 
-// Helper fungsi revalidasi rute
+// Helper fungsi revalidasi rute setelah perubahan master data
 function revalidateMasterPaths() {
   revalidatePath('/rebo/dataRB/pilar');
   revalidatePath('/rebo/dataRB/pilar/subpilar');
   revalidatePath('/rebo/dataRB/pilar/pertanyaan');
   revalidatePath('/rebo/formRB');
-  revalidatePath('/rebo/formRB/area');
   revalidatePath('/rebo/monitoring');
   revalidatePath('/rebo/kanban');
+  revalidatePath('/rebo/pilarHasil');
 }
 
 // ==============================================================================
-// 1. CRUD PILAR
+// 1. CRUD PILAR (public.pilar: id_pilar, nama_pilar, id_area)
 // ==============================================================================
 
 /**
@@ -95,7 +107,8 @@ export async function createPilar(rawInput: PilarInput) {
     let assignedId = validated.id_pilar
       ? Number(validated.id_pilar)
       : undefined;
-    if (!assignedId) {
+
+    if (!assignedId || isNaN(assignedId) || assignedId <= 0) {
       const { data: maxRow } = await supabase
         .from('pilar')
         .select('id_pilar')
@@ -103,18 +116,32 @@ export async function createPilar(rawInput: PilarInput) {
         .limit(1)
         .maybeSingle();
       assignedId = (maxRow?.id_pilar ? Number(maxRow.id_pilar) : 0) + 1;
+    } else {
+      // Cek apakah ID sudah terpakai
+      const { data: existing } = await supabase
+        .from('pilar')
+        .select('id_pilar')
+        .eq('id_pilar', assignedId)
+        .maybeSingle();
+
+      if (existing) {
+        return {
+          success: false,
+          error: `ID Pilar "${assignedId}" sudah digunakan. Silakan gunakan ID unik lainnya.`
+        };
+      }
     }
 
     const newRecord = {
       id_pilar: assignedId,
-      nama_pilar: validated.nama_pilar,
+      nama_pilar: validated.nama_pilar.trim(),
       id_area: validated.id_area
     };
 
     const { data, error } = await supabase
       .from('pilar')
       .insert(newRecord)
-      .select()
+      .select('id_pilar, nama_pilar, id_area, area (id_area, nama_area)')
       .single();
 
     if (error) {
@@ -122,7 +149,7 @@ export async function createPilar(rawInput: PilarInput) {
       return { success: false, error: `Gagal membuat pilar: ${error.message}` };
     }
 
-    // Catat audit log
+    // Catat audit log bila tabel tersedia
     try {
       await supabase.from('audit_log').insert({
         action: 'CREATE_PILAR',
@@ -131,9 +158,7 @@ export async function createPilar(rawInput: PilarInput) {
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true, data };
@@ -141,7 +166,7 @@ export async function createPilar(rawInput: PilarInput) {
     console.error('[MASTER-DATA] Exception in createPilar:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error: err.message || 'Terjadi kesalahan sistem saat membuat pilar.'
     };
   }
 }
@@ -164,18 +189,20 @@ export async function updatePilar(
 
     const validated = PilarSchema.parse(rawInput);
     const supabase = await createClient();
-
     const targetId = Number(idPilar);
 
-    // Ambil state lama untuk audit log
     const { data: oldData } = await supabase
       .from('pilar')
       .select('*')
       .eq('id_pilar', targetId)
       .maybeSingle();
 
+    if (!oldData) {
+      return { success: false, error: 'Pilar tidak ditemukan.' };
+    }
+
     const updatePayload = {
-      nama_pilar: validated.nama_pilar,
+      nama_pilar: validated.nama_pilar.trim(),
       id_area: validated.id_area
     };
 
@@ -183,7 +210,7 @@ export async function updatePilar(
       .from('pilar')
       .update(updatePayload)
       .eq('id_pilar', targetId)
-      .select()
+      .select('id_pilar, nama_pilar, id_area, area (id_area, nama_area)')
       .single();
 
     if (error) {
@@ -194,7 +221,6 @@ export async function updatePilar(
       };
     }
 
-    // Catat audit log
     try {
       await supabase.from('audit_log').insert({
         action: 'UPDATE_PILAR',
@@ -204,9 +230,7 @@ export async function updatePilar(
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true, data };
@@ -214,13 +238,14 @@ export async function updatePilar(
     console.error('[MASTER-DATA] Exception in updatePilar:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error: err.message || 'Terjadi kesalahan sistem saat memperbarui pilar.'
     };
   }
 }
 
 /**
  * Menghapus data Pilar.
+ * Memeriksa apakah ada anak subpilar sebelum mengizinkan penghapusan.
  */
 export async function deletePilar(idPilar: number | string) {
   try {
@@ -236,7 +261,7 @@ export async function deletePilar(idPilar: number | string) {
     const targetId = Number(idPilar);
     const supabase = await createClient();
 
-    // Cek apakah ada subpilar turunan
+    // Integritas referensial: Cek apakah ada subpilar turunan
     const { count, error: countErr } = await supabase
       .from('subpilar')
       .select('id_subpilar', { count: 'exact', head: true })
@@ -256,7 +281,6 @@ export async function deletePilar(idPilar: number | string) {
       };
     }
 
-    // Ambil data lama untuk audit
     const { data: oldData } = await supabase
       .from('pilar')
       .select('*')
@@ -276,7 +300,6 @@ export async function deletePilar(idPilar: number | string) {
       };
     }
 
-    // Catat audit log
     try {
       await supabase.from('audit_log').insert({
         action: 'DELETE_PILAR',
@@ -285,9 +308,7 @@ export async function deletePilar(idPilar: number | string) {
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true };
@@ -295,13 +316,13 @@ export async function deletePilar(idPilar: number | string) {
     console.error('[MASTER-DATA] Exception in deletePilar:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error: err.message || 'Terjadi kesalahan sistem saat menghapus pilar.'
     };
   }
 }
 
 // ==============================================================================
-// 2. CRUD SUBPILAR
+// 2. CRUD SUBPILAR (public.subpilar: id_subpilar, id_pilar, nama_subpilar)
 // ==============================================================================
 
 /**
@@ -324,7 +345,8 @@ export async function createSubpilar(rawInput: SubpilarInput) {
     let assignedId = validated.id_subpilar
       ? Number(validated.id_subpilar)
       : undefined;
-    if (!assignedId) {
+
+    if (!assignedId || isNaN(assignedId) || assignedId <= 0) {
       const { data: maxRow } = await supabase
         .from('subpilar')
         .select('id_subpilar')
@@ -332,18 +354,33 @@ export async function createSubpilar(rawInput: SubpilarInput) {
         .limit(1)
         .maybeSingle();
       assignedId = (maxRow?.id_subpilar ? Number(maxRow.id_subpilar) : 0) + 1;
+    } else {
+      const { data: existing } = await supabase
+        .from('subpilar')
+        .select('id_subpilar')
+        .eq('id_subpilar', assignedId)
+        .maybeSingle();
+
+      if (existing) {
+        return {
+          success: false,
+          error: `ID Subpilar "${assignedId}" sudah digunakan. Gunakan ID unik lainnya.`
+        };
+      }
     }
 
     const newRecord = {
       id_subpilar: assignedId,
-      nama_subpilar: validated.nama_subpilar,
+      nama_subpilar: validated.nama_subpilar.trim(),
       id_pilar: Number(validated.id_pilar)
     };
 
     const { data, error } = await supabase
       .from('subpilar')
       .insert(newRecord)
-      .select()
+      .select(
+        'id_subpilar, nama_subpilar, id_pilar, pilar (id_pilar, nama_pilar)'
+      )
       .single();
 
     if (error) {
@@ -354,7 +391,6 @@ export async function createSubpilar(rawInput: SubpilarInput) {
       };
     }
 
-    // Catat audit log
     try {
       await supabase.from('audit_log').insert({
         action: 'CREATE_SUBPILAR',
@@ -363,9 +399,7 @@ export async function createSubpilar(rawInput: SubpilarInput) {
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true, data };
@@ -373,7 +407,7 @@ export async function createSubpilar(rawInput: SubpilarInput) {
     console.error('[MASTER-DATA] Exception in createSubpilar:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error: err.message || 'Terjadi kesalahan sistem saat membuat subpilar.'
     };
   }
 }
@@ -405,8 +439,12 @@ export async function updateSubpilar(
       .eq('id_subpilar', targetId)
       .maybeSingle();
 
+    if (!oldData) {
+      return { success: false, error: 'Subpilar tidak ditemukan.' };
+    }
+
     const updatePayload = {
-      nama_subpilar: validated.nama_subpilar,
+      nama_subpilar: validated.nama_subpilar.trim(),
       id_pilar: Number(validated.id_pilar)
     };
 
@@ -414,7 +452,9 @@ export async function updateSubpilar(
       .from('subpilar')
       .update(updatePayload)
       .eq('id_subpilar', targetId)
-      .select()
+      .select(
+        'id_subpilar, nama_subpilar, id_pilar, pilar (id_pilar, nama_pilar)'
+      )
       .single();
 
     if (error) {
@@ -434,9 +474,7 @@ export async function updateSubpilar(
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true, data };
@@ -444,13 +482,15 @@ export async function updateSubpilar(
     console.error('[MASTER-DATA] Exception in updateSubpilar:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error:
+        err.message || 'Terjadi kesalahan sistem saat memperbarui subpilar.'
     };
   }
 }
 
 /**
  * Menghapus data Subpilar.
+ * Memeriksa apakah ada pertanyaan di dalamnya sebelum mengizinkan penghapusan.
  */
 export async function deleteSubpilar(idSubpilar: number | string) {
   try {
@@ -466,7 +506,7 @@ export async function deleteSubpilar(idSubpilar: number | string) {
     const targetId = Number(idSubpilar);
     const supabase = await createClient();
 
-    // Cek pertanyaan turunan
+    // Integritas referensial: Cek apakah ada pertanyaan turunan
     const { count, error: countErr } = await supabase
       .from('pertanyaan')
       .select('id_pertanyaan', { count: 'exact', head: true })
@@ -482,7 +522,7 @@ export async function deleteSubpilar(idSubpilar: number | string) {
     if (count && count > 0) {
       return {
         success: false,
-        error: `Tidak dapat menghapus Subpilar ini karena masih memiliki ${count} Pertanyaan/Indikator terkait. Hapus pertanyaan di dalamnya terlebih dahulu.`
+        error: `Tidak dapat menghapus Subpilar ini karena masih memiliki ${count} Pertanyaan/Indikator terkait. Silakan hapus atau pindahkan pertanyaan di dalamnya terlebih dahulu.`
       };
     }
 
@@ -513,9 +553,7 @@ export async function deleteSubpilar(idSubpilar: number | string) {
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true };
@@ -523,18 +561,17 @@ export async function deleteSubpilar(idSubpilar: number | string) {
     console.error('[MASTER-DATA] Exception in deleteSubpilar:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error: err.message || 'Terjadi kesalahan sistem saat menghapus subpilar.'
     };
   }
 }
 
 // ==============================================================================
-// 3. CRUD PERTANYAAN (INDIKATOR LKE)
+// 3. CRUD PERTANYAAN (public.pertanyaan: id_pertanyaan, deskripsi_pertanyaan, id_subpilar, uraian_buktidukung)
 // ==============================================================================
 
 /**
  * Membuat Pertanyaan / Indikator LKE baru.
- * Otomatis dihubungkan ke periode aktif saat ini jika ada.
  */
 export async function createPertanyaan(rawInput: PertanyaanInput) {
   try {
@@ -548,11 +585,34 @@ export async function createPertanyaan(rawInput: PertanyaanInput) {
     }
 
     const validated = PertanyaanSchema.parse(rawInput);
+    const textDeskripsi =
+      validated.deskripsi_pertanyaan?.trim() ||
+      validated.uraian_pertanyaan?.trim() ||
+      '';
+
+    if (textDeskripsi.length < 5) {
+      return {
+        success: false,
+        error: 'Deskripsi pertanyaan minimal 5 karakter.'
+      };
+    }
+
+    const textBuktiDukung =
+      validated.uraian_buktidukung !== undefined
+        ? validated.uraian_buktidukung
+        : validated.uraian_singkat || null;
+
     const supabase = await createClient();
 
-    // Cek apakah ID pertanyaan sudah terpakai
-    let assignedId = Number(validated.id_pertanyaan);
-    if (isNaN(assignedId)) {
+    // Tentukan ID numerik
+    let assignedId: number;
+    if (
+      validated.id_pertanyaan &&
+      !isNaN(Number(validated.id_pertanyaan)) &&
+      Number(validated.id_pertanyaan) > 0
+    ) {
+      assignedId = Number(validated.id_pertanyaan);
+    } else {
       const { data: maxRow } = await supabase
         .from('pertanyaan')
         .select('id_pertanyaan')
@@ -572,22 +632,34 @@ export async function createPertanyaan(rawInput: PertanyaanInput) {
     if (existing) {
       return {
         success: false,
-        error: `Kode/ID Pertanyaan "${assignedId}" sudah digunakan. Gunakan ID unik lainnya.`
+        error: `ID Pertanyaan "${assignedId}" sudah digunakan. Gunakan ID unik lainnya.`
       };
     }
 
     const newRecord = {
       id_pertanyaan: assignedId,
-      deskripsi_pertanyaan:
-        validated.uraian_pertanyaan || validated.deskripsi_pertanyaan || '',
-      uraian_buktidukung: validated.uraian_singkat || '',
+      deskripsi_pertanyaan: textDeskripsi,
+      uraian_buktidukung: textBuktiDukung,
       id_subpilar: Number(validated.id_subpilar)
     };
 
     const { data, error } = await supabase
       .from('pertanyaan')
       .insert(newRecord)
-      .select()
+      .select(
+        `
+        id_pertanyaan,
+        deskripsi_pertanyaan,
+        uraian_buktidukung,
+        id_subpilar,
+        subpilar (
+          id_subpilar,
+          nama_subpilar,
+          id_pilar,
+          pilar (id_pilar, nama_pilar)
+        )
+      `
+      )
       .single();
 
     if (error) {
@@ -598,7 +670,7 @@ export async function createPertanyaan(rawInput: PertanyaanInput) {
       };
     }
 
-    // Sambungkan ke periode evaluasi aktif secara otomatis
+    // Sambungkan ke periode evaluasi aktif secara otomatis jika ada tabel pertanyaan_periode
     try {
       const { data: activePeriode } = await supabase
         .from('periode_evaluasi')
@@ -611,20 +683,14 @@ export async function createPertanyaan(rawInput: PertanyaanInput) {
       if (activePeriode?.id) {
         await supabase.from('pertanyaan_periode').insert({
           id_periode: activePeriode.id,
-          id_pertanyaan: validated.id_pertanyaan,
+          id_pertanyaan: assignedId,
           status_kelengkapan: 0,
           nilai_mandiri: 0,
           nilai_verifikasi: 0
         });
       }
-    } catch (e) {
-      console.warn(
-        '[MASTER-DATA] Notice linking pertanyaan to active period:',
-        e
-      );
-    }
+    } catch (_) {}
 
-    // Catat audit log
     try {
       await supabase.from('audit_log').insert({
         action: 'CREATE_PERTANYAAN',
@@ -633,9 +699,7 @@ export async function createPertanyaan(rawInput: PertanyaanInput) {
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true, data };
@@ -643,7 +707,7 @@ export async function createPertanyaan(rawInput: PertanyaanInput) {
     console.error('[MASTER-DATA] Exception in createPertanyaan:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error: err.message || 'Terjadi kesalahan sistem saat membuat pertanyaan.'
     };
   }
 }
@@ -652,7 +716,7 @@ export async function createPertanyaan(rawInput: PertanyaanInput) {
  * Mengubah data Pertanyaan / Indikator LKE.
  */
 export async function updatePertanyaan(
-  idPertanyaan: string,
+  idPertanyaan: number | string,
   rawInput: Partial<PertanyaanInput>
 ) {
   try {
@@ -679,16 +743,34 @@ export async function updatePertanyaan(
     }
 
     const updatePayload: Record<string, any> = {};
+
     if (
-      rawInput.uraian_pertanyaan !== undefined ||
-      rawInput.deskripsi_pertanyaan !== undefined
+      rawInput.deskripsi_pertanyaan !== undefined ||
+      rawInput.uraian_pertanyaan !== undefined
     ) {
-      updatePayload.deskripsi_pertanyaan =
-        rawInput.uraian_pertanyaan || rawInput.deskripsi_pertanyaan || '';
+      const textDeskripsi =
+        rawInput.deskripsi_pertanyaan?.trim() ||
+        rawInput.uraian_pertanyaan?.trim() ||
+        '';
+      if (textDeskripsi.length < 5) {
+        return {
+          success: false,
+          error: 'Deskripsi pertanyaan minimal 5 karakter.'
+        };
+      }
+      updatePayload.deskripsi_pertanyaan = textDeskripsi;
     }
-    if (rawInput.uraian_singkat !== undefined) {
-      updatePayload.uraian_buktidukung = rawInput.uraian_singkat;
+
+    if (
+      rawInput.uraian_buktidukung !== undefined ||
+      rawInput.uraian_singkat !== undefined
+    ) {
+      updatePayload.uraian_buktidukung =
+        rawInput.uraian_buktidukung !== undefined
+          ? rawInput.uraian_buktidukung
+          : rawInput.uraian_singkat || null;
     }
+
     if (rawInput.id_subpilar !== undefined) {
       updatePayload.id_subpilar = Number(rawInput.id_subpilar);
     }
@@ -697,7 +779,20 @@ export async function updatePertanyaan(
       .from('pertanyaan')
       .update(updatePayload)
       .eq('id_pertanyaan', targetId)
-      .select()
+      .select(
+        `
+        id_pertanyaan,
+        deskripsi_pertanyaan,
+        uraian_buktidukung,
+        id_subpilar,
+        subpilar (
+          id_subpilar,
+          nama_subpilar,
+          id_pilar,
+          pilar (id_pilar, nama_pilar)
+        )
+      `
+      )
       .single();
 
     if (error) {
@@ -717,9 +812,7 @@ export async function updatePertanyaan(
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true, data };
@@ -727,15 +820,17 @@ export async function updatePertanyaan(
     console.error('[MASTER-DATA] Exception in updatePertanyaan:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error:
+        err.message || 'Terjadi kesalahan sistem saat memperbarui pertanyaan.'
     };
   }
 }
 
 /**
- * Menghapus data Pertanyaan / Indikator LKE.
+ * Menghapus data Pertanyaan / Indikator LKE secara aman.
+ * Menghapus relasi buktiDukung, kategoriPenilaian, dan pertanyaan_periode terkait secara berurutan.
  */
-export async function deletePertanyaan(idPertanyaan: string) {
+export async function deletePertanyaan(idPertanyaan: number | string) {
   try {
     const session = await getCurrentUserSession();
     if (!session.userId || !isAdmin(session.role)) {
@@ -759,12 +854,19 @@ export async function deletePertanyaan(idPertanyaan: string) {
       return { success: false, error: 'Pertanyaan tidak ditemukan.' };
     }
 
-    // Hapus relasi di tabel buktiDukung dan kategoriPenilaian terlebih dahulu untuk integritas referensial
+    // Cascade aman: hapus relasi di buktiDukung dan kategoriPenilaian
     await supabase.from('buktiDukung').delete().eq('id_pertanyaan', targetId);
     await supabase
       .from('kategoriPenilaian')
       .delete()
       .eq('id_pertanyaan', targetId);
+
+    try {
+      await supabase
+        .from('pertanyaan_periode')
+        .delete()
+        .eq('id_pertanyaan', targetId);
+    } catch (_) {}
 
     const { error } = await supabase
       .from('pertanyaan')
@@ -787,9 +889,7 @@ export async function deletePertanyaan(idPertanyaan: string) {
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true };
@@ -797,13 +897,14 @@ export async function deletePertanyaan(idPertanyaan: string) {
     console.error('[MASTER-DATA] Exception in deletePertanyaan:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error:
+        err.message || 'Terjadi kesalahan sistem saat menghapus pertanyaan.'
     };
   }
 }
 
 // ==============================================================================
-// 4. CRUD KATEGORI PENILAIAN (BOBOT & OPSI PILIHAN JAWABAN)
+// 4. CRUD KATEGORI PENILAIAN (public.kategoriPenilaian: id_kategori, id_pertanyaan, kode_kategori, nilai, uraian_kategori)
 // ==============================================================================
 
 /**
@@ -841,14 +942,17 @@ export async function createKategoriPenilaian(
     const newRecord = {
       id_kategori: assignedId,
       id_pertanyaan: Number(validated.id_pertanyaan),
-      uraian_kategori: validated.uraian_kategori,
+      kode_kategori: validated.kode_kategori?.trim() || null,
+      uraian_kategori: validated.uraian_kategori.trim(),
       nilai: validated.nilai
     };
 
     const { data, error } = await supabase
       .from('kategoriPenilaian')
       .insert(newRecord)
-      .select()
+      .select(
+        'id_kategori, id_pertanyaan, kode_kategori, nilai, uraian_kategori'
+      )
       .single();
 
     if (error) {
@@ -870,9 +974,7 @@ export async function createKategoriPenilaian(
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true, data };
@@ -880,7 +982,9 @@ export async function createKategoriPenilaian(
     console.error('[MASTER-DATA] Exception in createKategoriPenilaian:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error:
+        err.message ||
+        'Terjadi kesalahan sistem saat membuat kategori penilaian.'
     };
   }
 }
@@ -889,8 +993,12 @@ export async function createKategoriPenilaian(
  * Mengubah Opsi Jawaban / Bobot Kategori Penilaian.
  */
 export async function updateKategoriPenilaian(
-  idKategori: string,
-  data: { uraian_kategori: string; nilai: number }
+  idKategori: number | string,
+  data: {
+    uraian_kategori: string;
+    nilai: number;
+    kode_kategori?: string | null;
+  }
 ) {
   try {
     const session = await getCurrentUserSession();
@@ -899,6 +1007,13 @@ export async function updateKategoriPenilaian(
         success: false,
         error:
           'Akses ditolak: Hanya Super Admin yang berwenang mengubah bobot penilaian.'
+      };
+    }
+
+    if (!data.uraian_kategori || data.uraian_kategori.trim().length < 2) {
+      return {
+        success: false,
+        error: 'Uraian pilihan jawaban minimal 2 karakter.'
       };
     }
 
@@ -911,16 +1026,29 @@ export async function updateKategoriPenilaian(
       .eq('id_kategori', targetId)
       .maybeSingle();
 
-    const updatePayload = {
-      uraian_kategori: data.uraian_kategori,
+    if (!oldData) {
+      return {
+        success: false,
+        error: 'Opsi penilaian tidak ditemukan.'
+      };
+    }
+
+    const updatePayload: Record<string, any> = {
+      uraian_kategori: data.uraian_kategori.trim(),
       nilai: Number(data.nilai)
     };
+
+    if (data.kode_kategori !== undefined) {
+      updatePayload.kode_kategori = data.kode_kategori?.trim() || null;
+    }
 
     const { data: updated, error } = await supabase
       .from('kategoriPenilaian')
       .update(updatePayload)
       .eq('id_kategori', targetId)
-      .select()
+      .select(
+        'id_kategori, id_pertanyaan, kode_kategori, nilai, uraian_kategori'
+      )
       .single();
 
     if (error) {
@@ -943,9 +1071,7 @@ export async function updateKategoriPenilaian(
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true, data: updated };
@@ -953,15 +1079,17 @@ export async function updateKategoriPenilaian(
     console.error('[MASTER-DATA] Exception in updateKategoriPenilaian:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error:
+        err.message || 'Terjadi kesalahan sistem saat memperbarui kategori.'
     };
   }
 }
 
 /**
- * Menghapus Opsi Jawaban / Kategori Penilaian.
+ * Menghapus Opsi Jawaban / Kategori Penilaian secara aman.
+ * Melepaskan referensi di buktiDukung jika ada.
  */
-export async function deleteKategoriPenilaian(idKategori: string) {
+export async function deleteKategoriPenilaian(idKategori: number | string) {
   try {
     const session = await getCurrentUserSession();
     if (!session.userId || !isAdmin(session.role)) {
@@ -980,6 +1108,23 @@ export async function deleteKategoriPenilaian(idKategori: string) {
       .select('*')
       .eq('id_kategori', targetId)
       .maybeSingle();
+
+    if (!oldData) {
+      return {
+        success: false,
+        error: 'Opsi penilaian tidak ditemukan.'
+      };
+    }
+
+    // Lepaskan referensi foreign key di buktiDukung terlebih dahulu secara aman
+    try {
+      await supabase
+        .from('buktiDukung')
+        .update({ id_kategori: null })
+        .eq('id_kategori', targetId);
+    } catch (e) {
+      console.warn('[MASTER-DATA] Could not clear buktiDukung foreign key:', e);
+    }
 
     const { error } = await supabase
       .from('kategoriPenilaian')
@@ -1005,9 +1150,7 @@ export async function deleteKategoriPenilaian(idKategori: string) {
         user_name: session.fullName || 'Super Admin',
         role: session.role
       });
-    } catch (e) {
-      console.warn('[MASTER-DATA] Audit log warning:', e);
-    }
+    } catch (_) {}
 
     revalidateMasterPaths();
     return { success: true };
@@ -1015,7 +1158,7 @@ export async function deleteKategoriPenilaian(idKategori: string) {
     console.error('[MASTER-DATA] Exception in deleteKategoriPenilaian:', err);
     return {
       success: false,
-      error: err.message || 'Terjadi kesalahan sistem.'
+      error: err.message || 'Terjadi kesalahan sistem saat menghapus kategori.'
     };
   }
 }

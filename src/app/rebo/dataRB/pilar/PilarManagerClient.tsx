@@ -13,12 +13,7 @@ import {
   FolderTree
 } from 'lucide-react';
 import PageContainer from '@/components/layout/page-container';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -40,7 +35,6 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -56,16 +50,14 @@ import {
   type PilarInput
 } from '@/actions/master-data-actions';
 
-interface PilarItem {
+export interface PilarItem {
   id_pilar: number;
   nama_pilar: string;
-  kode_pilar?: string | null;
-  deskripsi_pilar?: string | null;
   id_area: number;
   area?: {
     id_area: number;
     nama_area: string;
-  };
+  } | null;
 }
 
 interface PilarManagerClientProps {
@@ -87,11 +79,9 @@ export default function PilarManagerClient({
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   // Form state
-  const [formNama, setFormNama] = useState('');
-  const [formKode, setFormKode] = useState('');
-  const [formDeskripsi, setFormDeskripsi] = useState('');
-  const [formArea, setFormArea] = useState<number>(1);
   const [formIdPilar, setFormIdPilar] = useState<string>('');
+  const [formNama, setFormNama] = useState('');
+  const [formArea, setFormArea] = useState<number>(1);
 
   const pilarsArea1 = pilars.filter((p) => Number(p.id_area) === 1);
   const pilarsArea2 = pilars.filter((p) => Number(p.id_area) === 2);
@@ -105,8 +95,6 @@ export default function PilarManagerClient({
         : 1;
     setFormIdPilar(String(nextId));
     setFormNama('');
-    setFormKode(`Pilar ${nextId}`);
-    setFormDeskripsi('');
     setFormArea(1);
     setDialogOpen(true);
   };
@@ -116,36 +104,47 @@ export default function PilarManagerClient({
     setActiveItem(p);
     setFormIdPilar(String(p.id_pilar));
     setFormNama(p.nama_pilar);
-    setFormKode(p.kode_pilar || `Pilar ${p.id_pilar}`);
-    setFormDeskripsi(p.deskripsi_pilar || '');
     setFormArea(Number(p.id_area) || 1);
     setDialogOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formNama.trim()) {
-      toast.error('Nama pilar wajib diisi.');
+
+    const trimmedNama = formNama.trim();
+    if (!trimmedNama || trimmedNama.length < 3) {
+      toast.error('Nama pilar minimal 3 karakter.');
       return;
     }
 
     const payload: PilarInput = {
-      nama_pilar: formNama.trim(),
-      kode_pilar: formKode.trim() || undefined,
-      deskripsi_pilar: formDeskripsi.trim() || undefined,
+      nama_pilar: trimmedNama,
       id_area: formArea
     };
 
     startTransition(async () => {
       if (dialogMode === 'create') {
         const idNum = parseInt(formIdPilar, 10);
-        if (!isNaN(idNum) && idNum > 0) {
-          payload.id_pilar = idNum;
+        if (isNaN(idNum) || idNum <= 0) {
+          toast.error('ID Pilar harus berupa angka positif.');
+          return;
         }
+        payload.id_pilar = idNum;
+
         const res = await createPilar(payload);
         if (res.success && res.data) {
           toast.success(`Pilar "${res.data.nama_pilar}" berhasil ditambahkan!`);
-          setPilars((prev) => [...prev, res.data as PilarItem]);
+          const newItem: PilarItem = {
+            id_pilar: Number(res.data.id_pilar),
+            nama_pilar: String(res.data.nama_pilar),
+            id_area: Number(res.data.id_area),
+            area: (res.data as any).area
+              ? Array.isArray((res.data as any).area)
+                ? (res.data as any).area[0]
+                : (res.data as any).area
+              : null
+          };
+          setPilars((prev) => [...prev, newItem]);
           setDialogOpen(false);
         } else {
           toast.error(res.error || 'Gagal menambahkan pilar.');
@@ -154,10 +153,20 @@ export default function PilarManagerClient({
         const res = await updatePilar(activeItem.id_pilar, payload);
         if (res.success && res.data) {
           toast.success(`Pilar "${res.data.nama_pilar}" berhasil diperbarui!`);
+          const updatedItem: Partial<PilarItem> = {
+            id_pilar: Number(res.data.id_pilar),
+            nama_pilar: String(res.data.nama_pilar),
+            id_area: Number(res.data.id_area),
+            area: (res.data as any).area
+              ? Array.isArray((res.data as any).area)
+                ? (res.data as any).area[0]
+                : (res.data as any).area
+              : null
+          };
           setPilars((prev) =>
             prev.map((item) =>
               item.id_pilar === activeItem.id_pilar
-                ? { ...item, ...(res.data as PilarItem) }
+                ? { ...item, ...updatedItem }
                 : item
             )
           );
@@ -198,8 +207,8 @@ export default function PilarManagerClient({
               </h1>
             </div>
             <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
-              Pengelolaan 6 pilar pengungkit Zona Integritas (Area Pemenuhan &
-              Area Reform)
+              Pengelolaan 6 pilar pengungkit Zona Integritas (Area Pemenuhan
+              &amp; Area Reform)
             </p>
           </div>
 
@@ -249,79 +258,80 @@ export default function PilarManagerClient({
           </div>
 
           <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-            {pilarsArea1.map((p) => (
-              <Card
-                key={p.id_pilar}
-                className='flex flex-col justify-between border-gray-200 transition-all hover:border-blue-300 hover:shadow-xs dark:border-gray-800 dark:hover:border-blue-800'
-              >
-                <CardHeader className='pb-3'>
-                  <div className='flex items-start justify-between gap-2'>
-                    <div className='flex items-center gap-2.5'>
-                      <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300'>
-                        {p.id_pilar}
+            {pilarsArea1.length === 0 ? (
+              <div className='text-muted-foreground col-span-full rounded-lg border-2 border-dashed p-6 text-center text-xs'>
+                Belum ada data pilar untuk Area 1 (Pemenuhan).
+              </div>
+            ) : (
+              pilarsArea1.map((p) => (
+                <Card
+                  key={p.id_pilar}
+                  className='flex flex-col justify-between border-gray-200 transition-all hover:border-blue-300 hover:shadow-xs dark:border-gray-800 dark:hover:border-blue-800'
+                >
+                  <CardHeader className='pb-3'>
+                    <div className='flex items-start justify-between gap-2'>
+                      <div className='flex items-center gap-2.5'>
+                        <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300'>
+                          {p.id_pilar}
+                        </div>
+                        <div>
+                          <CardTitle className='text-base font-semibold text-gray-900 dark:text-gray-100'>
+                            {p.nama_pilar}
+                          </CardTitle>
+                          <span className='font-mono text-xs font-medium text-blue-600 dark:text-blue-400'>
+                            Pilar {p.id_pilar}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className='text-base font-semibold text-gray-900 dark:text-gray-100'>
-                          {p.nama_pilar}
-                        </CardTitle>
-                        <span className='font-mono text-xs font-medium text-blue-600 dark:text-blue-400'>
-                          {p.kode_pilar || `Pilar ${p.id_pilar}`}
-                        </span>
-                      </div>
+                      <Badge
+                        variant='outline'
+                        className='border-blue-200 bg-blue-50 text-[10px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                      >
+                        Pemenuhan
+                      </Badge>
                     </div>
-                    <Badge
-                      variant='outline'
-                      className='border-blue-200 bg-blue-50 text-[10px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                  </CardHeader>
+
+                  <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-900/40'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      asChild
+                      className='text-muted-foreground h-8 text-xs hover:text-blue-600'
                     >
-                      Pemenuhan
-                    </Badge>
+                      <Link
+                        href={`/rebo/dataRB/pilar/subpilar?pilar=${p.id_pilar}`}
+                      >
+                        Lihat Subpilar
+                        <ArrowRight className='ml-1 h-3.5 w-3.5' />
+                      </Link>
+                    </Button>
+
+                    {isAdmin && (
+                      <div className='flex items-center gap-1'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => openEditModal(p)}
+                          className='h-8 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40'
+                        >
+                          <Edit className='mr-1 h-3.5 w-3.5' />
+                          Edit
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => setDeleteTargetId(p.id_pilar)}
+                          className='h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40'
+                        >
+                          <Trash2 className='h-3.5 w-3.5' />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  {p.deskripsi_pilar && (
-                    <CardDescription className='mt-2 line-clamp-2 text-xs'>
-                      {p.deskripsi_pilar}
-                    </CardDescription>
-                  )}
-                </CardHeader>
-
-                <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-900/40'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    asChild
-                    className='text-muted-foreground h-8 text-xs hover:text-blue-600'
-                  >
-                    <Link
-                      href={`/rebo/dataRB/pilar/subpilar?pilar=${p.id_pilar}`}
-                    >
-                      Lihat Subpilar
-                      <ArrowRight className='ml-1 h-3.5 w-3.5' />
-                    </Link>
-                  </Button>
-
-                  {isAdmin && (
-                    <div className='flex items-center gap-1'>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        onClick={() => openEditModal(p)}
-                        className='h-8 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40'
-                      >
-                        <Edit className='mr-1 h-3.5 w-3.5' />
-                        Edit
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        onClick={() => setDeleteTargetId(p.id_pilar)}
-                        className='h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40'
-                      >
-                        <Trash2 className='h-3.5 w-3.5' />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </div>
 
@@ -332,85 +342,86 @@ export default function PilarManagerClient({
               2
             </div>
             <h2 className='text-lg font-bold text-gray-800 dark:text-gray-200'>
-              Area 2 — Reform (Komponen Hasil & Dampak Pelayanan)
+              Area 2 — Reform (Komponen Hasil &amp; Dampak Pelayanan)
             </h2>
             <div className='h-px flex-1 bg-gradient-to-r from-purple-300 to-transparent dark:from-purple-700' />
           </div>
 
           <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-            {pilarsArea2.map((p) => (
-              <Card
-                key={p.id_pilar}
-                className='flex flex-col justify-between border-gray-200 transition-all hover:border-purple-300 hover:shadow-xs dark:border-gray-800 dark:hover:border-purple-800'
-              >
-                <CardHeader className='pb-3'>
-                  <div className='flex items-start justify-between gap-2'>
-                    <div className='flex items-center gap-2.5'>
-                      <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-sm font-bold text-purple-700 dark:bg-purple-950 dark:text-purple-300'>
-                        {p.id_pilar}
+            {pilarsArea2.length === 0 ? (
+              <div className='text-muted-foreground col-span-full rounded-lg border-2 border-dashed p-6 text-center text-xs'>
+                Belum ada data pilar untuk Area 2 (Reform).
+              </div>
+            ) : (
+              pilarsArea2.map((p) => (
+                <Card
+                  key={p.id_pilar}
+                  className='flex flex-col justify-between border-gray-200 transition-all hover:border-purple-300 hover:shadow-xs dark:border-gray-800 dark:hover:border-purple-800'
+                >
+                  <CardHeader className='pb-3'>
+                    <div className='flex items-start justify-between gap-2'>
+                      <div className='flex items-center gap-2.5'>
+                        <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-sm font-bold text-purple-700 dark:bg-purple-950 dark:text-purple-300'>
+                          {p.id_pilar}
+                        </div>
+                        <div>
+                          <CardTitle className='text-base font-semibold text-gray-900 dark:text-gray-100'>
+                            {p.nama_pilar}
+                          </CardTitle>
+                          <span className='font-mono text-xs font-medium text-purple-600 dark:text-purple-400'>
+                            Pilar {p.id_pilar}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className='text-base font-semibold text-gray-900 dark:text-gray-100'>
-                          {p.nama_pilar}
-                        </CardTitle>
-                        <span className='font-mono text-xs font-medium text-purple-600 dark:text-purple-400'>
-                          {p.kode_pilar || `Pilar ${p.id_pilar}`}
-                        </span>
-                      </div>
+                      <Badge
+                        variant='outline'
+                        className='border-purple-200 bg-purple-50 text-[10px] text-purple-700 dark:bg-purple-950/40 dark:text-purple-300'
+                      >
+                        Reform
+                      </Badge>
                     </div>
-                    <Badge
-                      variant='outline'
-                      className='border-purple-200 bg-purple-50 text-[10px] text-purple-700 dark:bg-purple-950/40 dark:text-purple-300'
+                  </CardHeader>
+
+                  <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-900/40'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      asChild
+                      className='text-muted-foreground h-8 text-xs hover:text-purple-600'
                     >
-                      Reform
-                    </Badge>
+                      <Link
+                        href={`/rebo/dataRB/pilar/subpilar?pilar=${p.id_pilar}`}
+                      >
+                        Lihat Subpilar
+                        <ArrowRight className='ml-1 h-3.5 w-3.5' />
+                      </Link>
+                    </Button>
+
+                    {isAdmin && (
+                      <div className='flex items-center gap-1'>
+                        <Button
+                          variant='ghost'
+                          size='sm'
+                          onClick={() => openEditModal(p)}
+                          className='h-8 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40'
+                        >
+                          <Edit className='mr-1 h-3.5 w-3.5' />
+                          Edit
+                        </Button>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() => setDeleteTargetId(p.id_pilar)}
+                          className='h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40'
+                        >
+                          <Trash2 className='h-3.5 w-3.5' />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  {p.deskripsi_pilar && (
-                    <CardDescription className='mt-2 line-clamp-2 text-xs'>
-                      {p.deskripsi_pilar}
-                    </CardDescription>
-                  )}
-                </CardHeader>
-
-                <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-900/40'>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    asChild
-                    className='text-muted-foreground h-8 text-xs hover:text-purple-600'
-                  >
-                    <Link
-                      href={`/rebo/dataRB/pilar/subpilar?pilar=${p.id_pilar}`}
-                    >
-                      Lihat Subpilar
-                      <ArrowRight className='ml-1 h-3.5 w-3.5' />
-                    </Link>
-                  </Button>
-
-                  {isAdmin && (
-                    <div className='flex items-center gap-1'>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        onClick={() => openEditModal(p)}
-                        className='h-8 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40'
-                      >
-                        <Edit className='mr-1 h-3.5 w-3.5' />
-                        Edit
-                      </Button>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        onClick={() => setDeleteTargetId(p.id_pilar)}
-                        className='h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40'
-                      >
-                        <Trash2 className='h-3.5 w-3.5' />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </div>
 
@@ -430,26 +441,21 @@ export default function PilarManagerClient({
               </DialogHeader>
 
               <div className='space-y-4 py-4'>
-                <div className='grid grid-cols-3 gap-3'>
-                  <div className='space-y-1.5'>
-                    <Label htmlFor='idPilar'>ID Pilar</Label>
-                    <Input
-                      id='idPilar'
-                      value={formIdPilar}
-                      onChange={(e) => setFormIdPilar(e.target.value)}
-                      disabled={dialogMode === 'edit'}
-                      required
-                    />
-                  </div>
-                  <div className='col-span-2 space-y-1.5'>
-                    <Label htmlFor='kodePilar'>Kode Pilar</Label>
-                    <Input
-                      id='kodePilar'
-                      value={formKode}
-                      onChange={(e) => setFormKode(e.target.value)}
-                      placeholder='misal: Pilar 1'
-                    />
-                  </div>
+                <div className='space-y-1.5'>
+                  <Label htmlFor='idPilar'>ID Pilar</Label>
+                  <Input
+                    id='idPilar'
+                    type='number'
+                    min={1}
+                    value={formIdPilar}
+                    onChange={(e) => setFormIdPilar(e.target.value)}
+                    disabled={dialogMode === 'edit'}
+                    placeholder='Contoh: 1'
+                    required
+                  />
+                  <p className='text-muted-foreground text-[11px]'>
+                    ID unik pilar dalam database.
+                  </p>
                 </div>
 
                 <div className='space-y-1.5'>
@@ -477,17 +483,6 @@ export default function PilarManagerClient({
                       <SelectItem value='2'>Area 2 — Reform</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div className='space-y-1.5'>
-                  <Label htmlFor='deskripsi'>Deskripsi Pilar</Label>
-                  <Textarea
-                    id='deskripsi'
-                    value={formDeskripsi}
-                    onChange={(e) => setFormDeskripsi(e.target.value)}
-                    placeholder='Tuliskan tujuan dan cakupan pilar ini...'
-                    rows={3}
-                  />
                 </div>
               </div>
 
@@ -524,7 +519,9 @@ export default function PilarManagerClient({
               </AlertDialogTitle>
               <AlertDialogDescription>
                 Tindakan ini akan menghapus pilar master. Pastikan pilar ini
-                tidak lagi memiliki subpilar atau pertanyaan aktif.
+                tidak lagi memiliki subpilar terkait. Jika masih terdapat
+                subpilar, sistem akan menolak penghapusan demi menjaga
+                integritas data.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

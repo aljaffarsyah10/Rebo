@@ -53,6 +53,7 @@ export default async function PertanyaanPage(props: PageProps) {
       kategoriPenilaian (
         id_kategori,
         id_pertanyaan,
+        kode_kategori,
         uraian_kategori,
         nilai
       )
@@ -65,17 +66,15 @@ export default async function PertanyaanPage(props: PageProps) {
   }
 
   const mappedPertanyaans = (rawPertanyaanData || []).map((q: any) => ({
-    ...q,
-    id_pertanyaan: String(q.id_pertanyaan),
-    uraian_pertanyaan: q.deskripsi_pertanyaan || '',
-    uraian_singkat:
-      q.uraian_buktidukung ||
-      (q.deskripsi_pertanyaan ? q.deskripsi_pertanyaan.substring(0, 100) : ''),
+    id_pertanyaan: Number(q.id_pertanyaan),
     deskripsi_pertanyaan: q.deskripsi_pertanyaan || '',
+    uraian_buktidukung: q.uraian_buktidukung || null,
+    id_subpilar: Number(q.id_subpilar),
+    subpilar: q.subpilar || null,
     kategoriPenilaian: (q.kategoriPenilaian || []).map((k: any) => ({
-      ...k,
-      id_kategori: String(k.id_kategori),
-      id_pertanyaan: String(k.id_pertanyaan),
+      id_kategori: Number(k.id_kategori),
+      id_pertanyaan: Number(k.id_pertanyaan),
+      kode_kategori: k.kode_kategori || null,
       uraian_kategori: k.uraian_kategori || '',
       nilai: Number(k.nilai || 0)
     }))

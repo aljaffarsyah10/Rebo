@@ -20,7 +20,6 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -54,16 +53,14 @@ import {
   type SubpilarInput
 } from '@/actions/master-data-actions';
 
-interface SubpilarItem {
+export interface SubpilarItem {
   id_subpilar: number;
   nama_subpilar: string;
-  deskripsi_subpilar?: string | null;
   id_pilar: number;
   pilar?: {
     id_pilar: number;
     nama_pilar: string;
-    kode_pilar?: string;
-  };
+  } | null;
 }
 
 interface PilarOption {
@@ -104,14 +101,14 @@ export default function SubpilarManagerClient({
   // Form State
   const [formIdSubpilar, setFormIdSubpilar] = useState<string>('');
   const [formNama, setFormNama] = useState('');
-  const [formDeskripsi, setFormDeskripsi] = useState('');
-  const [formIdPilar, setFormIdPilar] = useState<string>('1');
+  const [formIdPilar, setFormIdPilar] = useState<string>(
+    pilars[0] ? String(pilars[0].id_pilar) : '1'
+  );
 
   // Filtered & Paginated Data
   const filtered = subpilars.filter((item) => {
     const matchSearch =
       item.nama_subpilar?.toLowerCase().includes(search.toLowerCase()) ||
-      item.deskripsi_subpilar?.toLowerCase().includes(search.toLowerCase()) ||
       String(item.id_subpilar).includes(search);
 
     const matchPilar =
@@ -132,8 +129,13 @@ export default function SubpilarManagerClient({
         : 1;
     setFormIdSubpilar(String(nextId));
     setFormNama('');
-    setFormDeskripsi('');
-    setFormIdPilar(filterPilar !== 'ALL' ? filterPilar : '1');
+    setFormIdPilar(
+      filterPilar !== 'ALL'
+        ? filterPilar
+        : pilars[0]
+          ? String(pilars[0].id_pilar)
+          : '1'
+    );
     setDialogOpen(true);
   };
 
@@ -142,30 +144,33 @@ export default function SubpilarManagerClient({
     setActiveItem(item);
     setFormIdSubpilar(String(item.id_subpilar));
     setFormNama(item.nama_subpilar);
-    setFormDeskripsi(item.deskripsi_subpilar || '');
     setFormIdPilar(String(item.id_pilar));
     setDialogOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formNama.trim()) {
-      toast.error('Nama subpilar wajib diisi.');
+
+    const trimmedNama = formNama.trim();
+    if (!trimmedNama || trimmedNama.length < 3) {
+      toast.error('Nama subpilar minimal 3 karakter.');
       return;
     }
 
     const payload: SubpilarInput = {
-      nama_subpilar: formNama.trim(),
-      deskripsi_subpilar: formDeskripsi.trim() || undefined,
+      nama_subpilar: trimmedNama,
       id_pilar: Number(formIdPilar)
     };
 
     startTransition(async () => {
       if (dialogMode === 'create') {
         const idNum = parseInt(formIdSubpilar, 10);
-        if (!isNaN(idNum) && idNum > 0) {
-          payload.id_subpilar = idNum;
+        if (isNaN(idNum) || idNum <= 0) {
+          toast.error('ID Subpilar harus berupa angka positif.');
+          return;
         }
+        payload.id_subpilar = idNum;
+
         const res = await createSubpilar(payload);
         if (res.success && res.data) {
           toast.success(
@@ -175,13 +180,15 @@ export default function SubpilarManagerClient({
             (p) => p.id_pilar === Number(formIdPilar)
           );
           const newItem: SubpilarItem = {
-            ...(res.data as SubpilarItem),
+            id_subpilar: Number(res.data.id_subpilar),
+            nama_subpilar: String(res.data.nama_subpilar),
+            id_pilar: Number(res.data.id_pilar),
             pilar: matchedPilar
               ? {
                   id_pilar: matchedPilar.id_pilar,
                   nama_pilar: matchedPilar.nama_pilar
                 }
-              : undefined
+              : null
           };
           setSubpilars((prev) => [...prev, newItem]);
           setDialogOpen(false);
@@ -197,18 +204,23 @@ export default function SubpilarManagerClient({
           const matchedPilar = pilars.find(
             (p) => p.id_pilar === Number(formIdPilar)
           );
+          const updatedItem: Partial<SubpilarItem> = {
+            id_subpilar: Number(res.data.id_subpilar),
+            nama_subpilar: String(res.data.nama_subpilar),
+            id_pilar: Number(res.data.id_pilar),
+            pilar: matchedPilar
+              ? {
+                  id_pilar: matchedPilar.id_pilar,
+                  nama_pilar: matchedPilar.nama_pilar
+                }
+              : activeItem.pilar
+          };
           setSubpilars((prev) =>
             prev.map((s) =>
               s.id_subpilar === activeItem.id_subpilar
                 ? {
                     ...s,
-                    ...(res.data as SubpilarItem),
-                    pilar: matchedPilar
-                      ? {
-                          id_pilar: matchedPilar.id_pilar,
-                          nama_pilar: matchedPilar.nama_pilar
-                        }
-                      : s.pilar
+                    ...updatedItem
                   }
                 : s
             )
@@ -322,7 +334,7 @@ export default function SubpilarManagerClient({
                 setPage(1);
               }}
             >
-              <SelectTrigger className='w-[220px] text-xs'>
+              <SelectTrigger className='w-[240px] text-xs'>
                 <SelectValue placeholder='Filter berdasarkan Pilar...' />
               </SelectTrigger>
               <SelectContent>
@@ -340,7 +352,7 @@ export default function SubpilarManagerClient({
         {/* Grid Card Subpilar */}
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
           {paginated.length === 0 ? (
-            <div className='text-muted-foreground col-span-full rounded-lg border-2 border-dashed p-8 text-center'>
+            <div className='text-muted-foreground col-span-full rounded-lg border-2 border-dashed p-8 text-center text-xs'>
               Tidak ditemukan subpilar yang sesuai dengan pencarian atau filter.
             </div>
           ) : (
@@ -371,12 +383,6 @@ export default function SubpilarManagerClient({
                   <p className='text-xs font-medium text-blue-600 dark:text-blue-400'>
                     {item.pilar?.nama_pilar || `Pilar ${item.id_pilar}`}
                   </p>
-
-                  {item.deskripsi_subpilar && (
-                    <p className='text-muted-foreground mt-2 line-clamp-3 text-xs'>
-                      {item.deskripsi_subpilar}
-                    </p>
-                  )}
                 </CardHeader>
 
                 <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-900/40'>
@@ -491,6 +497,8 @@ export default function SubpilarManagerClient({
                     <Label htmlFor='idSubpilar'>ID</Label>
                     <Input
                       id='idSubpilar'
+                      type='number'
+                      min={1}
                       value={formIdSubpilar}
                       onChange={(e) => setFormIdSubpilar(e.target.value)}
                       disabled={dialogMode === 'edit'}
@@ -507,17 +515,6 @@ export default function SubpilarManagerClient({
                       required
                     />
                   </div>
-                </div>
-
-                <div className='space-y-1.5'>
-                  <Label htmlFor='deskripsiSubpilar'>Deskripsi Subpilar</Label>
-                  <Textarea
-                    id='deskripsiSubpilar'
-                    value={formDeskripsi}
-                    onChange={(e) => setFormDeskripsi(e.target.value)}
-                    placeholder='Penjelasan singkat fokus evaluasi subpilar ini...'
-                    rows={3}
-                  />
                 </div>
               </div>
 
@@ -554,7 +551,9 @@ export default function SubpilarManagerClient({
               </AlertDialogTitle>
               <AlertDialogDescription>
                 Tindakan ini akan menghapus subpilar master. Pastikan subpilar
-                ini tidak lagi memiliki indikator pertanyaan di dalamnya.
+                ini tidak lagi memiliki indikator pertanyaan di dalamnya. Jika
+                masih terdapat pertanyaan, sistem akan menolak penghapusan untuk
+                melindungi data.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
