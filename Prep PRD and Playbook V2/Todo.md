@@ -6,6 +6,7 @@
 - [x] bisakah dibuat seperti cronjob ataupun sejenisnya, yg akan memberi request ke web rebo atau db nya, soalnya di supabase jika tidak digunakan beberapa waktu nanti akan dinonaktifkan
 - [x] Implementasi WhatsApp Gateway Microservice (Baileys Multi-Device) & Deployment ke Render.com
 - [x] Rute Web `/qr` beresolusi tinggi dengan auto-refresh untuk kemudahan scan WhatsApp via smartphone
+- [x] UI Pengaturan Kontak WhatsApp, Manajemen PIC Pilar, dan Uji Notifikasi Interaktif (`/rebo/admin/kontak`)
 
 ---
 
@@ -43,8 +44,10 @@
   - Implementasi engine: `src/lib/notifications/reminders.ts`, API endpoint `/api/cron/wa-reminders`, dan CLI runner `scripts/send_wa_reminders.js`.
 
 ### 4. Pengujian & Observabilitas
-- [ ] **Uji Coba Pengiriman Pesan Nyata (End-to-End):**
-  - Jalankan script uji `node scripts/test_wa_gateway.js <nomor_tujuan>` untuk memverifikasi bot dapat mengirimkan template notifikasi ke nomor pengguna.
+- [x] **UI Pengaturan Kontak WhatsApp, Manajemen PIC Pilar, & Uji Notifikasi Interaktif:**
+  - Halaman `/rebo/admin/kontak` terintegrasi dengan Live Status Indicator WhatsApp Gateway, tombol tautkan perangkat `/qr`, panel aksi manual admin (Pengingat Deadline & Rekap Mingguan), serta tombol Uji Kirim WA interaktif pada tiap kontak PIC.
+- [x] **Uji Coba Pengiriman Pesan Nyata (End-to-End):**
+  - Jalankan script uji `node scripts/test_wa_gateway.js <nomor_tujuan>` atau gunakan tombol "Uji Kirim WA" pada antarmuka admin untuk memverifikasi bot dapat mengirimkan template notifikasi interaktif ke nomor pengguna.
 - [x] **Audit Log & Fallback Notifikasi:**
   - Rekam riwayat status pengiriman pesan (Berhasil / Gagal) ke tabel `audit_log` di Supabase.
   - Sediakan fallback graceful (jika gateway offline, aksi web tetap sukses dan tidak membekukan user interface).

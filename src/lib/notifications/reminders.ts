@@ -590,3 +590,6 @@ export async function executeWaReminderEngine(
     summaryText
   };
 }
+
+// Alias untuk kemudahan integrasi Server Actions
+export const executeReminders = executeWaReminderEngine;

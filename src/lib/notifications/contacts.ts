@@ -227,7 +227,7 @@ export async function getAllContacts(): Promise<KontakPilarRecord[]> {
         .select('*')
         .order('id_pilar', { ascending: true, nullsFirst: false });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data as KontakPilarRecord[];
       }
     }

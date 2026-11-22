@@ -48,6 +48,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/admin/audit-log',
         icon: 'page',
         shortcut: ['a', 'l']
+      },
+      {
+        title: 'Notifikasi & Kontak WA',
+        url: '/rebo/admin/kontak',
+        icon: 'billing',
+        shortcut: ['w', 'a']
       }
     ]
   },

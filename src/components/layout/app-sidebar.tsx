@@ -112,9 +112,9 @@ export default function AppSidebar() {
                           tooltip={item.title}
                           isActive={pathname === item.url}
                         >
-                          {item.icon && <Icon />}
+                          {item.icon && <Icon className='size-4 shrink-0' />}
                           <span>{item.title}</span>
-                          <IconChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+                          <IconChevronRight className='ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
@@ -147,7 +147,7 @@ export default function AppSidebar() {
                         className='flex w-full items-center justify-between'
                       >
                         <div className='flex items-center gap-2'>
-                          <Icon />
+                          <Icon className='size-4 shrink-0' />
                           <span>{item.title}</span>
                         </div>
                         {item.title === 'Kanban Tindak Lanjut' && (

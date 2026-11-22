@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ChevronsUpDown, GalleryVerticalEnd } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
 
 import {
@@ -52,9 +52,9 @@ export function OrgSwitcher({
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group'
             >
-              <div className='relative flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#023047] to-[#034469] text-white shadow-md ring-1 ring-white/20 transition-all duration-300 group-hover:scale-105'>
+              <div className='relative flex aspect-square size-8.5 items-center justify-center rounded-lg bg-gradient-to-br from-[#023047] via-[#034469] to-[#0f4c75] text-white shadow-md ring-1 ring-white/20 transition-all duration-300 group-hover:scale-105'>
                 <svg
-                  className='size-4'
+                  className='size-4 text-amber-300'
                   viewBox='0 0 24 24'
                   fill='currentColor'
                   xmlns='http://www.w3.org/2000/svg'
@@ -76,8 +76,8 @@ export function OrgSwitcher({
                     V2
                   </span>
                 </div>
-                <span className='truncate text-[11px] font-medium text-[#023047]/70 dark:text-[#ffb703]/70'>
-                  BPS Siau Tagulandang Biaro
+                <span className='truncate text-[11px] font-medium text-[#023047]/75 dark:text-[#ffb703]/75'>
+                  BPS Sitaro
                 </span>
               </div>
               <ChevronsUpDown className='ml-auto size-4 text-[#023047]/60 dark:text-[#ffb703]/60' />

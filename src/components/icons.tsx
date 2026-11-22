@@ -34,7 +34,8 @@ import {
   IconPlayerPlay,
   IconFolder,
   IconHistory,
-  IconCalendar
+  IconCalendar,
+  IconBrandWhatsapp
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -74,5 +75,6 @@ export const Icons = {
   check: IconCheck,
   folder: IconFolder,
   history: IconHistory,
-  calendar: IconCalendar
+  calendar: IconCalendar,
+  whatsapp: IconBrandWhatsapp
 };
