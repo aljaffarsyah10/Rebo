@@ -1,16 +1,19 @@
 <div align="center">
-  <img src="/public/assets/logo_rebo.png" alt="Logo REBO V2" width="120" style="margin-bottom: 12px;" />
+  <img src="public/assets/logo_rebo.png" alt="Logo REBO V2" width="120" style="margin-bottom: 12px;" />
   <h1><strong>REBO V2 — Zona Integritas & Reformasi Birokrasi</strong></h1>
   <p><strong>Platform Digitalisasi, Evaluasi, dan Verifikasi Lembar Kerja Evaluasi (LKE) Menuju WBK/WBBM</strong></p>
   <p><em>Badan Pusat Statistik (BPS) Kabupaten Kepulauan Siau Tagulandang Biaro (Sitaro), Sulawesi Utara</em></p>
+  <br />
+  <img src="public/Homepage_rebo.png" alt="REBO Web Dashboard Preview" style="max-width: 850px; width: 100%; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.12); margin-bottom: 16px;" />
+  <br />
   <p>
     <a href="#-fitur-utama-v2">Fitur Utama</a> •
+    <a href="#-tangkapan-layar--antarmuka-aplikasi">Tangkapan Layar</a> •
     <a href="#-arsitektur--tech-stack">Arsitektur</a> •
     <a href="#-struktur-modul--navigasi">Modul Sistem</a> •
     <a href="#-role-based-access-control-rbac">Hak Akses</a> •
     <a href="#-panduan-migrasi-database-supabase-v2">Migrasi Database</a> •
     <a href="#-instalasi--cara-menjalankan-aplikasi">Cara Menjalankan</a> •
-    <a href="#-environment-variables">Konfigurasi Env</a> •
     <a href="#-dokumentasi-lengkap">Dokumentasi</a>
   </p>
 </div>
@@ -20,6 +23,34 @@
 ## 🌟 Tentang REBO V2
 
 **REBO (Reformasi Birokrasi) Versi 2.0.0** adalah sistem otomasi tata kelola bukti dukung, pemantauan progress, dan verifikasi penilaian Lembar Kerja Evaluasi (LKE) PMPRB BPS Kabupaten Kepulauan Sitaro. Platform ini bertransisi dari penataan dokumen manual dan tautan statis menjadi platform evaluasi terpusat yang aman, transparan, dan terintegrasi penuh dengan struktur hierarkis Google Drive resmi, alur review berjenjang, Kanban Board tindak lanjut, visualisasi capaian interaktif, ekspor resmi standar KemenPAN-RB, serta aksesibilitas mobile melalui Progressive Web App (PWA).
+
+---
+
+## 📸 Tangkapan Layar & Antarmuka Aplikasi
+
+<div align="center">
+  <h3>Pratinjau Dasbor Web & Visualisasi Progres</h3>
+  <img src="public/Homepage_rebo.png" alt="Antarmuka Dasbor Monitoring & Evaluasi REBO" style="max-width: 850px; width: 100%; border-radius: 10px; border: 1px solid #cbd5e1; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 24px;" />
+</div>
+
+<div align="center">
+  <table style="border: none; margin: 0 auto;">
+    <tr align="center">
+      <td width="50%" style="vertical-align: top; padding: 12px;">
+        <img src="public/assets/rebo.png" alt="Brand Logo REBO" width="180" style="margin-bottom: 8px;" />
+        <br />
+        <strong>Identitas Resmi REBO</strong>
+        <p style="font-size: 13px; color: #64748b;">Logo dan identitas visual Reformasi Birokrasi BPS Kabupaten Kepulauan Sitaro</p>
+      </td>
+      <td width="50%" style="vertical-align: top; padding: 12px;">
+        <img src="public/icons/manifest-icon-192.maskable.png" alt="PWA App Icon" width="110" style="border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 8px;" />
+        <br />
+        <strong>Mobile PWA Standalone Icon</strong>
+        <p style="font-size: 13px; color: #64748b;">Aplikasi siap pasang di perangkat smartphone Android & iOS tim kerja lapangan</p>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
