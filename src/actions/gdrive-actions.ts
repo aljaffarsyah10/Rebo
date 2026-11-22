@@ -88,7 +88,7 @@ export async function getIndicatorGdriveMapping(
         nama_subpilar,
         id_pilar,
         pilar (id_pilar, nama_pilar, id_area, area (id_area, nama_area)),
-        pertanyaan (id_pertanyaan, deskripsi_pertanyaan, uraian_pertanyaan, uraian_singkat, pertanyaan)
+        pertanyaan (id_pertanyaan, deskripsi_pertanyaan, uraian_buktidukung)
       `);
 
     if (pilarId && pilarId !== 'ALL') {
@@ -271,7 +271,7 @@ export async function generateAndSaveIndicatorLinks(
       nama_subpilar,
       id_pilar,
       pilar (id_pilar, nama_pilar, id_area, area (id_area, nama_area)),
-      pertanyaan (id_pertanyaan, deskripsi_pertanyaan, uraian_pertanyaan, uraian_singkat, pertanyaan)
+      pertanyaan (id_pertanyaan, deskripsi_pertanyaan, uraian_buktidukung)
     `);
 
   if (pilarIdFilter) {

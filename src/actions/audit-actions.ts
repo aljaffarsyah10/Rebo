@@ -195,7 +195,7 @@ export async function getAuditLogsAction(
     let query = supabase
       .from('audit_log')
       .select(
-        '*, pertanyaan_periode (id, id_pertanyaan, pertanyaan (id_pertanyaan, uraian_singkat, deskripsi_pertanyaan, subpilar (id_subpilar, id_pilar, pilar (nama_pilar))))'
+        '*, pertanyaan_periode (id, id_pertanyaan, pertanyaan (id_pertanyaan, deskripsi_pertanyaan, subpilar (id_subpilar, id_pilar, pilar (nama_pilar))))'
       )
       .order('created_at', { ascending: false });
 

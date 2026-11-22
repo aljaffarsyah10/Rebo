@@ -1021,7 +1021,7 @@ export async function getPilarDropdownOptions() {
     const supabase = await createClient();
     const { data } = await supabase
       .from('pilar')
-      .select('id_pilar, nama_pilar, kode_pilar, id_area, area (nama_area)')
+      .select('id_pilar, nama_pilar, id_area, area (nama_area)')
       .order('id_pilar', { ascending: true });
     return data || [];
   } catch (err) {

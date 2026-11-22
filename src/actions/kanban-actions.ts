@@ -56,12 +56,11 @@ export async function getKanbanBoardData(params?: {
         id_subpilar,
         nama_subpilar,
         id_pilar,
-        pilar (id_pilar, nama_pilar, kode_pilar),
+        pilar (id_pilar, nama_pilar),
         pertanyaan (
           id_pertanyaan,
-          uraian_singkat,
           deskripsi_pertanyaan,
-          uraian_pertanyaan,
+          uraian_buktidukung,
           kategoriPenilaian (id_kategori, uraian_kategori, nilai)
         )
       `);
