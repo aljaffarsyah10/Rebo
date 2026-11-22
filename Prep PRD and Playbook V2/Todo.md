@@ -21,10 +21,10 @@
   - Pasang ping otomatis via Cron-job.org atau Vercel Cron ke endpoint `https://<nama-service>.onrender.com/health` tiap 10-14 menit agar instance gateway tidak tertidur (*sleep*).
 
 ### 2. Pengelolaan Data Nomor HP & Profil Pengguna
-- [ ] **Kolom Nomor Telepon di Profil User:**
-  - Tambahkan field `no_telepon` / `no_wa` pada tabel user / metadata Clerk pengguna.
-  - Sediakan UI edit profil di menu pengaturan agar PIC dan Verifikator dapat mengisi nomor WhatsApp masing-masing (format otomatis 628xxx).
-- [ ] **Mapping Nomor PIC per Pilar / Unit Kerja:**
+- [x] **Kolom Nomor Telepon & Schema Tabel Kontak:**
+  - Tambahkan tabel `public.kontak_pilar` dan field `telepon` / `no_wa` pada tabel `public.users` Supabase.
+  - Sediakan helper resolver phone mapping di `src/lib/notifications/contacts.ts`.
+- [x] **Mapping Nomor PIC per Pilar / Unit Kerja:**
   - Konfigurasi nomor kontak default untuk tiap pilar (Pilar 1 s.d. Pilar 6) dan nomor hotline Tim Verifikator internal BPS Sitaro.
 
 ### 3. Otomasi Pengiriman Pesan (Triggers & Templates)
