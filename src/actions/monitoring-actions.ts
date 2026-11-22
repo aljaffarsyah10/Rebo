@@ -77,17 +77,10 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
     }
 
     // 3. Fetch data pertanyaan_periode untuk periode ini (V2)
-    const { data: ppData, error: ppError } = await supabase
+    const { data: ppData } = await supabase
       .from('pertanyaan_periode')
       .select('*, dokumen_bukti (*)')
       .eq('id_periode', currentPeriode.id);
-
-    if (ppError) {
-      console.warn(
-        '[MONITORING-ACTIONS] Notice querying pertanyaan_periode:',
-        ppError.message
-      );
-    }
 
     const ppMap = new Map<string, any>();
     (ppData || []).forEach((row) => {
@@ -117,11 +110,8 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
           0
         );
       }
-    } catch (phErr: any) {
-      console.warn(
-        '[MONITORING-ACTIONS] Notice pilarHasil query:',
-        phErr?.message
-      );
+    } catch {
+      // Fallback silent
     }
 
     // 6. Lakukan iterasi kalkulasi berjenjang

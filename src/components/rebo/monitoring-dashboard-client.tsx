@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -60,6 +60,11 @@ export default function MonitoringDashboardClient({
     {}
   );
   const [isPending, startTransition] = useTransition();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const toggleExpand = (pilarId: string) => {
     setExpandedPilars((prev) => ({
@@ -337,71 +342,77 @@ export default function MonitoringDashboardClient({
           </CardHeader>
           <CardContent>
             <div className='h-[360px] w-full'>
-              <ResponsiveContainer width='100%' height='100%'>
-                <BarChart
-                  data={barChartData}
-                  margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
-                  barCategoryGap='20%'
-                >
-                  <CartesianGrid
-                    strokeDasharray='3 3'
-                    vertical={false}
-                    stroke='#e2e8f0'
-                    className='dark:stroke-slate-800'
-                  />
-                  <XAxis
-                    dataKey='name'
-                    tick={{ fontSize: 12, fill: '#64748b' }}
-                    axisLine={{ stroke: '#cbd5e1' }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: '#64748b' }}
-                    axisLine={{ stroke: '#cbd5e1' }}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.1)',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '12px'
-                    }}
-                    formatter={(value: any, name: string) => {
-                      if (name === 'skorMandiri')
-                        return [Number(value).toFixed(2), 'Skor Mandiri'];
-                      if (name === 'skorVerifikasi')
-                        return [Number(value).toFixed(2), 'Skor Verifikasi'];
-                      if (name === 'skorMaksimal')
-                        return [Number(value).toFixed(2), 'Skor Maksimal'];
-                      return [value, name];
-                    }}
-                    labelFormatter={(label) => {
-                      const item = barChartData.find((b) => b.name === label);
-                      return `${label}: ${item?.fullName || ''}`;
-                    }}
-                  />
-                  <Bar
-                    dataKey='skorMandiri'
-                    name='Skor Mandiri'
-                    fill='#3b82f6'
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey='skorVerifikasi'
-                    name='Skor Verifikasi'
-                    fill='#10b981'
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey='skorMaksimal'
-                    name='Skor Maksimal'
-                    fill='#94a3b8'
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {isMounted ? (
+                <ResponsiveContainer width='100%' height='100%'>
+                  <BarChart
+                    data={barChartData}
+                    margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+                    barCategoryGap='20%'
+                  >
+                    <CartesianGrid
+                      strokeDasharray='3 3'
+                      vertical={false}
+                      stroke='#e2e8f0'
+                      className='dark:stroke-slate-800'
+                    />
+                    <XAxis
+                      dataKey='name'
+                      tick={{ fontSize: 12, fill: '#64748b' }}
+                      axisLine={{ stroke: '#cbd5e1' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: '#64748b' }}
+                      axisLine={{ stroke: '#cbd5e1' }}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.1)',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '12px'
+                      }}
+                      formatter={(value: any, name: string) => {
+                        if (name === 'skorMandiri')
+                          return [Number(value).toFixed(2), 'Skor Mandiri'];
+                        if (name === 'skorVerifikasi')
+                          return [Number(value).toFixed(2), 'Skor Verifikasi'];
+                        if (name === 'skorMaksimal')
+                          return [Number(value).toFixed(2), 'Skor Maksimal'];
+                        return [value, name];
+                      }}
+                      labelFormatter={(label) => {
+                        const item = barChartData.find((b) => b.name === label);
+                        return `${label}: ${item?.fullName || ''}`;
+                      }}
+                    />
+                    <Bar
+                      dataKey='skorMandiri'
+                      name='Skor Mandiri'
+                      fill='#3b82f6'
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey='skorVerifikasi'
+                      name='Skor Verifikasi'
+                      fill='#10b981'
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey='skorMaksimal'
+                      name='Skor Maksimal'
+                      fill='#94a3b8'
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className='flex h-full w-full items-center justify-center text-xs text-slate-400'>
+                  Memuat grafik capaian...
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -418,36 +429,42 @@ export default function MonitoringDashboardClient({
           </CardHeader>
           <CardContent className='flex flex-col items-center justify-center space-y-4'>
             <div className='relative h-[220px] w-full'>
-              <ResponsiveContainer width='100%' height='100%'>
-                <PieChart>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '12px'
-                    }}
-                    formatter={(val: any, name: string) => [
-                      `${val} Indikator (${kpi.totalPertanyaan > 0 ? Math.round((Number(val) / kpi.totalPertanyaan) * 100) : 0}%)`,
-                      name
-                    ]}
-                  />
-                  <Pie
-                    data={statusDistribution}
-                    dataKey='value'
-                    nameKey='name'
-                    cx='50%'
-                    cy='50%'
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={3}
-                  >
-                    {statusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+              {isMounted ? (
+                <ResponsiveContainer width='100%' height='100%'>
+                  <PieChart>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '12px'
+                      }}
+                      formatter={(val: any, name: string) => [
+                        `${val} Indikator (${kpi.totalPertanyaan > 0 ? Math.round((Number(val) / kpi.totalPertanyaan) * 100) : 0}%)`,
+                        name
+                      ]}
+                    />
+                    <Pie
+                      data={statusDistribution}
+                      dataKey='value'
+                      nameKey='name'
+                      cx='50%'
+                      cy='50%'
+                      innerRadius={55}
+                      outerRadius={85}
+                      paddingAngle={3}
+                    >
+                      {statusDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className='flex h-full w-full items-center justify-center text-xs text-slate-400'>
+                  Memuat grafik distribusi...
+                </div>
+              )}
 
               {/* Center Stat */}
               <div className='pointer-events-none absolute inset-0 flex flex-col items-center justify-center'>

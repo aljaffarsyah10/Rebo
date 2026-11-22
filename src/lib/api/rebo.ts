@@ -27,18 +27,7 @@ export async function getActivePeriode(): Promise<PeriodeEvaluasi | null> {
       .limit(1)
       .maybeSingle();
 
-    if (error) {
-      console.warn('[REBO API] getActivePeriode query notice:', error.message);
-      return {
-        id: 'default-periode-2025',
-        tahun: 2025,
-        nama_periode: 'Evaluasi PMPRB 2025/2026',
-        is_active: true,
-        is_locked: false
-      };
-    }
-
-    if (!data) {
+    if (error || !data) {
       return {
         id: 'default-periode-2025',
         tahun: 2025,
@@ -49,8 +38,7 @@ export async function getActivePeriode(): Promise<PeriodeEvaluasi | null> {
     }
 
     return data as PeriodeEvaluasi;
-  } catch (err: any) {
-    console.warn('[REBO API] getActivePeriode exception:', err?.message);
+  } catch {
     return {
       id: 'default-periode-2025',
       tahun: 2025,
@@ -72,14 +60,12 @@ export async function getAllPeriode(): Promise<PeriodeEvaluasi[]> {
       .select('*')
       .order('tahun', { ascending: false });
 
-    if (error) {
-      console.warn('[REBO API] getAllPeriode query notice:', error.message);
+    if (error || !data) {
       return [];
     }
 
     return (data as PeriodeEvaluasi[]) || [];
-  } catch (err: any) {
-    console.warn('[REBO API] getAllPeriode exception:', err?.message);
+  } catch {
     return [];
   }
 }
