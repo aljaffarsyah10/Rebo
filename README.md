@@ -8,8 +8,10 @@
     <a href="#-arsitektur--tech-stack">Arsitektur</a> •
     <a href="#-struktur-modul--navigasi">Modul Sistem</a> •
     <a href="#-role-based-access-control-rbac">Hak Akses</a> •
-    <a href="#-instalasi--menjalankan-aplikasi">Instalasi</a> •
-    <a href="#-environment-variables">Konfigurasi Env</a>
+    <a href="#-panduan-migrasi-database-supabase-v2">Migrasi Database</a> •
+    <a href="#-instalasi--cara-menjalankan-aplikasi">Cara Menjalankan</a> •
+    <a href="#-environment-variables">Konfigurasi Env</a> •
+    <a href="#-dokumentasi-lengkap">Dokumentasi</a>
   </p>
 </div>
 
@@ -26,7 +28,7 @@
 1. **Multi-Periode Lifecycle Management**:
    - Isolasi data evaluasi tahun berjalan (misal: 2025, 2026, 2027) tanpa redundansi atau risiko tertimpa.
    - Penguncian periode lampau (*Lock/Freeze*) menjadi *read-only* demi menjaga keutuhan arsip reviu.
-   - Fasilitas kloning/duplikasi hierarki indikator lintas tahun anggaran baru dengan satu klik.
+   - Fasilitas kloning/duplikasi hierarki indikator lintas tahun anggaran baru dengan satu klik (*1-Click Clone*).
    - Global switcher periode di header navigasi yang responsif di seluruh halaman.
 
 2. **Role-Based Access Control (RBAC) Terstruktur**:
@@ -34,9 +36,10 @@
    - Validasi keamanan berlapis pada level `middleware.ts`, Next.js Server Actions, dan Client UI.
 
 3. **Generator Hierarki Google Drive per Indikator**:
-   - Otomatisasi pembentukan tautan dan struktur folder terstandar: `BPS-7108/RB/{Tahun}/{Area}/{Pilar}/{Kode_Indikator}`.
-   - One-click navigation langsung ke folder Google Drive dari masing-masing butir pertanyaan.
-   - Panduan izin akses domain `@bps.go.id`.
+   - Tiap indikator/pertanyaan memiliki 1 tautan folder Google Drive khusus:
+     `REBO_[TAHUN] > [AREA] > [PILAR] > [SUBPILAR] > [IND_KODE - NAMA_INDIKATOR]`.
+   - Generator otomatis skrip Google Apps Script (GAS) untuk instan provisioning seluruh pohon folder fisik di Google Drive instansi.
+   - One-click navigation langsung ke folder Google Drive dari masing-masing butir pertanyaan di Form LKE.
 
 4. **Multi-Dokumen Bukti & Penilaian Mandiri Real-Time**:
    - Input berkas bukti fleksibel (SK, Notula, SOP, Undangan, Foto, dsb.) dalam satu pertanyaan.
@@ -46,7 +49,7 @@
 5. **Verifikasi Koordinator & Feedback Loop Ketat**:
    - Proteksi total terhadap field catatan koordinator dan tombol status dari perubahan oleh Operator biasa.
    - Aturan bisnis: Catatan revisi wajib diisi (minimal 5 karakter) apabila status ditetapkan menjadi **Perlu Revisi (Ditolak)**.
-   - Aksi cepat menyamakan skor verifikasi dengan skor mandiri saat bukti dinyatakan valid.
+   - Sistem penilaian ganda (**Dual-Scoring**): membandingkan Nilai Mandiri (usulan) vs Nilai Verifikasi (final) beserta kalkulasi deviasi.
 
 6. **Kanban Board Tindak Lanjut Terintegrasi**:
    - Indikator berstatus 'Perlu Revisi' otomatis masuk ke kolom **To Do** pada `/rebo/kanban`.
@@ -58,12 +61,15 @@
    - Tabel rincian progres per pilar dan subpilar.
 
 8. **Ekspor Kertas Kerja LKE Resmi Standar KemenPAN-RB**:
-   - Unduh laporan lengkap dalam format Excel (`.xlsx`) berformat resmi dengan header instansi, formatting sel rapi, dan tautan bukti aktif.
-   - Modul arsip dinamis untuk mengunduh rekapitulasi evaluasi historis.
+   - Unduh laporan lengkap dalam format Excel (`.xlsx`) via `exceljs` berformat resmi 2 sheet (Kertas Kerja LKE & Ringkasan Capaian) dengan header instansi, border, formatting sel rapi, dan tautan bukti aktif.
+   - Modul arsip dinamis (`/rebo/arsip`) berbasis database dengan filter tahun/kategori.
 
-9. **Progressive Web App (PWA) & Mobile Ready**:
-   - Dapat diinstal di smartphone Android/iOS pimpinan dan tim kerja lapangan (*standalone app*).
-   - Splash screens, icon adaptif, dan caching Service Worker offline-ready via Workbox.
+9. **CRUD Master Data LKE Lengkap**:
+   - Pengelolaan penuh Pilar, Subpilar, Pertanyaan, serta Opsi Jawaban & Bobot Nilai (Kategori Penilaian) pada menu `/rebo/dataRB`.
+
+10. **Progressive Web App (PWA) & Mobile Ready**:
+    - Dapat diinstal di smartphone Android/iOS pimpinan dan tim kerja lapangan (*standalone app*).
+    - Splash screens, icon adaptif (maskable 192px & 512px), dan caching Service Worker offline-ready via Workbox.
 
 ---
 
@@ -97,6 +103,11 @@
 ├── /monitoring                 # Dashboard analitik progress, visualisasi chart, & export Excel
 ├── /kanban                     # Papan Kanban tindak lanjut perbaikan indikator LKE
 ├── /arsip                      # Dynamic archive dokumen, SK, dan kertas kerja historis
+├── /informasi                  # Panduan pengisian LKE, regulasi, dan FAQ
+├── /dataRB                     # CRUD Master Data LKE (Super Admin)
+│   ├── /pilar                  # Kelola Master Pilar Area Pemenuhan & Reform
+│   ├── /pilar/subpilar         # Kelola Master Subpilar
+│   └── /pilar/pertanyaan       # Kelola Master Indikator & Bobot Opsi Kategori
 └── /admin                      # Khusus Super Admin
     ├── /periode                # Manajemen siklus tahun evaluasi LKE & duplikasi indikator
     ├── /gdrive-generator       # Generator hierarki Google Drive per indikator
@@ -111,19 +122,35 @@
 | Peran (Role) | Hak Akses Utama |
 |---|---|
 | **Super Admin** | Akses penuh seluruh sistem: manajemen user & role, manajemen periode evaluasi, audit log, master data pilar/indikator, dan generator Google Drive. |
-| **Koordinator Pilar** | Memverifikasi bukti dukung, menyetujui/menolak bukti, memberikan catatan revisi, dan menetapkan skor verifikasi pada pilar yang ditugaskan. |
+| **Koordinator Pilar** | Memverifikasi bukti dukung, menyetujui/menolak bukti, memberikan catatan revisi wajib, dan menetapkan skor verifikasi pada pilar yang ditugaskan. |
 | **Operator (Tim Kerja)** | Mengisi jawaban LKE, mengunggah multi-dokumen bukti dukung, memilih nilai mandiri, dan menindaklanjuti revisi pada Kanban. |
-| **TPI / Observer** | Hak akses reviu dan audit read-only lintas pilar untuk inspektorat atau penilai eksternal. |
+| **TPI / Verifikator** | Hak akses reviu dan audit independen lintas pilar untuk inspektorat atau tim penilai internal. |
 
 ---
 
-## 💻 Instalasi & Menjalankan Aplikasi
+## 🗄️ Panduan Migrasi Database Supabase V2
+
+Bagi instalasi baru atau sinkronisasi database remote Supabase, jalankan dua file migrasi SQL berikut melalui **SQL Editor** pada dashboard Supabase:
+
+1. **Skema Inti V2 & Seed Data:**
+   Buka file [20261121000000_rebo_v2_schema.sql](supabase/migrations/20261121000000_rebo_v2_schema.sql) dan jalankan pada SQL Editor.
+   *Membuat tabel `periode_evaluasi`, `pertanyaan_periode`, `dokumen_bukti`, `audit_log`, fungsi trigger `updated_at`, RLS policies, dan query migrasi data lama.*
+
+2. **Skema Arsip Digital:**
+   Buka file [20261121000001_arsip_dokumen.sql](supabase/migrations/20261121000001_arsip_dokumen.sql) dan jalankan pada SQL Editor.
+   *Membuat tabel `arsip_dokumen`, RLS policies, dan initial data dokumen SK Tim ZI & Pedoman.*
+
+> Panduan terperinci dapat dibaca di [supabase/README_MIGRATION_V2.md](supabase/README_MIGRATION_V2.md).
+
+---
+
+## 💻 Instalasi & Cara Menjalankan Aplikasi
 
 ### Kebutuhan Dasar
 - **Node.js**: Versi 20.x atau 22.x LTS
 - **Package Manager**: `pnpm` (disarankan) atau `npm`
 
-### Langkah-Langkah:
+### Langkah-Langkah Menjalankan:
 1. **Clone repositori**:
    ```bash
    git clone https://github.com/aljaffarsyah10/rebo.git
@@ -136,20 +163,25 @@
    ```
 
 3. **Siapkan file konfigurasi environment**:
-   ```bash
-   cp env.example.txt .env.local
-   ```
+   - Di Windows PowerShell:
+     ```powershell
+     Copy-Item env.example.txt .env.local
+     ```
+   - Di Linux / macOS:
+     ```bash
+     cp env.example.txt .env.local
+     ```
    *Buka `.env.local` dan isi kredensial Clerk, Supabase, dan Sentry.*
 
-4. **Verifikasi kode**:
+4. **Verifikasi integritas kode**:
    ```bash
-   # Cek tipe data
+   # Cek tipe data TypeScript
    npx tsc --noEmit
 
    # Cek linter
    pnpm lint
 
-   # Verifikasi build produksi
+   # Verifikasi build produksi (opsional)
    pnpm build
    ```
 
@@ -161,9 +193,27 @@
 
 ---
 
+## 🌐 Daftar Tautan Cepat Navigasi Lokal
+
+Setelah server berjalan (`http://localhost:3000`), Anda dapat langsung mengakses modul-modul berikut:
+
+- **Beranda / Overview:** [http://localhost:3000/rebo/overview](http://localhost:3000/rebo/overview)
+- **Monitoring Capaian & Ekspor Excel:** [http://localhost:3000/rebo/monitoring](http://localhost:3000/rebo/monitoring)
+- **Kanban Tindak Lanjut Revisi:** [http://localhost:3000/rebo/kanban](http://localhost:3000/rebo/kanban)
+- **Formulir Pengisian Bukti (Area):** [http://localhost:3000/rebo/formRB/area](http://localhost:3000/rebo/formRB/area)
+- **Katalog Arsip Digital:** [http://localhost:3000/rebo/arsip](http://localhost:3000/rebo/arsip)
+- **Kelola Master Data LKE:** [http://localhost:3000/rebo/dataRB/pilar](http://localhost:3000/rebo/dataRB/pilar)
+- **Admin Panel:**
+  - Manajemen Pengguna: [http://localhost:3000/rebo/admin](http://localhost:3000/rebo/admin)
+  - Generator Folder GDrive: [http://localhost:3000/rebo/admin/gdrive-generator](http://localhost:3000/rebo/admin/gdrive-generator)
+  - Manajemen Siklus Periode: [http://localhost:3000/rebo/admin/periode](http://localhost:3000/rebo/admin/periode)
+  - Audit Trail & Log Aktivitas: [http://localhost:3000/rebo/admin/audit-log](http://localhost:3000/rebo/admin/audit-log)
+
+---
+
 ## ⚙️ Environment Variables
 
-Berikut daftar variabel lingkungan yang dibutuhkan:
+Berikut daftar variabel lingkungan yang dibutuhkan pada `.env.local`:
 
 ```env
 # Clerk Authentication
@@ -184,6 +234,7 @@ NEXT_PUBLIC_SENTRY_DSN=https://...@sentry.io/...
 SENTRY_AUTH_TOKEN=sntrys_...
 NEXT_PUBLIC_SENTRY_ORG=your-sentry-org
 NEXT_PUBLIC_SENTRY_PROJECT=rebo
+NEXT_PUBLIC_SENTRY_DISABLED="false"
 ```
 
 ---
@@ -194,6 +245,16 @@ REBO V2 dikonfigurasikan agar dapat diinstal langsung di perangkat *smartphone* 
 - **Web App Manifest**: Dideklarasikan pada `/manifest.json` dengan dukungan maskable icons (192px dan 512px).
 - **Theme Color**: Menggunakan warna resmi Navy BPS (`#003366`) pada mode terang dan `#09090b` pada mode gelap.
 - **Service Worker**: Dikelola secara otomatis oleh Workbox melalui `next-pwa` dengan strategi cache teroptimasi.
+
+---
+
+## 📚 Dokumentasi Lengkap
+
+Untuk informasi perencanaan, arsitektur, dan riwayat pengembangan terperinci, silakan merujuk ke dokumen berikut:
+- **[PRD & Sequential Development Playbook V2](Prep%20PRD%20and%20Playbook%20V2/PRD%20and%20Playbook%20REBO%20V2.md)**
+- **[Catatan Rilis Resmi (Release Notes v2.0.0)](Prep%20PRD%20and%20Playbook%20V2/REBO_V2_RELEASE_NOTES.md)**
+- **[Analisis Kebutuhan Awal](Prep%20PRD%20and%20Playbook%20V2/Analisis%20Kebutuhan.md)**
+- **[Panduan Migrasi Database V2](supabase/README_MIGRATION_V2.md)**
 
 ---
 
