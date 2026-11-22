@@ -23,7 +23,10 @@ import {
   User,
   ArrowRight,
   Filter,
-  Kanban as KanbanIcon
+  Kanban as KanbanIcon,
+  X,
+  Layers,
+  ArrowUpRight
 } from 'lucide-react';
 import { getKanbanBoardData } from '@/actions/kanban-actions';
 import { PILAR_LIST } from '@/lib/auth/rbac';
@@ -72,6 +75,12 @@ export default function KanbanBoardClient({
     });
   };
 
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedPilar('ALL');
+    handleFetch('ALL');
+  };
+
   const filteredCards = useMemo(() => {
     if (!searchQuery.trim()) {
       return data.cards;
@@ -99,38 +108,38 @@ export default function KanbanBoardClient({
     filteredCards.menungguReview.length +
     filteredCards.disetujui.length;
 
-  return (
-    <div className='container mx-auto max-w-7xl space-y-6 p-6'>
-      {/* 1. Header / Hero Section */}
-      <div className='relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-50 via-amber-50/70 to-blue-50/60 p-6 sm:p-8 dark:from-slate-900 dark:via-slate-800/90 dark:to-slate-700/80'>
-        <div className='absolute inset-0 bg-gradient-to-br from-rose-100/20 via-amber-100/15 to-blue-100/10 dark:from-slate-900/50 dark:via-slate-800/40 dark:to-slate-700/30' />
+  const hasActiveFilters = searchQuery.trim() !== '' || selectedPilar !== 'ALL';
 
+  return (
+    <div className='container mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8'>
+      {/* 1. Header / Hero Section (Calm & Elegant Pastel Modern) */}
+      <div className='relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/70 p-6 shadow-xs sm:p-8 dark:border-slate-800 dark:from-slate-900/90 dark:via-slate-900 dark:to-slate-950'>
         <div className='relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
-          <div className='space-y-2'>
+          <div className='space-y-2.5'>
             <div className='flex flex-wrap items-center gap-2'>
               <Badge
                 variant='outline'
-                className='border-rose-300/60 bg-rose-100/60 text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                className='border-slate-300/70 bg-white/80 font-medium text-slate-700 shadow-2xs dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300'
               >
-                <KanbanIcon className='mr-1.5 h-3.5 w-3.5' />
+                <KanbanIcon className='mr-1.5 h-3.5 w-3.5 text-slate-500 dark:text-slate-400' />
                 Action Center & Follow-Up
               </Badge>
               {data.periode && (
                 <Badge
                   variant='secondary'
-                  className='bg-white/80 text-slate-800 shadow-xs dark:bg-slate-800 dark:text-slate-200'
+                  className='bg-slate-200/60 font-normal text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                 >
                   {data.periode.nama_periode} ({data.periode.tahun})
                 </Badge>
               )}
             </div>
-            <h1 className='bg-gradient-to-r from-slate-900 via-rose-700 to-amber-700 bg-clip-text text-3xl font-black text-transparent sm:text-4xl dark:from-slate-100 dark:via-rose-400 dark:to-amber-300'>
+            <h1 className='text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100'>
               Kanban Tindak Lanjut RB
             </h1>
-            <p className='text-sm text-slate-700 sm:text-base dark:text-slate-300'>
-              Papan kendali tangkas untuk menindaklanjuti indikator berstatus
-              perlu revisi, memantau berkas dalam review, dan melacak
-              persetujuan bukti dukung LKE BPS Sitaro.
+            <p className='max-w-2xl text-xs text-slate-600 sm:text-sm dark:text-slate-400'>
+              Papan kendali terstruktur untuk mempercepat tindak lanjut
+              indikator yang memerlukan perbaikan, memantau berkas usulan
+              review, serta melacak persetujuan bukti dukung LKE BPS Sitaro.
             </p>
           </div>
 
@@ -140,9 +149,10 @@ export default function KanbanBoardClient({
               <Button
                 variant='outline'
                 size='sm'
-                className='h-9 border-slate-300 bg-white/80 shadow-xs hover:bg-white dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800'
+                className='h-9 rounded-xl border-slate-200 bg-white/80 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800'
               >
-                Lihat Monitoring Progres →
+                <span>Monitoring Progres</span>
+                <ArrowUpRight className='ml-1.5 h-3.5 w-3.5 text-slate-400' />
               </Button>
             </Link>
             <Button
@@ -150,10 +160,12 @@ export default function KanbanBoardClient({
               size='sm'
               onClick={() => handleFetch()}
               disabled={isPending}
-              className='h-9 border-slate-300 bg-white/80 shadow-xs hover:bg-white dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800'
+              className='h-9 rounded-xl border-slate-200 bg-white/80 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800'
             >
               <RefreshCw
-                className={`mr-1.5 h-3.5 w-3.5 ${isPending ? 'animate-spin' : ''}`}
+                className={`mr-1.5 h-3.5 w-3.5 text-slate-500 dark:text-slate-400 ${
+                  isPending ? 'animate-spin' : ''
+                }`}
               />
               Perbarui Board
             </Button>
@@ -161,24 +173,96 @@ export default function KanbanBoardClient({
         </div>
       </div>
 
-      {/* 2. Filter & Search Bar */}
-      <div className='flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900'>
-        <div className='flex flex-1 flex-col gap-3 sm:flex-row sm:items-center'>
+      {/* 2. KPI Summary Strip (Clean & Balanced Pastel Cards) */}
+      <div className='grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4'>
+        {/* Total Active */}
+        <div className='flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 p-3.5 shadow-2xs sm:p-4 dark:border-slate-800 dark:bg-slate-900/80'>
+          <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'>
+            <Layers className='h-5 w-5' />
+          </div>
+          <div className='min-w-0 flex-1'>
+            <div className='text-xs font-medium text-slate-500 dark:text-slate-400'>
+              Total Terfilter
+            </div>
+            <div className='text-lg font-bold tracking-tight text-slate-900 sm:text-xl dark:text-slate-100'>
+              {totalFilteredCount}
+            </div>
+          </div>
+        </div>
+
+        {/* Perlu Revisi */}
+        <div className='flex items-center gap-3 rounded-2xl border border-rose-200/60 bg-rose-50/40 p-3.5 shadow-2xs sm:p-4 dark:border-rose-900/30 dark:bg-rose-950/20'>
+          <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100/90 text-rose-600 dark:bg-rose-900/50 dark:text-rose-300'>
+            <AlertTriangle className='h-5 w-5' />
+          </div>
+          <div className='min-w-0 flex-1'>
+            <div className='text-xs font-medium text-rose-800/80 dark:text-rose-300/80'>
+              Perlu Revisi
+            </div>
+            <div className='text-lg font-bold tracking-tight text-rose-900 sm:text-xl dark:text-rose-200'>
+              {filteredCards.perluRevisi.length}
+            </div>
+          </div>
+        </div>
+
+        {/* Menunggu Review */}
+        <div className='flex items-center gap-3 rounded-2xl border border-amber-200/60 bg-amber-50/40 p-3.5 shadow-2xs sm:p-4 dark:border-amber-900/30 dark:bg-amber-950/20'>
+          <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100/90 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'>
+            <Clock className='h-5 w-5' />
+          </div>
+          <div className='min-w-0 flex-1'>
+            <div className='text-xs font-medium text-amber-800/80 dark:text-amber-300/80'>
+              Menunggu Review
+            </div>
+            <div className='text-lg font-bold tracking-tight text-amber-900 sm:text-xl dark:text-amber-200'>
+              {filteredCards.menungguReview.length}
+            </div>
+          </div>
+        </div>
+
+        {/* Disetujui */}
+        <div className='flex items-center gap-3 rounded-2xl border border-emerald-200/60 bg-emerald-50/40 p-3.5 shadow-2xs sm:p-4 dark:border-emerald-900/30 dark:bg-emerald-950/20'>
+          <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100/90 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'>
+            <CheckCircle2 className='h-5 w-5' />
+          </div>
+          <div className='min-w-0 flex-1'>
+            <div className='text-xs font-medium text-emerald-800/80 dark:text-emerald-300/80'>
+              Disetujui
+            </div>
+            <div className='text-lg font-bold tracking-tight text-emerald-900 sm:text-xl dark:text-emerald-200'>
+              {filteredCards.disetujui.length}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Filter & Search Bar */}
+      <div className='flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-2xs sm:p-4 md:flex-row md:items-center md:justify-between dark:border-slate-800 dark:bg-slate-900'>
+        <div className='flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center'>
           {/* Search Input */}
           <div className='relative w-full sm:max-w-xs'>
             <Search className='absolute top-2.5 left-3 h-4 w-4 text-slate-400' />
             <Input
               type='text'
-              placeholder='Cari kode, judul, atau catatan...'
+              placeholder='Cari kode, indikator, catatan...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className='pl-9 text-xs sm:text-sm'
+              className='h-9 rounded-xl border-slate-200 pr-8 pl-9 text-xs sm:text-sm dark:border-slate-700'
             />
+            {searchQuery && (
+              <button
+                type='button'
+                onClick={() => setSearchQuery('')}
+                className='absolute top-2.5 right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+              >
+                <X className='h-4 w-4' />
+              </button>
+            )}
           </div>
 
           {/* Filter Pilar */}
-          <div className='flex items-center gap-2'>
-            <Filter className='h-4 w-4 text-slate-400' />
+          <div className='flex items-center gap-1.5'>
+            <Filter className='h-3.5 w-3.5 text-slate-400' />
             <select
               value={selectedPilar}
               onChange={(e) => {
@@ -187,7 +271,7 @@ export default function KanbanBoardClient({
                 handleFetch(val);
               }}
               disabled={isPending}
-              className='h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+              className='h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-2xs outline-hidden transition focus:border-slate-400 focus:ring-1 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
             >
               <option value='ALL'>Semua Pilar (Pilar 1 s.d. 6)</option>
               {PILAR_LIST.map((p) => (
@@ -208,7 +292,7 @@ export default function KanbanBoardClient({
                 handleFetch(selectedPilar, val);
               }}
               disabled={isPending}
-              className='h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+              className='h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-2xs outline-hidden transition focus:border-slate-400 focus:ring-1 focus:ring-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
             >
               {periodes.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -217,37 +301,55 @@ export default function KanbanBoardClient({
               ))}
             </select>
           )}
+
+          {/* Reset Filters Button */}
+          {hasActiveFilters && (
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={handleResetFilters}
+              className='h-9 rounded-xl text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+            >
+              <X className='mr-1 h-3.5 w-3.5' />
+              Reset Filter
+            </Button>
+          )}
         </div>
 
         {/* Counter Summary */}
-        <div className='text-xs text-slate-500 dark:text-slate-400'>
-          Menampilkan{' '}
-          <span className='font-bold text-slate-800 dark:text-slate-100'>
+        <div className='flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400'>
+          <span>Menampilkan</span>
+          <span className='font-semibold text-slate-800 dark:text-slate-200'>
             {totalFilteredCount}
-          </span>{' '}
-          kartu indikator aktif
+          </span>
+          <span>kartu indikator</span>
         </div>
       </div>
 
-      {/* 3. Kanban Columns (3-Column Layout) */}
+      {/* 4. Kanban Columns (3-Column Soft Pastel Layout) */}
       <div className='grid grid-cols-1 items-start gap-6 lg:grid-cols-3'>
         {/* ============================================================ */}
-        {/* Kolom 1: PERLU REVISI (To Do) - Prioritas Utama              */}
+        {/* Kolom 1: PERLU REVISI (To Do) - Soft Rose/Coral Pastel        */}
         {/* ============================================================ */}
-        <div className='flex flex-col space-y-4'>
+        <div className='flex flex-col space-y-3.5'>
           {/* Column Header */}
-          <div className='flex items-center justify-between rounded-xl border border-rose-200/80 bg-rose-50/80 p-3.5 dark:border-rose-900/60 dark:bg-rose-950/30'>
-            <div className='flex items-center gap-2'>
-              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-white shadow-xs'>
-                <AlertTriangle className='h-3.5 w-3.5' />
+          <div className='flex items-center justify-between rounded-xl border border-rose-200/70 bg-rose-50/60 p-3 shadow-2xs dark:border-rose-900/40 dark:bg-rose-950/25'>
+            <div className='flex items-center gap-2.5'>
+              <div className='flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100/90 text-rose-600 shadow-2xs dark:bg-rose-900/50 dark:text-rose-300'>
+                <AlertTriangle className='h-4 w-4' />
               </div>
-              <span className='font-bold text-rose-900 dark:text-rose-200'>
-                Perlu Revisi (To Do)
-              </span>
+              <div>
+                <span className='text-sm font-semibold text-rose-900 dark:text-rose-200'>
+                  Perlu Revisi
+                </span>
+                <span className='ml-1.5 text-[11px] font-normal text-rose-700/80 dark:text-rose-300/80'>
+                  (To Do)
+                </span>
+              </div>
             </div>
             <Badge
-              variant='destructive'
-              className='bg-rose-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-xs'
+              variant='outline'
+              className='border-rose-200/80 bg-rose-100/80 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:border-rose-800/60 dark:bg-rose-900/40 dark:text-rose-300'
             >
               {filteredCards.perluRevisi.length}
             </Badge>
@@ -256,10 +358,12 @@ export default function KanbanBoardClient({
           {/* Cards Container */}
           <div className='space-y-3'>
             {filteredCards.perluRevisi.length === 0 ? (
-              <div className='flex flex-col items-center justify-center rounded-2xl border border-dashed border-rose-200/80 bg-rose-50/30 p-8 text-center dark:border-rose-900/40 dark:bg-rose-950/10'>
-                <CheckCircle2 className='h-8 w-8 text-emerald-500' />
-                <p className='mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200'>
-                  Tidak ada indikator yang perlu revisi!
+              <div className='flex flex-col items-center justify-center rounded-2xl border border-dashed border-rose-200/60 bg-rose-50/20 p-8 text-center dark:border-rose-900/30 dark:bg-rose-950/10'>
+                <div className='flex h-10 w-10 items-center justify-center rounded-full bg-rose-100/60 text-rose-500 dark:bg-rose-900/30 dark:text-rose-400'>
+                  <CheckCircle2 className='h-5 w-5' />
+                </div>
+                <p className='mt-2.5 text-sm font-medium text-slate-700 dark:text-slate-200'>
+                  Tidak ada indikator yang perlu revisi
                 </p>
                 <p className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
                   Semua indikator pada filter ini dalam kondisi siap atau telah
@@ -270,21 +374,21 @@ export default function KanbanBoardClient({
               filteredCards.perluRevisi.map((card) => (
                 <Card
                   key={card.id_pertanyaan}
-                  className='border-rose-200/80 shadow-xs transition-shadow hover:shadow-md dark:border-rose-900/60 dark:bg-slate-900'
+                  className='rounded-xl border border-rose-200/60 bg-white shadow-2xs transition-all duration-200 hover:border-rose-300 hover:shadow-xs dark:border-rose-900/30 dark:bg-slate-900/90 dark:hover:border-rose-800/50'
                 >
                   <CardHeader className='p-4 pb-2'>
                     <div className='flex items-center justify-between gap-2'>
                       <Badge
                         variant='outline'
-                        className='border-rose-300 bg-rose-50 text-[11px] font-semibold text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                        className='border-rose-200/70 bg-rose-50/70 text-[11px] font-medium text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300'
                       >
                         {card.pilar_kode}
                       </Badge>
-                      <span className='text-[11px] font-bold text-slate-500 dark:text-slate-400'>
+                      <span className='font-mono text-xs font-medium text-slate-500 dark:text-slate-400'>
                         {card.kode_indikator}
                       </span>
                     </div>
-                    <CardTitle className='mt-1 text-sm font-bold text-slate-900 dark:text-slate-100'>
+                    <CardTitle className='mt-1.5 text-sm leading-snug font-semibold text-slate-900 dark:text-slate-100'>
                       {card.uraian_singkat}
                     </CardTitle>
                     <CardDescription className='line-clamp-2 text-xs text-slate-500 dark:text-slate-400'>
@@ -293,19 +397,19 @@ export default function KanbanBoardClient({
                   </CardHeader>
 
                   <CardContent className='space-y-3 p-4 pt-2'>
-                    {/* Box Catatan Revisi Khusus */}
+                    {/* Box Catatan Revisi Khusus (Soft Rose Pastel) */}
                     {card.catatan_koordinator ? (
-                      <div className='rounded-xl border border-rose-300/80 bg-rose-100/50 p-3 text-xs dark:border-rose-800/80 dark:bg-rose-950/40'>
-                        <div className='flex items-center gap-1.5 font-bold text-rose-800 dark:text-rose-300'>
-                          <AlertTriangle className='h-3.5 w-3.5 shrink-0' />
+                      <div className='rounded-lg border border-rose-200/70 bg-rose-50/50 p-2.5 text-xs dark:border-rose-900/40 dark:bg-rose-950/25'>
+                        <div className='flex items-center gap-1.5 font-medium text-rose-800 dark:text-rose-300'>
+                          <AlertTriangle className='h-3.5 w-3.5 shrink-0 text-rose-500' />
                           <span>Poin Perbaikan dari Verifikator:</span>
                         </div>
-                        <p className='mt-1 text-rose-900/90 italic dark:text-rose-200/90'>
+                        <p className='mt-1 leading-relaxed text-rose-900/80 italic dark:text-rose-200/80'>
                           &ldquo;{card.catatan_koordinator}&rdquo;
                         </p>
                       </div>
                     ) : (
-                      <div className='rounded-lg bg-rose-50 p-2 text-xs text-rose-600 italic dark:bg-rose-950/20 dark:text-rose-400'>
+                      <div className='rounded-lg bg-rose-50/40 p-2 text-xs text-rose-700/80 italic dark:bg-rose-950/20 dark:text-rose-400/80'>
                         Menunggu tindak lanjut perbaikan berkas bukti dukung.
                       </div>
                     )}
@@ -323,16 +427,16 @@ export default function KanbanBoardClient({
                       )}
                     </div>
 
-                    {/* Action Link to Form Pilar */}
+                    {/* Action Link to Form Pilar (Soft Pastel Button) */}
                     <div className='pt-1'>
                       <Link
                         href={`/rebo/formRB/${card.pilar_id}`}
                         className='block w-full'
                       >
                         <Button
-                          variant='default'
+                          variant='outline'
                           size='sm'
-                          className='w-full justify-between bg-rose-600 text-xs font-semibold text-white shadow-xs hover:bg-rose-700'
+                          className='h-8.5 w-full justify-between rounded-lg border-rose-200/80 bg-rose-50/60 text-xs font-medium text-rose-700 shadow-2xs transition-colors hover:border-rose-300 hover:bg-rose-100/80 hover:text-rose-800 dark:border-rose-800/50 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-900/50'
                         >
                           <span>Tindak Lanjuti di Form Pilar</span>
                           <ArrowRight className='h-3.5 w-3.5' />
@@ -347,22 +451,27 @@ export default function KanbanBoardClient({
         </div>
 
         {/* ============================================================ */}
-        {/* Kolom 2: MENUNGGU REVIEW (In Review)                         */}
+        {/* Kolom 2: MENUNGGU REVIEW (In Review) - Warm Soft Amber Pastel */}
         {/* ============================================================ */}
-        <div className='flex flex-col space-y-4'>
+        <div className='flex flex-col space-y-3.5'>
           {/* Column Header */}
-          <div className='flex items-center justify-between rounded-xl border border-amber-200/80 bg-amber-50/80 p-3.5 dark:border-amber-900/60 dark:bg-amber-950/30'>
-            <div className='flex items-center gap-2'>
-              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-white shadow-xs'>
-                <Clock className='h-3.5 w-3.5' />
+          <div className='flex items-center justify-between rounded-xl border border-amber-200/70 bg-amber-50/60 p-3 shadow-2xs dark:border-amber-900/40 dark:bg-amber-950/25'>
+            <div className='flex items-center gap-2.5'>
+              <div className='flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100/90 text-amber-700 shadow-2xs dark:bg-amber-900/50 dark:text-amber-300'>
+                <Clock className='h-4 w-4' />
               </div>
-              <span className='font-bold text-amber-900 dark:text-amber-200'>
-                Menunggu Review (In Review)
-              </span>
+              <div>
+                <span className='text-sm font-semibold text-amber-900 dark:text-amber-200'>
+                  Menunggu Review
+                </span>
+                <span className='ml-1.5 text-[11px] font-normal text-amber-700/80 dark:text-amber-300/80'>
+                  (In Review)
+                </span>
+              </div>
             </div>
             <Badge
               variant='outline'
-              className='border-amber-300 bg-amber-200/70 px-2.5 py-0.5 text-xs font-bold text-amber-800 dark:border-amber-700 dark:bg-amber-900/60 dark:text-amber-200'
+              className='border-amber-200/80 bg-amber-100/80 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:border-amber-800/60 dark:bg-amber-900/40 dark:text-amber-300'
             >
               {filteredCards.menungguReview.length}
             </Badge>
@@ -371,9 +480,11 @@ export default function KanbanBoardClient({
           {/* Cards Container */}
           <div className='space-y-3'>
             {filteredCards.menungguReview.length === 0 ? (
-              <div className='flex flex-col items-center justify-center rounded-2xl border border-dashed border-amber-200/80 bg-amber-50/30 p-8 text-center dark:border-amber-900/40 dark:bg-amber-950/10'>
-                <Clock className='h-8 w-8 text-amber-400' />
-                <p className='mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200'>
+              <div className='flex flex-col items-center justify-center rounded-2xl border border-dashed border-amber-200/60 bg-amber-50/20 p-8 text-center dark:border-amber-900/30 dark:bg-amber-950/10'>
+                <div className='flex h-10 w-10 items-center justify-center rounded-full bg-amber-100/60 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'>
+                  <Clock className='h-5 w-5' />
+                </div>
+                <p className='mt-2.5 text-sm font-medium text-slate-700 dark:text-slate-200'>
                   Tidak ada berkas menunggu review
                 </p>
                 <p className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
@@ -385,21 +496,21 @@ export default function KanbanBoardClient({
               filteredCards.menungguReview.map((card) => (
                 <Card
                   key={card.id_pertanyaan}
-                  className='border-amber-200/70 shadow-xs transition-shadow hover:shadow-md dark:border-amber-900/50 dark:bg-slate-900'
+                  className='rounded-xl border border-amber-200/60 bg-white shadow-2xs transition-all duration-200 hover:border-amber-300 hover:shadow-xs dark:border-amber-900/30 dark:bg-slate-900/90 dark:hover:border-amber-800/50'
                 >
                   <CardHeader className='p-4 pb-2'>
                     <div className='flex items-center justify-between gap-2'>
                       <Badge
                         variant='outline'
-                        className='border-amber-300 bg-amber-50 text-[11px] font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                        className='border-amber-200/70 bg-amber-50/70 text-[11px] font-medium text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300'
                       >
                         {card.pilar_kode}
                       </Badge>
-                      <span className='text-[11px] font-bold text-slate-500 dark:text-slate-400'>
+                      <span className='font-mono text-xs font-medium text-slate-500 dark:text-slate-400'>
                         {card.kode_indikator}
                       </span>
                     </div>
-                    <CardTitle className='mt-1 text-sm font-bold text-slate-900 dark:text-slate-100'>
+                    <CardTitle className='mt-1.5 text-sm leading-snug font-semibold text-slate-900 dark:text-slate-100'>
                       {card.uraian_singkat}
                     </CardTitle>
                     <CardDescription className='line-clamp-2 text-xs text-slate-500 dark:text-slate-400'>
@@ -408,9 +519,9 @@ export default function KanbanBoardClient({
                   </CardHeader>
 
                   <CardContent className='space-y-3 p-4 pt-2'>
-                    {/* Operator Note / Dokumen summary */}
-                    <div className='rounded-lg bg-amber-50/60 p-2.5 text-xs dark:bg-amber-950/20'>
-                      <div className='flex items-center justify-between font-semibold text-amber-800 dark:text-amber-300'>
+                    {/* Operator Note / Dokumen summary (Warm Soft Amber Pastel) */}
+                    <div className='rounded-lg border border-amber-200/70 bg-amber-50/50 p-2.5 text-xs dark:border-amber-900/40 dark:bg-amber-950/25'>
+                      <div className='flex items-center justify-between font-medium text-amber-900 dark:text-amber-200'>
                         <span>
                           {card.total_dokumen} Dokumen Bukti Disematkan
                         </span>
@@ -419,13 +530,20 @@ export default function KanbanBoardClient({
                         </span>
                       </div>
                       {card.catatan_operator && (
-                        <p className='mt-1 text-slate-600 italic dark:text-slate-300'>
+                        <p className='mt-1 leading-relaxed text-amber-950/80 italic dark:text-amber-200/80'>
                           &ldquo;{card.catatan_operator}&rdquo;
                         </p>
                       )}
                     </div>
 
-                    {/* Action Link to Form Pilar */}
+                    {/* Metadata Subpilar */}
+                    <div className='flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400'>
+                      <span className='truncate'>
+                        Subpilar: {card.subpilar_nama}
+                      </span>
+                    </div>
+
+                    {/* Action Link to Form Pilar (Warm Soft Amber Button) */}
                     <div className='pt-1'>
                       <Link
                         href={`/rebo/formRB/${card.pilar_id}`}
@@ -434,7 +552,7 @@ export default function KanbanBoardClient({
                         <Button
                           variant='outline'
                           size='sm'
-                          className='w-full justify-between border-amber-300 text-xs font-semibold text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-950/50'
+                          className='h-8.5 w-full justify-between rounded-lg border-amber-200/80 bg-amber-50/60 text-xs font-medium text-amber-800 shadow-2xs transition-colors hover:border-amber-300 hover:bg-amber-100/80 hover:text-amber-900 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-300 dark:hover:bg-amber-900/50'
                         >
                           <span>Review Bukti Dukung</span>
                           <ExternalLink className='h-3.5 w-3.5' />
@@ -449,22 +567,27 @@ export default function KanbanBoardClient({
         </div>
 
         {/* ============================================================ */}
-        {/* Kolom 3: DISETUJUI (Done)                                    */}
+        {/* Kolom 3: DISETUJUI (Done) - Sage / Soft Emerald Pastel        */}
         {/* ============================================================ */}
-        <div className='flex flex-col space-y-4'>
+        <div className='flex flex-col space-y-3.5'>
           {/* Column Header */}
-          <div className='flex items-center justify-between rounded-xl border border-emerald-200/80 bg-emerald-50/80 p-3.5 dark:border-emerald-900/60 dark:bg-emerald-950/30'>
-            <div className='flex items-center gap-2'>
-              <div className='flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs'>
-                <CheckCircle2 className='h-3.5 w-3.5' />
+          <div className='flex items-center justify-between rounded-xl border border-emerald-200/70 bg-emerald-50/60 p-3 shadow-2xs dark:border-emerald-900/40 dark:bg-emerald-950/25'>
+            <div className='flex items-center gap-2.5'>
+              <div className='flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100/90 text-emerald-700 shadow-2xs dark:bg-emerald-900/50 dark:text-emerald-300'>
+                <CheckCircle2 className='h-4 w-4' />
               </div>
-              <span className='font-bold text-emerald-900 dark:text-emerald-200'>
-                Disetujui (Done)
-              </span>
+              <div>
+                <span className='text-sm font-semibold text-emerald-900 dark:text-emerald-200'>
+                  Disetujui
+                </span>
+                <span className='ml-1.5 text-[11px] font-normal text-emerald-700/80 dark:text-emerald-300/80'>
+                  (Done)
+                </span>
+              </div>
             </div>
             <Badge
               variant='outline'
-              className='border-emerald-300 bg-emerald-200/70 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200'
+              className='border-emerald-200/80 bg-emerald-100/80 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-900/40 dark:text-emerald-300'
             >
               {filteredCards.disetujui.length}
             </Badge>
@@ -473,9 +596,11 @@ export default function KanbanBoardClient({
           {/* Cards Container */}
           <div className='space-y-3'>
             {filteredCards.disetujui.length === 0 ? (
-              <div className='flex flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-200/80 bg-emerald-50/30 p-8 text-center dark:border-emerald-900/40 dark:bg-emerald-950/10'>
-                <FileText className='h-8 w-8 text-emerald-400' />
-                <p className='mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200'>
+              <div className='flex flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-200/60 bg-emerald-50/20 p-8 text-center dark:border-emerald-900/30 dark:bg-emerald-950/10'>
+                <div className='flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100/60 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'>
+                  <FileText className='h-5 w-5' />
+                </div>
+                <p className='mt-2.5 text-sm font-medium text-slate-700 dark:text-slate-200'>
                   Belum ada indikator yang disetujui
                 </p>
                 <p className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
@@ -487,21 +612,21 @@ export default function KanbanBoardClient({
               filteredCards.disetujui.map((card) => (
                 <Card
                   key={card.id_pertanyaan}
-                  className='border-emerald-200/70 shadow-xs transition-shadow hover:shadow-md dark:border-emerald-900/50 dark:bg-slate-900'
+                  className='rounded-xl border border-emerald-200/60 bg-white shadow-2xs transition-all duration-200 hover:border-emerald-300 hover:shadow-xs dark:border-emerald-900/30 dark:bg-slate-900/90 dark:hover:border-emerald-800/50'
                 >
                   <CardHeader className='p-4 pb-2'>
                     <div className='flex items-center justify-between gap-2'>
                       <Badge
                         variant='outline'
-                        className='border-emerald-300 bg-emerald-50 text-[11px] font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                        className='border-emerald-200/70 bg-emerald-50/70 text-[11px] font-medium text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300'
                       >
                         {card.pilar_kode}
                       </Badge>
-                      <span className='text-[11px] font-bold text-slate-500 dark:text-slate-400'>
+                      <span className='font-mono text-xs font-medium text-slate-500 dark:text-slate-400'>
                         {card.kode_indikator}
                       </span>
                     </div>
-                    <CardTitle className='mt-1 text-sm font-bold text-slate-900 dark:text-slate-100'>
+                    <CardTitle className='mt-1.5 text-sm leading-snug font-semibold text-slate-900 dark:text-slate-100'>
                       {card.uraian_singkat}
                     </CardTitle>
                     <CardDescription className='line-clamp-2 text-xs text-slate-500 dark:text-slate-400'>
@@ -510,8 +635,9 @@ export default function KanbanBoardClient({
                   </CardHeader>
 
                   <CardContent className='space-y-3 p-4 pt-2'>
-                    <div className='rounded-lg bg-emerald-50/60 p-2.5 text-xs dark:bg-emerald-950/20'>
-                      <div className='flex items-center justify-between font-bold text-emerald-800 dark:text-emerald-300'>
+                    {/* Nilai Verifikasi Box (Sage / Soft Emerald Pastel) */}
+                    <div className='rounded-lg border border-emerald-200/70 bg-emerald-50/50 p-2.5 text-xs dark:border-emerald-900/40 dark:bg-emerald-950/25'>
+                      <div className='flex items-center justify-between font-medium text-emerald-900 dark:text-emerald-200'>
                         <span>Skor Terverifikasi:</span>
                         <span>
                           {card.nilai_verifikasi.toFixed(2)} /{' '}
@@ -519,25 +645,32 @@ export default function KanbanBoardClient({
                         </span>
                       </div>
                       {card.verified_by && (
-                        <p className='mt-1 text-[11px] text-slate-600 dark:text-slate-400'>
+                        <p className='mt-1 text-[11px] text-emerald-800/80 dark:text-emerald-300/80'>
                           Disetujui oleh:{' '}
-                          <span className='font-semibold'>
+                          <span className='font-medium text-emerald-900 dark:text-emerald-200'>
                             {card.verified_by}
                           </span>
                         </p>
                       )}
                     </div>
 
-                    {/* Action Link to Form Pilar */}
+                    {/* Metadata Subpilar */}
+                    <div className='flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400'>
+                      <span className='truncate'>
+                        Subpilar: {card.subpilar_nama}
+                      </span>
+                    </div>
+
+                    {/* Action Link to Form Pilar (Sage / Soft Emerald Button) */}
                     <div className='pt-1'>
                       <Link
                         href={`/rebo/formRB/${card.pilar_id}`}
                         className='block w-full'
                       >
                         <Button
-                          variant='ghost'
+                          variant='outline'
                           size='sm'
-                          className='w-full justify-between text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+                          className='h-8.5 w-full justify-between rounded-lg border-emerald-200/80 bg-emerald-50/60 text-xs font-medium text-emerald-800 shadow-2xs transition-colors hover:border-emerald-300 hover:bg-emerald-100/80 hover:text-emerald-900 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50'
                         >
                           <span>Lihat Form Pilar</span>
                           <ExternalLink className='h-3.5 w-3.5' />

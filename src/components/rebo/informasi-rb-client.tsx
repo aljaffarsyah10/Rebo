@@ -66,56 +66,54 @@ export default function InformasiRBClient({
   return (
     <div className='w-full space-y-8'>
       {/* ============================================================================== */}
-      {/* 1. HERO BANNER: PUSAT INFORMASI & PENGETAHUAN ZONA INTEGRITAS */}
+      {/* 1. HERO / ABOUT CARD: PUSAT INFORMASI & PENJELASAN ZONA INTEGRITAS */}
       {/* ============================================================================== */}
-      <div className='relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-6 text-white shadow-xl md:p-8 dark:border-slate-800'>
-        {/* Glow decorations */}
-        <div className='pointer-events-none absolute -top-32 -right-32 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl' />
-        <div className='pointer-events-none absolute -bottom-32 -left-32 h-72 w-72 rounded-full bg-purple-500/20 blur-3xl' />
-
-        <div className='relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between'>
+      <div className='relative rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs md:p-8 dark:border-slate-800 dark:bg-slate-900/60'>
+        <div className='flex flex-col gap-6 md:flex-row md:items-center md:justify-between'>
           <div className='max-w-3xl space-y-3'>
-            <div className='inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3.5 py-1 text-xs font-semibold text-blue-300 backdrop-blur-xs'>
-              <Building2 className='h-3.5 w-3.5 text-blue-400' />
-              Pusat Informasi & Pengetahuan Zona Integritas (ZI) BPS
+            <div className='inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100/80 px-3.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300'>
+              <Building2 className='h-3.5 w-3.5 text-slate-500 dark:text-slate-400' />
+              Pusat Informasi & Penjelasan Reformasi Birokrasi
             </div>
-            <h1 className='text-2xl font-extrabold tracking-tight text-white md:text-3xl lg:text-4xl'>
-              Panduan & Arsitektur Reformasi Birokrasi
+
+            <h1 className='text-2xl font-bold tracking-tight text-slate-900 md:text-3xl dark:text-slate-100'>
+              Tentang & Panduan Zona Integritas (ZI)
             </h1>
-            <p className='text-sm leading-relaxed text-slate-300'>
-              Portal sistematis yang merangkum seluruh instrumen pembangunan
-              Zona Integritas menuju predikat Wilayah Bebas dari Korupsi (WBK)
-              dan Wilayah Birokrasi Bersih dan Melayani (WBBM). Pelajari peta
-              hierarki struktur, rincian 6 pilar, indikator LKE, hingga tata
-              kelola tim penilai.
+
+            <p className='text-sm leading-relaxed text-slate-600 dark:text-slate-400'>
+              Halaman ini memuat penjelasan konseptual, landasan regulasi,
+              struktur hierarki, dan instrumen penilaian Zona Integritas menuju
+              predikat Wilayah Bebas dari Korupsi (WBK) dan Wilayah Birokrasi
+              Bersih dan Melayani (WBBM) di lingkungan BPS Kabupaten Kepulauan
+              Siau Tagulandang Biaro.
             </p>
 
             {/* Quick Action Buttons */}
-            <div className='flex flex-wrap items-center gap-3 pt-2'>
+            <div className='flex flex-wrap items-center gap-2.5 pt-1'>
               <a
                 href={gdriveLink}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md transition hover:scale-[1.02] hover:from-blue-700 hover:to-indigo-700'
+                className='inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-800 transition hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
               >
-                <FolderGit2 className='h-4 w-4' />
-                <span>Folder GDrive Pedoman RB</span>
-                <ExternalLink className='h-3 w-3 opacity-80' />
+                <FolderGit2 className='h-3.5 w-3.5 text-slate-600 dark:text-slate-400' />
+                <span>Folder GDrive Pedoman</span>
+                <ExternalLink className='h-3 w-3 text-slate-400' />
               </a>
 
               <Link
                 href='/rebo/arsip'
-                className='inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-xs transition hover:bg-white/20'
+                className='inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
               >
-                <FileSpreadsheet className='h-4 w-4 text-emerald-400' />
-                <span>Arsip Dokumen Resmi</span>
+                <FileSpreadsheet className='h-3.5 w-3.5 text-slate-500' />
+                <span>Arsip Dokumen</span>
               </Link>
 
               <Link
                 href='/rebo/formRB/area'
-                className='inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-xs transition hover:bg-white/20'
+                className='inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
               >
-                <FileCheck className='h-4 w-4 text-amber-400' />
+                <FileCheck className='h-3.5 w-3.5 text-slate-500' />
                 <span>Pengisian LKE</span>
               </Link>
             </div>
@@ -123,85 +121,97 @@ export default function InformasiRBClient({
 
           {/* Bobot Score Pill */}
           <div className='flex flex-col items-start gap-2 md:items-end'>
-            <div className='rounded-2xl border border-white/15 bg-white/5 p-4 text-left backdrop-blur-md md:text-right'>
-              <div className='text-xs font-medium text-slate-400'>
+            <div className='rounded-xl border border-slate-200/90 bg-slate-50/80 p-4 text-left md:text-right dark:border-slate-800 dark:bg-slate-800/50'>
+              <div className='text-xs font-medium text-slate-500 dark:text-slate-400'>
                 Total Bobot Evaluasi ZI
               </div>
-              <div className='mt-1 text-3xl font-extrabold text-emerald-400'>
+              <div className='mt-0.5 text-2xl font-bold text-slate-900 dark:text-slate-100'>
                 100%
               </div>
-              <div className='mt-1 text-xs text-slate-300'>
-                Pengungkit <span className='font-bold text-blue-400'>60%</span>{' '}
-                • Hasil <span className='font-bold text-purple-400'>40%</span>
+              <div className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
+                Pengungkit{' '}
+                <span className='font-semibold text-slate-700 dark:text-slate-300'>
+                  60%
+                </span>{' '}
+                • Hasil{' '}
+                <span className='font-semibold text-slate-700 dark:text-slate-300'>
+                  40%
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* 6 High-Level System Metrics */}
-        <div className='relative z-10 mt-8 grid grid-cols-2 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3 lg:grid-cols-6'>
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm'>
-            <div className='text-[11px] font-medium text-slate-400'>
+        <div className='mt-6 grid grid-cols-2 gap-3 border-t border-slate-100 pt-5 sm:grid-cols-3 lg:grid-cols-6 dark:border-slate-800'>
+          <div className='rounded-lg border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30'>
+            <div className='text-[11px] font-medium text-slate-500 dark:text-slate-400'>
               Komponen Evaluasi
             </div>
-            <div className='mt-1 text-xl font-bold text-white'>2</div>
-            <div className='text-[10px] font-medium text-blue-400'>
+            <div className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
+              2
+            </div>
+            <div className='text-[10px] text-slate-500 dark:text-slate-400'>
               Pengungkit & Hasil
             </div>
           </div>
 
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm'>
-            <div className='text-[11px] font-medium text-slate-400'>
+          <div className='rounded-lg border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30'>
+            <div className='text-[11px] font-medium text-slate-500 dark:text-slate-400'>
               Area Pengungkit
             </div>
-            <div className='mt-1 text-xl font-bold text-white'>2</div>
-            <div className='text-[10px] font-medium text-indigo-400'>
+            <div className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
+              2
+            </div>
+            <div className='text-[10px] text-slate-500 dark:text-slate-400'>
               Pemenuhan & Reform
             </div>
           </div>
 
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm'>
-            <div className='text-[11px] font-medium text-slate-400'>
+          <div className='rounded-lg border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30'>
+            <div className='text-[11px] font-medium text-slate-500 dark:text-slate-400'>
               Pilar Utama RB
             </div>
-            <div className='mt-1 text-xl font-bold text-white'>6</div>
-            <div className='text-[10px] font-medium text-purple-400'>
+            <div className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
+              6
+            </div>
+            <div className='text-[10px] text-slate-500 dark:text-slate-400'>
               Pilar 1 s/d Pilar 6
             </div>
           </div>
 
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm'>
-            <div className='text-[11px] font-medium text-slate-400'>
+          <div className='rounded-lg border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30'>
+            <div className='text-[11px] font-medium text-slate-500 dark:text-slate-400'>
               Sub-Pilar Kegiatan
             </div>
-            <div className='mt-1 text-xl font-bold text-white'>
+            <div className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
               {totalSubpilar || 42}
             </div>
-            <div className='text-[10px] font-medium text-emerald-400'>
+            <div className='text-[10px] text-slate-500 dark:text-slate-400'>
               Kegiatan Pokok
             </div>
           </div>
 
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm'>
-            <div className='text-[11px] font-medium text-slate-400'>
+          <div className='rounded-lg border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30'>
+            <div className='text-[11px] font-medium text-slate-500 dark:text-slate-400'>
               Indikator LKE
             </div>
-            <div className='mt-1 text-xl font-bold text-white'>
+            <div className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
               {totalPertanyaan || 110}
             </div>
-            <div className='text-[10px] font-medium text-amber-400'>
+            <div className='text-[10px] text-slate-500 dark:text-slate-400'>
               Pertanyaan Evaluasi
             </div>
           </div>
 
-          <div className='rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm'>
-            <div className='text-[11px] font-medium text-slate-400'>
+          <div className='rounded-lg border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30'>
+            <div className='text-[11px] font-medium text-slate-500 dark:text-slate-400'>
               Pilar Hasil
             </div>
-            <div className='mt-1 text-xl font-bold text-white'>
+            <div className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
               {pilarHasilData.length || 2}
             </div>
-            <div className='text-[10px] font-medium text-rose-400'>
+            <div className='text-[10px] text-slate-500 dark:text-slate-400'>
               Survei & Dampak Kinerja
             </div>
           </div>
