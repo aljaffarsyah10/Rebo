@@ -13,10 +13,14 @@ import {
 } from '@/types/rebo';
 import {
   sendWhatsAppMessage,
-  formatRevisiMessage,
-  formatApprovalMessage,
+  formatBuktiRevisionNotification,
+  formatBuktiApprovedNotification,
   createWhatsAppDeepLink
 } from '@/lib/notifications/whatsapp';
+import {
+  getPilarContact,
+  getDefaultNotificationReceiver
+} from '@/lib/notifications/contacts';
 
 // ==============================================================================
 // 1. Zod Validation Schemas
@@ -378,57 +382,118 @@ export async function submitVerifikasiAction(
     try {
       const qDesc = targetPertanyaanDeskripsi;
       const pName = targetPilarNama;
+      const pilarNumber = targetPilarId ? parseInt(targetPilarId, 10) : 0;
+      const picContact = await getPilarContact(pilarNumber);
+      const recipientPhone =
+        picContact?.noWa ||
+        process.env.WA_DEFAULT_RECEIVER ||
+        getDefaultNotificationReceiver();
 
       if (
         validated.status_kelengkapan === STATUS_KELENGKAPAN.PERLU_REVISI &&
         cleanCatatan
       ) {
-        const msg = formatRevisiMessage({
+        const msg = formatBuktiRevisionNotification({
           indikatorKode: String(validated.id_pertanyaan),
           namaIndikator: qDesc,
           pilarNama: pName,
           catatanKoordinator: cleanCatatan,
-          namaKoordinator: verifierName
+          catatanRevisi: cleanCatatan,
+          catatanVerifikasi: cleanCatatan,
+          namaKoordinator: verifierName,
+          namaVerifikator: verifierName
         });
-        waDeepLink = createWhatsAppDeepLink(
-          process.env.WA_DEFAULT_RECEIVER || '',
-          msg
-        );
 
-        if (process.env.WA_GATEWAY_URL && process.env.WA_DEFAULT_RECEIVER) {
-          sendWhatsAppMessage({
-            phone: process.env.WA_DEFAULT_RECEIVER,
-            message: msg
-          }).catch((err) =>
-            console.warn('[WA-NOTIFICATION] Background error:', err)
+        if (recipientPhone) {
+          waDeepLink = createWhatsAppDeepLink(recipientPhone, msg);
+        }
+
+        const sendResult = await sendWhatsAppMessage({
+          phone: recipientPhone,
+          message: msg
+        });
+
+        // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_REVISION)
+        try {
+          await supabase.from('audit_log').insert({
+            id_pertanyaan_periode: idPertanyaanPeriode || null,
+            action: 'NOTIF_WA_REVISION',
+            old_state: null,
+            new_state: {
+              recipient: recipientPhone,
+              pic_name: picContact?.namaPic || null,
+              pilar_id: targetPilarId,
+              pilar_nama: pName,
+              indikator: validated.id_pertanyaan,
+              catatan_revisi: cleanCatatan,
+              success: sendResult.success,
+              error: sendResult.error || null
+            },
+            user_id: session.userId,
+            user_name: verifierName,
+            role: session.role || 'koordinator',
+            created_at: new Date().toISOString()
+          });
+        } catch (auditErr: any) {
+          console.warn(
+            '[VERIFIKASI-ACTIONS] Notice recording audit log for NOTIF_WA_REVISION:',
+            auditErr?.message
           );
         }
       } else if (
         validated.status_kelengkapan === STATUS_KELENGKAPAN.DISETUJUI
       ) {
-        const msg = formatApprovalMessage({
+        const msg = formatBuktiApprovedNotification({
           indikatorKode: String(validated.id_pertanyaan),
           namaIndikator: qDesc,
           pilarNama: pName,
           skor: validated.nilai_verifikasi,
-          namaKoordinator: verifierName
+          namaKoordinator: verifierName,
+          namaVerifikator: verifierName
         });
-        waDeepLink = createWhatsAppDeepLink(
-          process.env.WA_DEFAULT_RECEIVER || '',
-          msg
-        );
 
-        if (process.env.WA_GATEWAY_URL && process.env.WA_DEFAULT_RECEIVER) {
-          sendWhatsAppMessage({
-            phone: process.env.WA_DEFAULT_RECEIVER,
-            message: msg
-          }).catch((err) =>
-            console.warn('[WA-NOTIFICATION] Background error:', err)
+        if (recipientPhone) {
+          waDeepLink = createWhatsAppDeepLink(recipientPhone, msg);
+        }
+
+        const sendResult = await sendWhatsAppMessage({
+          phone: recipientPhone,
+          message: msg
+        });
+
+        // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_APPROVED)
+        try {
+          await supabase.from('audit_log').insert({
+            id_pertanyaan_periode: idPertanyaanPeriode || null,
+            action: 'NOTIF_WA_APPROVED',
+            old_state: null,
+            new_state: {
+              recipient: recipientPhone,
+              pic_name: picContact?.namaPic || null,
+              pilar_id: targetPilarId,
+              pilar_nama: pName,
+              indikator: validated.id_pertanyaan,
+              skor: validated.nilai_verifikasi,
+              success: sendResult.success,
+              error: sendResult.error || null
+            },
+            user_id: session.userId,
+            user_name: verifierName,
+            role: session.role || 'koordinator',
+            created_at: new Date().toISOString()
+          });
+        } catch (auditErr: any) {
+          console.warn(
+            '[VERIFIKASI-ACTIONS] Notice recording audit log for NOTIF_WA_APPROVED:',
+            auditErr?.message
           );
         }
       }
-    } catch (waErr) {
-      console.warn('[WA-NOTIFICATION] Warning creating notification:', waErr);
+    } catch (waErr: any) {
+      console.warn(
+        '[WA-NOTIFICATION] Warning handling verification notification:',
+        waErr?.message || waErr
+      );
     }
 
     return {

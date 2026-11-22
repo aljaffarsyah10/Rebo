@@ -28,13 +28,13 @@
   - Konfigurasi nomor kontak default untuk tiap pilar (Pilar 1 s.d. Pilar 6) dan nomor hotline Tim Verifikator internal BPS Sitaro.
 
 ### 3. Otomasi Pengiriman Pesan (Triggers & Templates)
-- [ ] **Notifikasi Submit Bukti Dukung (PIC ➔ Verifikator):**
+- [x] **Notifikasi Submit Bukti Dukung (PIC ➔ Verifikator):**
   - Kirim pesan ke Verifikator saat PIC mengunggah / mengajukan bukti dukung baru.
   - *Isi Template:* Nama Pilar, Nomor Indikator, Judul Bukti Dukung, Tautan Form Verifikasi.
-- [ ] **Notifikasi Approval / Disetujui (Verifikator ➔ PIC):**
+- [x] **Notifikasi Approval / Disetujui (Verifikator ➔ PIC):**
   - Kirim konfirmasi ke PIC saat bukti dukung disetujui (Status `DONE` / `VERIFIED`).
   - *Isi Template:* Pemberitahuan lolos verifikasi internal & ucapan apresiasi.
-- [ ] **Notifikasi Penolakan / Perlu Revisi (Verifikator ➔ PIC):**
+- [x] **Notifikasi Penolakan / Perlu Revisi (Verifikator ➔ PIC):**
   - Kirim notifikasi prioritas tinggi ke PIC saat bukti ditolak dengan status `REVISION_REQUIRED`.
   - *Isi Template:* Rincian catatan revisi verifikator + tenggat waktu perbaikan + link langsung ke indikator terkait.
 - [ ] **Notifikasi Pengingat Deadline & Rekapitulasi Berkala:**
@@ -44,7 +44,7 @@
 ### 4. Pengujian & Observabilitas
 - [ ] **Uji Coba Pengiriman Pesan Nyata (End-to-End):**
   - Jalankan script uji `node scripts/test_wa_gateway.js <nomor_tujuan>` untuk memverifikasi bot dapat mengirimkan template notifikasi ke nomor pengguna.
-- [ ] **Audit Log & Fallback Notifikasi:**
+- [x] **Audit Log & Fallback Notifikasi:**
   - Rekam riwayat status pengiriman pesan (Berhasil / Gagal) ke tabel `audit_log` di Supabase.
   - Sediakan fallback graceful (jika gateway offline, aksi web tetap sukses dan tidak membekukan user interface).
 

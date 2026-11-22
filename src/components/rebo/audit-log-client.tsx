@@ -25,7 +25,8 @@ import {
   Users,
   Folder,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react';
 import { getAuditLogsAction } from '@/actions/audit-actions';
 import {
@@ -110,6 +111,27 @@ function getActionBadge(action: string) {
         className:
           'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300',
         icon: History
+      };
+    case 'NOTIF_WA_SUBMIT':
+      return {
+        label: 'Notif WA Submit',
+        className:
+          'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300 border-green-300',
+        icon: MessageSquare
+      };
+    case 'NOTIF_WA_APPROVED':
+      return {
+        label: 'Notif WA Disetujui',
+        className:
+          'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border-teal-300',
+        icon: MessageSquare
+      };
+    case 'NOTIF_WA_REVISION':
+      return {
+        label: 'Notif WA Revisi',
+        className:
+          'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300',
+        icon: MessageSquare
       };
     default:
       return {
@@ -415,6 +437,12 @@ export default function AuditLogClient({
                       changeSummary =
                         log.new_state?.catatan_operator ||
                         `Telah diunggah ${log.new_state?.dokumen_count || 1} dokumen bukti dukung.`;
+                    } else if (log.action === 'NOTIF_WA_SUBMIT') {
+                      changeSummary = `Notifikasi WA terkirim ke Tim Verifikator (${log.new_state?.total_recipients || 1} penerima).`;
+                    } else if (log.action === 'NOTIF_WA_APPROVED') {
+                      changeSummary = `Notifikasi persetujuan WA terkirim ke PIC (${log.new_state?.recipient || 'PIC'}).`;
+                    } else if (log.action === 'NOTIF_WA_REVISION') {
+                      changeSummary = `Notifikasi revisi WA terkirim ke PIC (${log.new_state?.recipient || 'PIC'}). Catatan: ${log.new_state?.catatan_revisi || '-'}`;
                     } else if (log.new_state?.action) {
                       changeSummary = String(log.new_state.action);
                     }

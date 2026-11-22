@@ -101,16 +101,33 @@ export async function sendWhatsAppMessage(
 /**
  * Template Pesan Notifikasi Revisi LKE
  */
-export function formatRevisiMessage(params: {
+export interface BuktiRevisionNotificationParams {
   indikatorKode: string;
   namaIndikator: string;
   pilarNama: string;
-  catatanKoordinator: string;
-  namaKoordinator?: string;
+  catatanKoordinator?: string | null;
+  catatanRevisi?: string | null;
+  catatanVerifikasi?: string | null;
+  namaKoordinator?: string | null;
+  namaVerifikator?: string | null;
   appUrl?: string;
-}): string {
+}
+
+export function formatBuktiRevisionNotification(
+  params: BuktiRevisionNotificationParams
+): string {
   const baseAppUrl =
     params.appUrl || process.env.APP_URL || 'https://rebo.sitarokab.bps.go.id';
+  const catatan =
+    params.catatanKoordinator ||
+    params.catatanRevisi ||
+    params.catatanVerifikasi ||
+    'Perlu perbaikan kelengkapan berkas bukti dukung.';
+  const verifikator =
+    params.namaKoordinator ||
+    params.namaVerifikator ||
+    'Koordinator Pilar / Verifikator';
+
   return `⚠️ *[REBO V2 - NOTIFIKASI REVISI LKE]*
 
 Halo Rekan Tim Kerja RB,
@@ -119,10 +136,10 @@ Indikator penilaian LKE berikut memerlukan perbaikan berkas bukti dukung:
 
 📋 *Indikator:* ${params.indikatorKode} - ${params.namaIndikator}
 🏛️ *Pilar:* ${params.pilarNama}
-👤 *Verifikator:* ${params.namaKoordinator || 'Koordinator Pilar'}
+👤 *Verifikator:* ${verifikator}
 
 📝 *Catatan Perbaikan:*
-"${params.catatanKoordinator}"
+"${catatan}"
 
 Silakan lakukan perbaikan dan unggah dokumen revisi melalui tautan berikut:
 🔗 ${baseAppUrl}/rebo/kanban
@@ -130,19 +147,31 @@ Silakan lakukan perbaikan dan unggah dokumen revisi melalui tautan berikut:
 _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
 }
 
+export const formatRevisiMessage = formatBuktiRevisionNotification;
+
 /**
  * Template Pesan Notifikasi Persetujuan (Approved) LKE
  */
-export function formatApprovalMessage(params: {
+export interface BuktiApprovedNotificationParams {
   indikatorKode: string;
   namaIndikator: string;
   pilarNama: string;
   skor: number;
-  namaKoordinator?: string;
+  namaKoordinator?: string | null;
+  namaVerifikator?: string | null;
   appUrl?: string;
-}): string {
+}
+
+export function formatBuktiApprovedNotification(
+  params: BuktiApprovedNotificationParams
+): string {
   const baseAppUrl =
     params.appUrl || process.env.APP_URL || 'https://rebo.sitarokab.bps.go.id';
+  const verifikator =
+    params.namaKoordinator ||
+    params.namaVerifikator ||
+    'Koordinator Pilar / Verifikator';
+
   return `✅ *[REBO V2 - BUKTI DUKUNG DISETUJUI]*
 
 Halo Rekan Tim Kerja RB,
@@ -151,8 +180,8 @@ Bukti dukung untuk indikator berikut telah diverifikasi dan disetujui:
 
 📋 *Indikator:* ${params.indikatorKode} - ${params.namaIndikator}
 🏛️ *Pilar:* ${params.pilarNama}
-⭐ *Skor Verifikasi:* ${params.skor.toFixed(2)}
-👤 *Verifikator:* ${params.namaKoordinator || 'Koordinator Pilar'}
+⭐ *Skor Verifikasi:* ${Number(params.skor).toFixed(2)}
+👤 *Verifikator:* ${verifikator}
 
 Terima kasih atas pemenuhan dokumen Zona Integritas BPS Sitaro.
 🔗 ${baseAppUrl}/rebo/monitoring
@@ -160,22 +189,28 @@ Terima kasih atas pemenuhan dokumen Zona Integritas BPS Sitaro.
 _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
 }
 
+export const formatApprovalMessage = formatBuktiApprovedNotification;
+
 /**
- * Template Pesan Pengajuan Review dari Operator ke Koordinator
+ * Template Pesan Pengajuan Review dari Operator ke Koordinator & Tim Verifikator
  */
-export function formatSubmissionMessage(params: {
+export interface BuktiSubmittedNotificationParams {
   indikatorKode: string;
   namaIndikator: string;
   pilarNama: string;
-  namaOperator?: string;
+  namaOperator?: string | null;
   totalDokumen: number;
   appUrl?: string;
-}): string {
+}
+
+export function formatBuktiSubmittedNotification(
+  params: BuktiSubmittedNotificationParams
+): string {
   const baseAppUrl =
     params.appUrl || process.env.APP_URL || 'https://rebo.sitarokab.bps.go.id';
   return `📩 *[REBO V2 - USULAN BUKTI DUKUNG BARU]*
 
-Yth. Koordinator ${params.pilarNama},
+Yth. Tim Verifikator / Koordinator ${params.pilarNama},
 
 Operator telah mengirimkan usulan bukti dukung untuk diverifikasi:
 
@@ -188,3 +223,5 @@ Mohon perkenan Bapak/Ibu untuk memeriksa dan memverifikasi kelengkapan dokumen p
 
 _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
 }
+
+export const formatSubmissionMessage = formatBuktiSubmittedNotification;

@@ -142,9 +142,26 @@ export default function AppSidebar() {
                       tooltip={item.title}
                       isActive={pathname === item.url}
                     >
-                      <Link href={item.url}>
-                        <Icon />
-                        <span>{item.title}</span>
+                      <Link
+                        href={item.url}
+                        className='flex w-full items-center justify-between'
+                      >
+                        <div className='flex items-center gap-2'>
+                          <Icon />
+                          <span>{item.title}</span>
+                        </div>
+                        {item.title === 'Kanban Tindak Lanjut' && (
+                          <span className='relative mr-1 flex h-2 w-2'>
+                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75'></span>
+                            <span className='relative inline-flex h-2 w-2 rounded-full bg-amber-500'></span>
+                          </span>
+                        )}
+                        {item.title === 'Monitoring' && (
+                          <span className='relative mr-1 flex h-2 w-2'>
+                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60'></span>
+                            <span className='relative inline-flex h-2 w-2 rounded-full bg-emerald-500'></span>
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

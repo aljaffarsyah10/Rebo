@@ -14,8 +14,9 @@ import {
 } from '@/types/rebo';
 import {
   sendWhatsAppMessage,
-  formatSubmissionMessage
+  formatBuktiSubmittedNotification
 } from '@/lib/notifications/whatsapp';
+import { getVerifikatorContacts } from '@/lib/notifications/contacts';
 
 // ==============================================================================
 // 1. Zod Validation Schemas
@@ -391,7 +392,7 @@ export async function submitBuktiAction(
       ? 'Bukti dukung dan penilaian mandiri berhasil disimpan serta diajukan untuk review koordinator.'
       : 'Draf bukti dukung dan penilaian mandiri berhasil disimpan.';
 
-    // 15. Notifikasi WhatsApp otomatis ke Koordinator jika diajukan untuk review
+    // 15. Notifikasi WhatsApp otomatis ke Tim Verifikator jika diajukan untuk review
     if (validated.submit_for_review) {
       try {
         const qDesc =
@@ -399,28 +400,75 @@ export async function submitBuktiAction(
           `Indikator ${validated.id_pertanyaan}`;
         const pName =
           (qData as any)?.subpilar?.pilar?.nama_pilar ||
-          `Pilar ${targetPilarId || ''}`;
-        const msg = formatSubmissionMessage({
+          (targetPilarId ? `Pilar ${targetPilarId}` : 'Pilar ZI/RB');
+        const operatorName =
+          session.fullName || session.email || 'Operator Tim Kerja';
+
+        const msg = formatBuktiSubmittedNotification({
           indikatorKode: String(validated.id_pertanyaan),
           namaIndikator: qDesc,
           pilarNama: pName,
-          namaOperator:
-            session.fullName || session.email || 'Operator Tim Kerja',
+          namaOperator: operatorName,
           totalDokumen: validated.dokumen_list.length
         });
 
-        if (process.env.WA_GATEWAY_URL && process.env.WA_DEFAULT_RECEIVER) {
-          sendWhatsAppMessage({
-            phone: process.env.WA_DEFAULT_RECEIVER,
-            message: msg
-          }).catch((err) =>
-            console.warn('[WA-NOTIFICATION] Async error:', err)
+        // Ambil kontak tim verifikator aktif
+        const verifikatorContacts = await getVerifikatorContacts();
+
+        if (verifikatorContacts && verifikatorContacts.length > 0) {
+          const sendResults = await Promise.allSettled(
+            verifikatorContacts.map((phone) =>
+              sendWhatsAppMessage({
+                phone,
+                message: msg
+              })
+            )
           );
+
+          const delivered = sendResults.map((r, idx) => ({
+            phone: verifikatorContacts[idx],
+            status:
+              r.status === 'fulfilled'
+                ? r.value.success
+                  ? 'SENT'
+                  : 'FAILED'
+                : 'ERROR',
+            error:
+              r.status === 'fulfilled'
+                ? r.value.error || null
+                : String((r as any).reason)
+          }));
+
+          // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_SUBMIT)
+          try {
+            await supabase.from('audit_log').insert({
+              id_pertanyaan_periode: idPertanyaanPeriode || null,
+              action: 'NOTIF_WA_SUBMIT',
+              old_state: null,
+              new_state: {
+                recipients: verifikatorContacts,
+                total_recipients: verifikatorContacts.length,
+                indikator: validated.id_pertanyaan,
+                pilar: pName,
+                total_dokumen: validated.dokumen_list.length,
+                results: delivered
+              },
+              user_id: session.userId,
+              user_name: operatorName,
+              role: session.role || 'operator',
+              created_at: new Date().toISOString()
+            });
+          } catch (auditErr: any) {
+            console.warn(
+              '[BUKTI-ACTIONS] Notice recording audit log for NOTIF_WA_SUBMIT:',
+              auditErr?.message
+            );
+          }
         }
-      } catch (waErr) {
+      } catch (waErr: any) {
         console.warn(
           '[WA-NOTIFICATION] Warning creating submission notification:',
-          waErr
+          waErr?.message || waErr
         );
       }
     }

@@ -50,9 +50,9 @@ export function OrgSwitcher({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size='lg'
-              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group'
             >
-              <div className='flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#023047] to-[#034469] text-white shadow-md'>
+              <div className='relative flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#023047] to-[#034469] text-white shadow-md ring-1 ring-white/20 transition-all duration-300 group-hover:scale-105'>
                 <svg
                   className='size-4'
                   viewBox='0 0 24 24'
@@ -61,13 +61,23 @@ export function OrgSwitcher({
                 >
                   <path d='M8 2v20h2V2H8zm6 0v20h2V2h-2zM2 6v12h2V6H2zm18 0v12h2V6h-2zM5 9v6h2V9H5zm12 0v6h2V9h-2z' />
                 </svg>
+                {/* Live beacon indicator dot */}
+                <span className='absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5'>
+                  <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75'></span>
+                  <span className='relative inline-flex h-2.5 w-2.5 rounded-full border border-white bg-emerald-500 dark:border-slate-900'></span>
+                </span>
               </div>
               <div className='grid flex-1 text-left text-sm leading-tight'>
-                <span className='truncate font-bold text-[#023047] dark:text-[#ffb703]'>
-                  REBO
-                </span>
-                <span className='truncate text-xs text-[#023047]/70 dark:text-[#ffb703]/70'>
-                  Reformasi Birokrasi
+                <div className='flex items-center space-x-1.5'>
+                  <span className='truncate font-black tracking-tight text-[#023047] dark:text-[#ffb703]'>
+                    REBO
+                  </span>
+                  <span className='py-0.2 rounded border border-amber-500/30 bg-amber-500/15 px-1 text-[9px] font-bold text-amber-600 dark:text-amber-400'>
+                    V2
+                  </span>
+                </div>
+                <span className='truncate text-[11px] font-medium text-[#023047]/70 dark:text-[#ffb703]/70'>
+                  BPS Siau Tagulandang Biaro
                 </span>
               </div>
               <ChevronsUpDown className='ml-auto size-4 text-[#023047]/60 dark:text-[#ffb703]/60' />
