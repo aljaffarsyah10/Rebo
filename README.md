@@ -12,8 +12,9 @@
     <a href="#-arsitektur--tech-stack">Arsitektur</a> •
     <a href="#-struktur-modul--navigasi">Modul Sistem</a> •
     <a href="#-role-based-access-control-rbac">Hak Akses</a> •
-    <a href="#-panduan-migrasi-database-supabase-v2">Migrasi Database</a> •
+    <a href="#-panduan-migrasi-database--data-seeding">Migrasi & Seeding</a> •
     <a href="#-instalasi--cara-menjalankan-aplikasi">Cara Menjalankan</a> •
+    <a href="#-skrip-otomasi--utilitas-proyek">Skrip Utilitas</a> •
     <a href="#-dokumentasi-lengkap">Dokumentasi</a>
   </p>
 </div>
@@ -85,6 +86,7 @@
 6. **Kanban Board Tindak Lanjut Terintegrasi**:
    - Indikator berstatus 'Perlu Revisi' otomatis masuk ke kolom **To Do** pada `/rebo/kanban`.
    - Filter kartu per pilar dan pencarian instan untuk mempercepat koordinasi tim pilar.
+   - Tampilan bernuansa pastel modern yang nyaman digunakan sehari-hari.
 
 7. **Monitoring Real-Time & Visualisasi Interaktif**:
    - Kartu KPI komparasi akumulasi skor Mandiri vs Verifikasi vs Nilai Maksimal LKE.
@@ -97,8 +99,14 @@
 
 9. **CRUD Master Data LKE Lengkap**:
    - Pengelolaan penuh Pilar, Subpilar, Pertanyaan, serta Opsi Jawaban & Bobot Nilai (Kategori Penilaian) pada menu `/rebo/dataRB`.
+   - Proteksi *Safe Deletion* (mencegah penghapusan induk jika anak relasi masih ada) dan pemetaan kolom PostgreSQL asli secara presisi.
 
-10. **Progressive Web App (PWA) & Mobile Ready**:
+10. **Pusat Informasi & Bagan Hierarki Struktur RB**:
+    - Halaman komprehensif `/rebo/informasi` dengan gaya visual *soft-neutral* elegan dan ramah dibaca.
+    - Bagan hierarki interaktif (*React Flow / Interactive Graph*) untuk membedah keterkaitan Komponen, Area, Pilar, Subpilar, Indikator, hingga Bukti Dukung.
+    - Glosarium istilah ZI dan pedoman PermenPAN-RB No. 90/2021.
+
+11. **Progressive Web App (PWA) & Mobile Ready**:
     - Dapat diinstal di smartphone Android/iOS pimpinan dan tim kerja lapangan (*standalone app*).
     - Splash screens, icon adaptif (maskable 192px & 512px), dan caching Service Worker offline-ready via Workbox.
 
@@ -108,11 +116,12 @@
 
 | Layer | Teknologi | Peran & Justifikasi |
 |---|---|---|
-| **Framework** | Next.js 15.3 (App Router, Turbopack) | Server Components (RSC), Server Actions aman, route optimization |
+| **Framework** | Next.js 15.3.9 (App Router, Turbopack) | Server Components (RSC), Server Actions aman, patch keamanan CVE terbaru |
 | **Bahasa & Runtime** | TypeScript 5.7+ / React 19 | Type-safety end-to-end dan asynchronous form actions modern |
-| **Styling & UI Kit** | Tailwind CSS v4, shadcn/ui, Radix UI | Desain responsif modern, dukungan Light/Dark theme konsisten |
+| **Styling & UI Kit** | Tailwind CSS v4, shadcn/ui, Radix UI | Desain responsif modern, palet netral elegan, dukungan Light/Dark theme |
 | **Autentikasi & RBAC** | Clerk Authentication | Manajemen sesi aman, SSO, dan metadata peran pengguna |
-| **Database** | Supabase (PostgreSQL 15+) | Relasi data kuat, Row-Level Security, audit logging |
+| **Database & API** | Supabase (PostgreSQL 17.4) | Database relational, PostgREST API, Row-Level Security (RLS) |
+| **Direct DB Client** | `pg` (node-postgres) | Eksekusi DDL migrasi otomatis dan data seeding langsung dari CLI |
 | **Visualisasi Data** | Recharts 2.15+ | Grafik analitik progress pilar dan distribusi status LKE |
 | **Ekspor Dokumen** | ExcelJS | Ekspor format resmi Kertas Kerja LKE (.xlsx) standar KemenPAN-RB |
 | **PWA Engine** | next-pwa (Workbox) | Dukungan instalasi aplikasi web dan caching service worker |
@@ -134,7 +143,7 @@
 ├── /monitoring                 # Dashboard analitik progress, visualisasi chart, & export Excel
 ├── /kanban                     # Papan Kanban tindak lanjut perbaikan indikator LKE
 ├── /arsip                      # Dynamic archive dokumen, SK, dan kertas kerja historis
-├── /informasi                  # Panduan pengisian LKE, regulasi, dan FAQ
+├── /informasi                  # Pusat panduan, regulasi, bagan hierarki interaktif, dan FAQ
 ├── /dataRB                     # CRUD Master Data LKE (Super Admin)
 │   ├── /pilar                  # Kelola Master Pilar Area Pemenuhan & Reform
 │   ├── /pilar/subpilar         # Kelola Master Subpilar
@@ -159,19 +168,34 @@
 
 ---
 
-## 🗄️ Panduan Migrasi Database Supabase V2
+## 🗄️ Panduan Migrasi Database & Data Seeding
 
-Bagi instalasi baru atau sinkronisasi database remote Supabase, jalankan dua file migrasi SQL berikut melalui **SQL Editor** pada dashboard Supabase:
+Database REBO V2 berjalan di atas Supabase PostgreSQL dengan dukungan migrasi langsung maupun manual.
 
-1. **Skema Inti V2 & Seed Data:**
-   Buka file [20261121000000_rebo_v2_schema.sql](supabase/migrations/20261121000000_rebo_v2_schema.sql) dan jalankan pada SQL Editor.
-   *Membuat tabel `periode_evaluasi`, `pertanyaan_periode`, `dokumen_bukti`, `audit_log`, fungsi trigger `updated_at`, RLS policies, dan query migrasi data lama.*
+### 1. Migrasi Otomatis (Menggunakan Direct Connection)
+Pastikan `DATABASE_URL` sudah terisi di `.env.local`, kemudian jalankan skrip migrasi:
+```bash
+node scripts/apply_v2_migration.js
+```
+*Skrip ini akan secara otomatis membuat tabel `periode_evaluasi`, `pertanyaan_periode`, `dokumen_bukti`, `audit_log`, `arsip_dokumen`, function trigger `updated_at`, dan aturan RLS.*
 
-2. **Skema Arsip Digital:**
-   Buka file [20261121000001_arsip_dokumen.sql](supabase/migrations/20261121000001_arsip_dokumen.sql) dan jalankan pada SQL Editor.
-   *Membuat tabel `arsip_dokumen`, RLS policies, dan initial data dokumen SK Tim ZI & Pedoman.*
+### 2. Seeding Data Lengkap & Pemeliharaan Data Historis
+Untuk menyinkronkan data lama dari tabel `buktiDukung` serta mengisi data peraga realistis pada Monitoring, Kanban, dan Arsip:
+```bash
+node scripts/seed_rich_data.js
+```
+*Hasil seeding:*
+- **37 Indikator Disetujui (Done)**
+- **37 Indikator Menunggu Review (In Review)**
+- **5 Indikator Perlu Revisi (To Do)**
+- **31 Indikator Belum Diisi**
+- **75 Dokumen Bukti Dukung Multi-Files**
+- **5 Dokumen Arsip Resmi** (SK Tim ZI 2026, Rencana Aksi, SOP Inovasi, LKjIP, Pedoman PermenPAN-RB)
 
-> Panduan terperinci dapat dibaca di [supabase/README_MIGRATION_V2.md](supabase/README_MIGRATION_V2.md).
+### 3. Migrasi Manual via Supabase Dashboard
+Jika ingin menjalankan migrasi melalui **SQL Editor** pada [Supabase Dashboard](https://supabase.com/dashboard):
+- Jalankan file: [supabase/migrations/20261121000000_rebo_v2_schema.sql](supabase/migrations/20261121000000_rebo_v2_schema.sql)
+- Jalankan file: [supabase/migrations/20261121000001_arsip_dokumen.sql](supabase/migrations/20261121000001_arsip_dokumen.sql)
 
 ---
 
@@ -224,6 +248,18 @@ Bagi instalasi baru atau sinkronisasi database remote Supabase, jalankan dua fil
 
 ---
 
+## 🔧 Skrip Otomasi & Utilitas Proyek
+
+Di dalam direktori `scripts/` tersedia serangkaian skrip otomasi untuk mempermudah operasional:
+
+| Skrip | Perintah Eksekusi | Deskripsi & Fungsi |
+|---|---|---|
+| **Backup Supabase Live** | `node scripts/backup_supabase.js` | Mengambil snapshot penuh data remote Supabase ke format JSON & SQL (`supabase/backups/`) |
+| **Apply V2 Migration** | `node scripts/apply_v2_migration.js` | Menjalankan migrasi DDL pembuatan tabel V2 langsung ke server PostgreSQL Supabase |
+| **Seed Rich Data** | `node scripts/seed_rich_data.js` | Mengisi data peraga realistis dan menyinkronkan data lama ke periode berjalan |
+
+---
+
 ## 🌐 Daftar Tautan Cepat Navigasi Lokal
 
 Setelah server berjalan (`http://localhost:3000`), Anda dapat langsung mengakses modul-modul berikut:
@@ -232,6 +268,7 @@ Setelah server berjalan (`http://localhost:3000`), Anda dapat langsung mengakses
 - **Monitoring Capaian & Ekspor Excel:** [http://localhost:3000/rebo/monitoring](http://localhost:3000/rebo/monitoring)
 - **Kanban Tindak Lanjut Revisi:** [http://localhost:3000/rebo/kanban](http://localhost:3000/rebo/kanban)
 - **Formulir Pengisian Bukti (Area):** [http://localhost:3000/rebo/formRB/area](http://localhost:3000/rebo/formRB/area)
+- **Pusat Informasi & Bagan Struktur Hierarki:** [http://localhost:3000/rebo/informasi](http://localhost:3000/rebo/informasi)
 - **Katalog Arsip Digital:** [http://localhost:3000/rebo/arsip](http://localhost:3000/rebo/arsip)
 - **Kelola Master Data LKE:** [http://localhost:3000/rebo/dataRB/pilar](http://localhost:3000/rebo/dataRB/pilar)
 - **Admin Panel:**
@@ -258,7 +295,8 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/rebo/overview
 # Supabase (PostgreSQL Database)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
 
 # Sentry Monitoring (Opsional untuk dev, disarankan untuk production)
 NEXT_PUBLIC_SENTRY_DSN=https://...@sentry.io/...

@@ -1,0 +1,120 @@
+name: Supabase Database Keep-Alive
+
+on:
+  # Run every 3 days at 02:00 UTC (Supabase pauses free tier after 7 days of inactivity)
+  schedule:
+    - cron: '0 2 */3 * *'
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Pilihan target ping (all / supabase-direct / web-endpoint)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - supabase-direct
+          - web-endpoint
+
+jobs:
+  keep-alive:
+    name: Supabase Ping & Activity Keep-Alive
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Report Trigger Time
+        run: |
+          echo "Keep-Alive execution started at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Target mode: ${{ github.event.inputs.target || 'all (scheduled)' }}"
+
+      # Step 1: Ping Supabase Database directly via REST API (PostgREST)
+      - name: Ping Supabase REST API
+        if: ${{ github.event.inputs.target == null || github.event.inputs.target == 'all' || github.event.inputs.target == 'supabase-direct' }}
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "::warning ::Secrets NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY are not set in GitHub Secrets."
+            echo "Silakan tambahkan kedua secrets tersebut di Settings -> Secrets and variables -> Actions."
+            exit 0
+          fi
+
+          echo "Pinging Supabase endpoint: $SUPABASE_URL/rest/v1/area?select=id_area&limit=1"
+          START_TIME=$(date +%s%3N)
+          HTTP_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -X GET "$SUPABASE_URL/rest/v1/area?select=id_area&limit=1" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            -H "Content-Type: application/json")
+
+          END_TIME=$(date +%s%3N)
+          LATENCY=$((END_TIME - START_TIME))
+
+          BODY=$(echo "$HTTP_RESPONSE" | sed -e 's/HTTP_STATUS:.*//g')
+          STATUS_CODE=$(echo "$HTTP_RESPONSE" | tr -d '\n' | sed -e 's/.*HTTP_STATUS://')
+
+          echo "Response Status Code: $STATUS_CODE"
+          echo "Latency: ${LATENCY}ms"
+          echo "Response Body: $BODY"
+
+          if [ "$STATUS_CODE" -ge 200 ] && [ "$STATUS_CODE" -lt 300 ]; then
+            echo "Direct Supabase ping succeeded!"
+            echo "SUPABASE_PING_STATUS=SUCCESS (${STATUS_CODE}, ${LATENCY}ms)" >> $GITHUB_ENV
+          else
+            echo "::error ::Direct Supabase ping failed with status $STATUS_CODE"
+            exit 1
+          fi
+
+      # Step 2: Ping Next.js App Cron Endpoint (if APP_URL is configured)
+      - name: Ping Web Application Keep-Alive Endpoint
+        if: ${{ github.event.inputs.target == null || github.event.inputs.target == 'all' || github.event.inputs.target == 'web-endpoint' }}
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "APP_URL secret is not set. Skipping web app endpoint ping (Supabase direct ping already kept database alive)."
+            exit 0
+          fi
+
+          TARGET_URL="${APP_URL%/}/api/cron/keep-alive"
+          echo "Pinging App URL: $TARGET_URL"
+
+          AUTH_HEADER=""
+          if [ -n "$CRON_SECRET" ]; then
+            AUTH_HEADER="Authorization: Bearer $CRON_SECRET"
+          fi
+
+          START_TIME=$(date +%s%3N)
+          HTTP_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -X GET "$TARGET_URL" \
+            ${AUTH_HEADER:+-H "$AUTH_HEADER"} \
+            -H "Content-Type: application/json")
+
+          END_TIME=$(date +%s%3N)
+          LATENCY=$((END_TIME - START_TIME))
+
+          BODY=$(echo "$HTTP_RESPONSE" | sed -e 's/HTTP_STATUS:.*//g')
+          STATUS_CODE=$(echo "$HTTP_RESPONSE" | tr -d '\n' | sed -e 's/.*HTTP_STATUS://')
+
+          echo "Response Status Code: $STATUS_CODE"
+          echo "Latency: ${LATENCY}ms"
+          echo "Response Body: $BODY"
+
+          if [ "$STATUS_CODE" -ge 200 ] && [ "$STATUS_CODE" -lt 300 ]; then
+            echo "Web app endpoint ping succeeded!"
+            echo "APP_PING_STATUS=SUCCESS (${STATUS_CODE}, ${LATENCY}ms)" >> $GITHUB_ENV
+          else
+            echo "::warning ::Web app endpoint ping returned status $STATUS_CODE"
+          fi
+
+      - name: Summary
+        run: |
+          echo "### Supabase Keep-Alive Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Time**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Direct Supabase Ping**: ${SUPABASE_PING_STATUS:-Skipped / Not Configured}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web App Endpoint Ping**: ${APP_PING_STATUS:-Skipped / Not Configured}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Outcome**: Supabase activity confirmed. Inactivity timer reset." >> $GITHUB_STEP_SUMMARY

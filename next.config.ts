@@ -26,7 +26,7 @@ const pwaWrapper = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development'
+  disable: process.env.ENABLE_PWA !== 'true'
 });
 
 let configWithPlugins = baseConfig;

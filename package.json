@@ -13,6 +13,7 @@
     "lint": "next lint",
     "lint:fix": "eslint src --fix && pnpm format",
     "lint:strict": "eslint --max-warnings=0 src",
+    "cron:keep-alive": "node scripts/supabase_keep_alive.js",
     "format": "prettier --write .",
     "format:check": "prettier -c -w .",
     "prepare": "husky"
