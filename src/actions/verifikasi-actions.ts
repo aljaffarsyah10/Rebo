@@ -11,6 +11,12 @@ import {
   type PertanyaanPeriode,
   type StatusKelengkapan
 } from '@/types/rebo';
+import {
+  sendWhatsAppMessage,
+  formatRevisiMessage,
+  formatApprovalMessage,
+  createWhatsAppDeepLink
+} from '@/lib/notifications/whatsapp';
 
 // ==============================================================================
 // 1. Zod Validation Schemas
@@ -62,6 +68,7 @@ export interface SubmitVerifikasiResult {
   catatanKoordinator?: string | null;
   verifiedBy?: string | null;
   verifiedAt?: string | null;
+  waDeepLink?: string;
 }
 
 // ==============================================================================
@@ -110,7 +117,9 @@ export async function submitVerifikasiAction(
     // 3. Dapatkan pilar pemilik pertanyaan untuk memvalidasi hak verifikasi RBAC
     const { data: qData, error: qError } = await supabase
       .from('pertanyaan')
-      .select('id_pertanyaan, id_subpilar, subpilar (id_subpilar, id_pilar)')
+      .select(
+        'id_pertanyaan, deskripsi_pertanyaan, id_subpilar, subpilar (id_subpilar, id_pilar, pilar (id_pilar, nama_pilar))'
+      )
       .eq('id_pertanyaan', validated.id_pertanyaan)
       .maybeSingle();
 
@@ -122,9 +131,22 @@ export async function submitVerifikasiAction(
     }
 
     let targetPilarId: string | null = null;
-    if (qData?.subpilar) {
-      const sp = qData.subpilar as any;
-      targetPilarId = sp.id_pilar ? String(sp.id_pilar) : null;
+    let targetPilarNama = 'Pilar RB';
+    let targetPertanyaanDeskripsi = `Indikator ${validated.id_pertanyaan}`;
+
+    if (qData) {
+      if (qData.deskripsi_pertanyaan) {
+        targetPertanyaanDeskripsi = qData.deskripsi_pertanyaan;
+      }
+      if (qData.subpilar) {
+        const sp = qData.subpilar as any;
+        targetPilarId = sp.id_pilar ? String(sp.id_pilar) : null;
+        if (sp.pilar?.nama_pilar) {
+          targetPilarNama = sp.pilar.nama_pilar;
+        } else if (targetPilarId) {
+          targetPilarNama = `Pilar ${targetPilarId}`;
+        }
+      }
     }
 
     // 4. Validasi hak akses RBAC
@@ -351,6 +373,64 @@ export async function submitVerifikasiAction(
         'Status diubah menjadi Perlu Revisi. Catatan perbaikan telah dicatat.';
     }
 
+    // 12. Notifikasi WhatsApp (Mode Otomatis & Deep Link)
+    let waDeepLink: string | undefined = undefined;
+    try {
+      const qDesc = targetPertanyaanDeskripsi;
+      const pName = targetPilarNama;
+
+      if (
+        validated.status_kelengkapan === STATUS_KELENGKAPAN.PERLU_REVISI &&
+        cleanCatatan
+      ) {
+        const msg = formatRevisiMessage({
+          indikatorKode: String(validated.id_pertanyaan),
+          namaIndikator: qDesc,
+          pilarNama: pName,
+          catatanKoordinator: cleanCatatan,
+          namaKoordinator: verifierName
+        });
+        waDeepLink = createWhatsAppDeepLink(
+          process.env.WA_DEFAULT_RECEIVER || '',
+          msg
+        );
+
+        if (process.env.WA_GATEWAY_URL && process.env.WA_DEFAULT_RECEIVER) {
+          sendWhatsAppMessage({
+            phone: process.env.WA_DEFAULT_RECEIVER,
+            message: msg
+          }).catch((err) =>
+            console.warn('[WA-NOTIFICATION] Background error:', err)
+          );
+        }
+      } else if (
+        validated.status_kelengkapan === STATUS_KELENGKAPAN.DISETUJUI
+      ) {
+        const msg = formatApprovalMessage({
+          indikatorKode: String(validated.id_pertanyaan),
+          namaIndikator: qDesc,
+          pilarNama: pName,
+          skor: validated.nilai_verifikasi,
+          namaKoordinator: verifierName
+        });
+        waDeepLink = createWhatsAppDeepLink(
+          process.env.WA_DEFAULT_RECEIVER || '',
+          msg
+        );
+
+        if (process.env.WA_GATEWAY_URL && process.env.WA_DEFAULT_RECEIVER) {
+          sendWhatsAppMessage({
+            phone: process.env.WA_DEFAULT_RECEIVER,
+            message: msg
+          }).catch((err) =>
+            console.warn('[WA-NOTIFICATION] Background error:', err)
+          );
+        }
+      }
+    } catch (waErr) {
+      console.warn('[WA-NOTIFICATION] Warning creating notification:', waErr);
+    }
+
     return {
       success: true,
       message: successMessage,
@@ -359,7 +439,8 @@ export async function submitVerifikasiAction(
       nilaiVerifikasi: validated.nilai_verifikasi,
       catatanKoordinator: cleanCatatan,
       verifiedBy: verifierName,
-      verifiedAt: now
+      verifiedAt: now,
+      waDeepLink
     };
   } catch (error: any) {
     console.error(
