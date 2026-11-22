@@ -72,10 +72,19 @@ export async function getPeriodeList(): Promise<{
       .order('tahun', { ascending: false });
 
     if (pError) {
-      console.error(
-        '[PERIODE-ACTIONS] Error fetching periodes:',
-        pError.message
-      );
+      if (
+        pError.message.includes('schema cache') ||
+        pError.code === 'PGRST204'
+      ) {
+        console.warn(
+          '[PERIODE-ACTIONS] Notice: Tabel "periode_evaluasi" belum ada di Supabase remote. Silakan eksekusi file migrasi 20261122000000_v2_core_schema.sql di Supabase SQL Editor.'
+        );
+      } else {
+        console.error(
+          '[PERIODE-ACTIONS] Error fetching periodes:',
+          pError.message
+        );
+      }
       return { success: false, data: [], error: pError.message };
     }
 

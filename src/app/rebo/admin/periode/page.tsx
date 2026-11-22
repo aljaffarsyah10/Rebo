@@ -19,6 +19,16 @@ export default async function PeriodePage() {
 
   // 2. Ambil daftar periode beserta statistik
   const result = await getPeriodeList();
+  const isTableMissing = Boolean(
+    result.error &&
+      (result.error.includes('schema cache') ||
+        result.error.includes('does not exist'))
+  );
 
-  return <PeriodeManagerClient initialPeriodes={result.data || []} />;
+  return (
+    <PeriodeManagerClient
+      initialPeriodes={result.data || []}
+      tableMissing={isTableMissing}
+    />
+  );
 }

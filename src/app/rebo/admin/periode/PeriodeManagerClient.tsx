@@ -66,10 +66,12 @@ import {
 
 interface PeriodeManagerClientProps {
   initialPeriodes: PeriodeWithStats[];
+  tableMissing?: boolean;
 }
 
 export default function PeriodeManagerClient({
-  initialPeriodes
+  initialPeriodes,
+  tableMissing = false
 }: PeriodeManagerClientProps) {
   const [periodes, setPeriodes] = useState<PeriodeWithStats[]>(initialPeriodes);
   const [isPending, startTransition] = useTransition();
@@ -304,6 +306,39 @@ export default function PeriodeManagerClient({
             </Button>
           </div>
         </div>
+
+        {/* Warning Banner if Migration has not been executed */}
+        {tableMissing && (
+          <div className='rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'>
+            <div className='flex items-start gap-3'>
+              <AlertTriangle className='mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400' />
+              <div className='space-y-1'>
+                <h4 className='text-sm font-semibold'>
+                  Tabel &quot;periode_evaluasi&quot; Belum Dijalankan di
+                  Database Supabase
+                </h4>
+                <p className='text-xs leading-relaxed'>
+                  Database remote Supabase saat ini masih menggunakan skema V1.
+                  Untuk mengaktifkan fitur manajemen siklus periode, silakan
+                  buka{' '}
+                  <a
+                    href='https://supabase.com/dashboard/project/tvsieplcwiyrsnnmsrde/sql'
+                    target='_blank'
+                    rel='noreferrer'
+                    className='font-medium text-blue-600 underline dark:text-blue-400'
+                  >
+                    SQL Editor Supabase
+                  </a>
+                  , lalu jalankan script migrasi dari file{' '}
+                  <code className='rounded bg-amber-100 px-1 py-0.5 font-mono text-xs dark:bg-amber-900'>
+                    supabase/migrations/20261122000000_v2_core_schema.sql
+                  </code>
+                  .
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Highlight Summary Stats */}
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
