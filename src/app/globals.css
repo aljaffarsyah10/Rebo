@@ -156,3 +156,67 @@
   /* Apply the reveal animation */
   animation: reveal 0.4s ease-in-out forwards;
 }
+
+/* Ambient and Live Animations for Auth / Hero */
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.02);
+  }
+}
+
+@keyframes float-reverse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.42;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes beacon-ping {
+  0% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 rgba(251, 133, 0, 0.65);
+  }
+  70% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 9px rgba(251, 133, 0, 0);
+  }
+  100% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 rgba(251, 133, 0, 0);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 9s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 5s ease-in-out infinite;
+}
+
+.animate-beacon {
+  animation: beacon-ping 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

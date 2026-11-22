@@ -8,6 +8,7 @@
   <br />
   <p>
     <a href="#-fitur-utama-v2">Fitur Utama</a> •
+    <a href="#-sinergi--integrasi-dengan-web-rb-pusat-pmprb">Integrasi Web Pusat</a> •
     <a href="#-tangkapan-layar--antarmuka-aplikasi">Tangkapan Layar</a> •
     <a href="#-arsitektur--tech-stack">Arsitektur</a> •
     <a href="#-struktur-modul--navigasi">Modul Sistem</a> •
@@ -109,6 +110,34 @@
 11. **Progressive Web App (PWA) & Mobile Ready**:
     - Dapat diinstal di smartphone Android/iOS pimpinan dan tim kerja lapangan (*standalone app*).
     - Splash screens, icon adaptif (maskable 192px & 512px), dan caching Service Worker offline-ready via Workbox.
+
+---
+
+## 🔄 Sinergi & Integrasi dengan Web RB Pusat (PMPRB)
+
+Meskipun sudah ada portal pengumpulan evaluasi RB dari pusat (misal: PMPRB Nasional/Kementerian), **REBO V2 diposisikan sebagai *Internal Staging & Collaboration Workspace*** bagi tim kerja satker, sementara **Web RB Pusat adalah *Final Reporting Gate*** bagi asesor nasional.
+
+```
+[ Kerja Tim Satker ] ➔ [ REBO V2 (Pre-Audit, GDrive Guard, QA) ] ➔ [ Auto-Submit / Ekstensi ] ➔ [ Web RB Pusat ]
+```
+
+### 🎯 Nilai Tambah Utama yang Tidak Dimiliki Web Pusat:
+1. **Google Drive Permission Guard (Health Checker):**
+   - Mendeteksi otomatis apakah link Google Drive berstatus publik (*Anyone with the link can view*) atau masih terkunci (*Restricted*), mencegah bukti dukung ditolak asesor karena akses ditutup.
+2. **Pre-Submission QA Checklist:**
+   - Mewajibkan pemenuhan berkas kunci (Undangan, Daftar Hadir, Notula, Laporan, Foto) sebelum status indikator disetujui internal untuk dikirim ke pusat.
+3. **Alur Reviu Berjenjang Internal Satker:**
+   - Mekanisme verifikasi 3 lapis: `Operator Pilar` ➔ `Koordinator Pilar` ➔ `TPI / Asesor Internal`.
+4. **Tindak Lanjut via Kanban Otomatis:**
+   - Rekomendasi/catatan revisi langsung terkonversi menjadi kartu tugas berbatas waktu (*deadline*).
+
+### 🤖 Mekanisme Jembatan & Auto-Submit ke Web Pusat:
+- **REBO Chrome Extension (Sync Assistant — Direkomendasikan):** Ekstensi browser ringan yang membaca data link REBO yang sudah *verified*, lalu mengisikan form pada Web RB Pusat secara otomatis (*auto-fill*) dengan 1 klik tanpa kendala CAPTCHA/SSO.
+- **RPA / Headless Browser Worker:** Skrip otomatisasi (Puppeteer/Playwright) untuk proses submit batch berkala.
+- **Submission Status Tracking:** Status indikator tercatat transparan: `Draft` ➔ `Verified Internal` ➔ `Siap Kirim` ➔ `Tersinkron ke Pusat` lengkap dengan bukti *audit log*.
+
+> 📖 **Pelajari arsitektur dan perbandingan lengkap:**  
+> Silakan baca dokumentasi khusus pada **[INTEGRASI_DAN_DIFERENSIASI_WEB_PUSAT.md](INTEGRASI_DAN_DIFERENSIASI_WEB_PUSAT.md)**.
 
 ---
 
@@ -320,6 +349,7 @@ REBO V2 dikonfigurasikan agar dapat diinstal langsung di perangkat *smartphone* 
 ## 📚 Dokumentasi Lengkap
 
 Untuk informasi perencanaan, arsitektur, dan riwayat pengembangan terperinci, silakan merujuk ke dokumen berikut:
+- **[Sinergi, Diferensiasi & Jembatan Integrasi Web RB Pusat](INTEGRASI_DAN_DIFERENSIASI_WEB_PUSAT.md)**
 - **[PRD & Sequential Development Playbook V2](Prep%20PRD%20and%20Playbook%20V2/PRD%20and%20Playbook%20REBO%20V2.md)**
 - **[Catatan Rilis Resmi (Release Notes v2.0.0)](Prep%20PRD%20and%20Playbook%20V2/REBO_V2_RELEASE_NOTES.md)**
 - **[Analisis Kebutuhan Awal](Prep%20PRD%20and%20Playbook%20V2/Analisis%20Kebutuhan.md)**
