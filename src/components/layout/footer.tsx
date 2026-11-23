@@ -23,7 +23,7 @@ export default function Footer() {
               </span>
             </div>
             <p className='text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-              Sistem digitalisasi tata kelola bukti dukung LKE PMPRB, alur
+              Sistem digitalisasi tata kelola bukti dukung LKE ZIAPP, alur
               verifikasi berjenjang, dan pemantauan capaian Reformasi Birokrasi
               BPS Kabupaten Kepulauan Siau Tagulandang Biaro menuju predikat
               Wilayah Bebas dari Korupsi (WBK) &amp; WBBM.

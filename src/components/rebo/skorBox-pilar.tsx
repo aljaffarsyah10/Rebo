@@ -1,4 +1,5 @@
 import React from 'react';
+import { Award } from 'lucide-react';
 
 export type SkorBoxPilarProps = {
   totalSkor: number;
@@ -13,35 +14,33 @@ const SkorBoxPilar: React.FC<SkorBoxPilarProps> = ({
 }) => {
   return (
     <div
-      className={`flex items-center gap-1 rounded-lg border border-yellow-300 bg-yellow-50 px-2 py-1 shadow dark:border-yellow-600 dark:bg-yellow-900/30 ${className || ''}`}
-      style={{ fontSize: '0.85rem', minWidth: 'auto' }}
+      className={`flex h-11 w-full items-center justify-between rounded-xl border border-amber-200/80 bg-amber-50/40 px-3 py-1.5 shadow-2xs dark:border-amber-900/50 dark:bg-amber-950/20 ${className || ''}`}
     >
-      <span className='mr-1 flex items-center justify-center rounded-full bg-yellow-400 p-0.5 text-white'>
-        <svg
-          className='h-3 w-3'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='2'
-          viewBox='0 0 24 24'
-        >
-          <path
-            strokeLinecap='round'
-            strokeLinejoin='round'
-            d='M8 21h8M12 17v4M17 5V3a1 1 0 00-1-1H8a1 1 0 00-1 1v2M3 5h18M4 5v6a8 8 0 0016 0V5'
-          />
-        </svg>
-      </span>
-      <span className='text-xs font-bold text-yellow-700 dark:text-yellow-300'>
-        Total Skor Pilar:
-      </span>
-      <span
-        className={`rounded px-2 py-0.5 text-xs font-bold ${totalSkor != null ? 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
-      >
-        {totalSkor != null ? totalSkor.toFixed(2) : '-'}
-      </span>
-      <span className='text-xs font-semibold text-gray-600 dark:text-gray-300'>
-        / {totalNilaiMaks != null ? totalNilaiMaks.toFixed(2) : '-'}
-      </span>
+      <div className='flex items-center gap-2'>
+        <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100/90 text-amber-700 shadow-2xs dark:bg-amber-900/50 dark:text-amber-300'>
+          <Award className='h-3.5 w-3.5' />
+        </span>
+        <div className='flex flex-col text-left leading-tight'>
+          <span className='text-[9px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500'>
+            Skor
+          </span>
+          <span className='text-xs font-semibold text-slate-700 dark:text-slate-200'>
+            Capaian
+          </span>
+        </div>
+      </div>
+
+      <div className='flex items-center gap-1 font-mono text-xs'>
+        <span className='rounded-md border border-emerald-300/80 bg-emerald-100/90 px-1.5 py-0.5 font-bold text-emerald-800 dark:border-emerald-800/80 dark:bg-emerald-950/60 dark:text-emerald-300'>
+          {totalSkor != null ? totalSkor.toFixed(2) : '0.00'}
+        </span>
+        <span className='text-[10px] font-bold text-slate-400 dark:text-slate-500'>
+          /
+        </span>
+        <span className='rounded-md border border-slate-200 bg-white/80 px-1.5 py-0.5 font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300'>
+          {totalNilaiMaks != null ? totalNilaiMaks.toFixed(2) : '0.00'}
+        </span>
+      </div>
     </div>
   );
 };

@@ -998,7 +998,7 @@ export default function InformasiRBClient({
                 <div className='w-full rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60'>
                   <div className='flex items-center justify-between'>
                     <h4 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
-                      Penilaian Mandiri (PMPRB/LKE) oleh Satker
+                      Penilaian Mandiri (ZIAPP / PMPRB) oleh Satker
                     </h4>
                     <Badge variant='outline' className='text-[10px]'>
                       Self-Assessment

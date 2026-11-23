@@ -54,15 +54,15 @@
 
 ---
 
-## Goals & Roadmap Fitur Diferensiasi & Jembatan ke Web RB Pusat
+## Goals & Roadmap Fitur Diferensiasi & Jembatan ke Web Pusat (ZIAPP)
 
-### 1. Jembatan Sinkronisasi & Auto-Submit ke Web RB Pusat
-- [ ] **Riset & Pemetaan Struktur Form Web RB Pusat:** Analisis field input, alur login, struktur indikator, dan format data yang dibutuhkan pada web RB pusat.
+### 1. Jembatan Sinkronisasi & Auto-Submit ke Web Pusat (ZIAPP)
+- [ ] **Riset & Pemetaan Struktur Form Web Pusat (ZIAPP):** Analisis field input, alur login, struktur indikator, dan format data yang dibutuhkan pada portal evaluasi ZIAPP.
 - [ ] **Pengembangan Fitur Auto-Fill / Auto-Submit:**
-  - [ ] **Opsi Utama (Ekstensi Chrome / Script Helper):** Buat ekstensi peramban ringan "REBO Sync Assistant" yang membaca data link REBO dan mengisikan form Web RB Pusat dengan 1 klik.
+  - [ ] **Opsi Utama (Ekstensi Chrome / Script Helper):** Buat ekstensi peramban ringan "REBO Sync Assistant" yang membaca data link REBO dan mengisikan form Web Pusat ZIAPP dengan 1 klik.
   - [ ] **Opsi Alternatif (Headless Bot / RPA Service):** Skrip otomasi Puppeteer/Playwright untuk submit batch data terverifikasi jika tidak terhalang CAPTCHA/SSO.
-- [ ] **Status & Log Pengiriman ke Pusat:**
-  - [ ] Tambahkan status badge pada tiap indikator: `Draft` ➔ `Verified Internal` ➔ `Siap Kirim` ➔ `Tersinkron ke Pusat`.
+- [ ] **Status & Log Pengiriman ke ZIAPP:**
+  - [ ] Tambahkan status badge pada tiap indikator: `Draft` ➔ `Verified Internal` ➔ `Siap Kirim ke ZIAPP` ➔ `Tersinkron ke ZIAPP`.
   - [ ] Catat log pengiriman (waktu submit, PIC pengirim, tautan yang dikirimkan).
 
 ### 2. Fitur Unggulan Pra-Pengumpulan (Pre-Audit & Quality Assurance)

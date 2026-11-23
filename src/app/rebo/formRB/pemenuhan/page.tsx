@@ -1,12 +1,20 @@
-// app/features/products/components/product-listing.tsx
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
-import { Eye, Settings } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  FileText,
+  ChevronRight,
+  Layers,
+  Award,
+  CheckCircle2,
+  AlertCircle,
+  LayoutGrid
+} from 'lucide-react';
 import Link from 'next/link';
 import SkorBoxPilar from '@/components/rebo/skorBox-pilar';
 import ProgressPilar from '@/components/rebo/progress-pilar';
 
-export default async function FormRB() {
+export default async function PemenuhanPage() {
   const supabase = await createClient();
 
   const { data: pilarsData, error } = await supabase
@@ -24,7 +32,6 @@ export default async function FormRB() {
 
   // Ambil totalSkor dan totalNilaiMaks dengan join pilar -> subpilar -> pertanyaan -> buktiDukung
   for (const pilar of pilarsArea1) {
-    // Ambil subpilar, pertanyaan, dan buktiDukung sekaligus
     const { data: subpilarData } = await supabase
       .from('subpilar')
       .select(
@@ -34,24 +41,22 @@ export default async function FormRB() {
 
     let totalSkor = 0;
     let totalNilaiMaks = 0;
-    let pertanyaanList: any[] = [];
+    const pertanyaanList: any[] = [];
 
     if (subpilarData && subpilarData.length > 0) {
       for (const subpilar of subpilarData) {
         if (subpilar.pertanyaan && subpilar.pertanyaan.length > 0) {
           for (const p of subpilar.pertanyaan) {
-            // Hitung nilai maksimal dari kategoriPenilaian
             const kategoriMax = p.kategoriPenilaian?.length
               ? Math.max(...p.kategoriPenilaian.map((k: any) => k.nilai))
               : 0;
             totalNilaiMaks += kategoriMax;
-            // Hitung total skor dari buktiDukung
+
             if (p.buktiDukung && p.buktiDukung.length > 0) {
               totalSkor += p.buktiDukung.reduce(
                 (sum: number, b: any) => sum + (b.nilai_akhir || 0),
                 0
               );
-              // Ambil status_kelengkapan dari buktiDukung
               for (const b of p.buktiDukung) {
                 pertanyaanList.push({
                   id_pertanyaan: p.id_pertanyaan,
@@ -59,10 +64,9 @@ export default async function FormRB() {
                 });
               }
             } else {
-              // Jika tidak ada buktiDukung, tetap masukkan pertanyaan
               pertanyaanList.push({
                 id_pertanyaan: p.id_pertanyaan,
-                status_kelengkapan: 0 // Belum lengkap
+                status_kelengkapan: 0
               });
             }
           }
@@ -74,39 +78,42 @@ export default async function FormRB() {
     pilar.pertanyaanList = pertanyaanList;
   }
 
+  // Hitung metrik ringkasan keseluruhan Area 1
+  const areaTotalSkor = pilarsArea1.reduce(
+    (sum, p) => sum + (p.totalSkor || 0),
+    0
+  );
+  const areaTotalMaks = pilarsArea1.reduce(
+    (sum, p) => sum + (p.totalNilaiMaks || 0),
+    0
+  );
+  const totalPertanyaanArea = pilarsArea1.reduce(
+    (sum, p) => sum + (p.pertanyaanList?.length || 0),
+    0
+  );
+  const lengkapPertanyaanArea = pilarsArea1.reduce(
+    (sum, p) =>
+      sum +
+      (p.pertanyaanList?.filter((q: any) => q.status_kelengkapan === 2)
+        ?.length || 0),
+    0
+  );
+  const areaPercent =
+    totalPertanyaanArea > 0
+      ? Math.round((lengkapPertanyaanArea / totalPertanyaanArea) * 100)
+      : 0;
+
   if (error) {
-    console.error('Error fetching pilars:', error.message);
     return (
-      <div className='container mx-auto max-w-4xl p-6'>
-        <div className='rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20'>
-          <div className='mb-4 flex items-center'>
-            <div className='flex-shrink-0'>
-              <svg
-                className='h-5 w-5 text-red-400 dark:text-red-500'
-                viewBox='0 0 20 20'
-                fill='currentColor'
-              >
-                <path
-                  fillRule='evenodd'
-                  d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
-                  clipRule='evenodd'
-                />
-              </svg>
-            </div>
-            <div className='ml-3'>
-              <h3 className='text-sm font-medium text-red-800 dark:text-red-400'>
-                Error Loading Data
-              </h3>
-            </div>
-          </div>
-          <div className='text-sm text-red-700 dark:text-red-300'>
-            <p className='mb-2'>Terjadi kesalahan saat mengambil data pilar:</p>
-            <p className='rounded border bg-red-100 p-2 font-mono dark:border-red-700 dark:bg-red-900/40'>
+      <div className='mx-auto max-w-5xl p-6'>
+        <div className='flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50/70 p-6 dark:border-rose-900/60 dark:bg-rose-950/20'>
+          <AlertCircle className='h-6 w-6 text-rose-600 dark:text-rose-400' />
+          <div>
+            <h3 className='text-sm font-bold text-rose-900 dark:text-rose-200'>
+              Gagal Memuat Data Pilar
+            </h3>
+            <p className='text-xs text-rose-700 dark:text-rose-300'>
               {error.message}
-            </p>
-            <p className='mt-2 text-xs text-red-600 dark:text-red-400'>
-              Silakan coba refresh halaman atau hubungi administrator jika
-              masalah berlanjut.
             </p>
           </div>
         </div>
@@ -114,123 +121,242 @@ export default async function FormRB() {
     );
   }
 
-  // ...existing code...
-
   return (
-    <div className='container mx-auto max-w-6xl p-6'>
-      {/* Header Section */}
-      <div className='mb-8'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
-              Pilar Pemenuhan Reformasi Birokrasi
-            </h1>
-            <p className='mt-2 text-gray-600 dark:text-gray-400'>
-              Kelola dan pantau pilar pemenuhan reformasi birokrasi
-            </p>
-          </div>
-          <Button className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800'>
-            <Settings className='h-4 w-4' />
-            Pengaturan
+    <div className='mx-auto max-w-7xl space-y-6 p-4 md:p-6'>
+      {/* Breadcrumb & Navigation Bar Sistematis */}
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400'>
+          <Link
+            href='/rebo/overview'
+            className='transition-colors hover:text-blue-600 dark:hover:text-blue-400'
+          >
+            Beranda
+          </Link>
+          <ChevronRight className='h-3.5 w-3.5' />
+          <Link
+            href='/rebo/formRB/area'
+            className='transition-colors hover:text-blue-600 dark:hover:text-blue-400'
+          >
+            Area RB
+          </Link>
+          <ChevronRight className='h-3.5 w-3.5' />
+          <span className='font-semibold text-slate-800 dark:text-slate-200'>
+            Pilar Pemenuhan
+          </span>
+        </div>
+
+        {/* Quick Area Switcher Tabs */}
+        <div className='inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-slate-800 dark:bg-slate-900/60'>
+          <Button
+            size='sm'
+            variant='ghost'
+            className='h-7 bg-white px-3 text-xs font-bold text-blue-700 shadow-2xs dark:bg-slate-800 dark:text-blue-300'
+          >
+            Area 1: Pemenuhan
           </Button>
+          <Link href='/rebo/formRB/reform'>
+            <Button
+              size='sm'
+              variant='ghost'
+              className='h-7 px-3 text-xs text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300'
+            >
+              Area 2: Reform
+            </Button>
+          </Link>
+          <Link href='/rebo/formRB/area'>
+            <Button
+              size='sm'
+              variant='ghost'
+              className='h-7 px-2.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+            >
+              <LayoutGrid className='h-3.5 w-3.5' />
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Pilar Pemenuhan Section */}
-      <div>
-        <div className='mb-4 flex items-center gap-3'>
-          <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white dark:bg-blue-600'>
-            1
+      {/* Header Section dengan Aksen Lembut & Soft */}
+      <div className='relative overflow-hidden rounded-3xl border border-blue-200/60 bg-gradient-to-br from-blue-50/90 via-sky-50/50 to-white p-6 shadow-xs md:p-8 dark:border-slate-800 dark:from-slate-900/90 dark:via-blue-950/20 dark:to-slate-900'>
+        <div className='relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
+          <div className='space-y-2'>
+            <div className='flex items-center space-x-2'>
+              <Badge className='border-blue-200 bg-blue-100/80 px-2.5 py-0.5 text-xs font-semibold text-blue-800 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300'>
+                Area 1 &bull; Komponen Pengungkit
+              </Badge>
+              <span className='text-xs text-slate-500 dark:text-slate-400'>
+                Bobot Aspek: Pemenuhan
+              </span>
+            </div>
+
+            <h1 className='text-2xl font-black tracking-tight text-slate-900 md:text-3xl dark:text-slate-100'>
+              Pilar Pemenuhan Reformasi Birokrasi
+            </h1>
+
+            <p className='max-w-2xl text-xs leading-relaxed text-slate-600 md:text-sm dark:text-slate-300'>
+              Pemenuhan eviden dasar dan kepatuhan regulasi wajib dalam
+              pembangunan Zona Integritas. Setiap pilar memuat indikator
+              pertanyaan terstruktur untuk menuju predikat WBK &amp; WBBM.
+            </p>
           </div>
-          <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-            {pilarsArea1[0]?.area?.nama_area || 'Pilar Pemenuhan'}
+
+          <div className='flex shrink-0 items-center gap-2'>
+            <Link href='/rebo/monitoring'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-9 border-blue-200 bg-white/80 text-xs font-semibold text-blue-700 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800 dark:text-blue-300'
+              >
+                Lihat Monitoring Capaian
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* 3 Metric Summary Banner */}
+        <div className='mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3'>
+          <div className='rounded-xl border border-blue-200/60 bg-white/70 p-3.5 backdrop-blur-xs dark:border-slate-800 dark:bg-slate-800/40'>
+            <div className='flex items-center space-x-2 text-blue-600 dark:text-blue-400'>
+              <Layers className='h-4 w-4' />
+              <span className='text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400'>
+                Total Pilar
+              </span>
+            </div>
+            <p className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
+              {pilarsArea1.length} Pilar Pemenuhan
+            </p>
+            <p className='text-[11px] text-slate-500 dark:text-slate-400'>
+              Pilar 1 s.d. Pilar 6
+            </p>
+          </div>
+
+          <div className='rounded-xl border border-amber-200/60 bg-white/70 p-3.5 backdrop-blur-xs dark:border-slate-800 dark:bg-slate-800/40'>
+            <div className='flex items-center space-x-2 text-amber-600 dark:text-amber-400'>
+              <Award className='h-4 w-4' />
+              <span className='text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400'>
+                Skor Akumulasi Area
+              </span>
+            </div>
+            <p className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
+              {areaTotalSkor.toFixed(2)}{' '}
+              <span className='text-xs font-normal text-slate-500 dark:text-slate-400'>
+                / {areaTotalMaks.toFixed(2)}
+              </span>
+            </p>
+            <p className='text-[11px] text-slate-500 dark:text-slate-400'>
+              Klaim Nilai Berjalan
+            </p>
+          </div>
+
+          <div className='rounded-xl border border-emerald-200/60 bg-white/70 p-3.5 backdrop-blur-xs dark:border-slate-800 dark:bg-slate-800/40'>
+            <div className='flex items-center space-x-2 text-emerald-600 dark:text-emerald-400'>
+              <CheckCircle2 className='h-4 w-4' />
+              <span className='text-[10px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400'>
+                Rata-Rata Kelengkapan
+              </span>
+            </div>
+            <p className='mt-1 text-lg font-bold text-slate-900 dark:text-slate-100'>
+              {areaPercent}% Lengkap
+            </p>
+            <p className='text-[11px] text-slate-500 dark:text-slate-400'>
+              {lengkapPertanyaanArea} dari {totalPertanyaanArea} pertanyaan
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Daftar Pilar Pemenuhan (Card Memanjang / Baris List Sistematis) */}
+      <div className='space-y-3.5'>
+        <div className='flex items-center justify-between'>
+          <h2 className='text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100'>
+            Daftar Pilar Area Pemenuhan
           </h2>
-          <div className='h-px flex-1 bg-gradient-to-r from-blue-300 to-transparent dark:from-blue-600'></div>
+          <span className='text-xs text-slate-500 dark:text-slate-400'>
+            Pilih pilar untuk mengunggah dan memverifikasi bukti dukung
+          </span>
         </div>
 
         {pilarsArea1.length > 0 ? (
-          <div className='rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'>
-            {pilarsArea1.map((pilar: any, index: number) => (
-              <div
-                key={`area1-${pilar.id_pilar}`}
-                className={`flex items-center justify-between p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                  index !== pilarsArea1.length - 1
-                    ? 'border-b border-gray-200 dark:border-gray-700'
-                    : ''
-                }`}
-              >
-                {/* Left Side - Pilar Info */}
-                <div className='flex flex-1 items-center gap-4'>
-                  <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white dark:bg-blue-600'>
-                    {pilar.id_pilar}
-                  </div>
-                  <div className='flex-1'>
-                    <h3 className='font-semibold text-gray-900 dark:text-gray-100'>
-                      {pilar.nama_pilar}
-                    </h3>
-                    {pilar.deskripsi_pilar && (
-                      <p className='mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-400'>
-                        {pilar.deskripsi_pilar}
-                      </p>
-                    )}
-                    {pilar.area && (
-                      <div className='mt-2 inline-block rounded-full bg-blue-100 px-2 py-1 dark:bg-blue-900/30'>
-                        <span className='text-xs font-medium text-blue-700 dark:text-blue-300'>
-                          {pilar.area.nama_area}
-                        </span>
+          <div className='space-y-3'>
+            {pilarsArea1.map((pilar: any, index: number) => {
+              const displayPilarNum = index + 1;
+              return (
+                <div
+                  key={`area1-${pilar.id_pilar}`}
+                  className='group rounded-2xl border border-slate-200/80 bg-white/95 p-3.5 shadow-2xs transition-all duration-200 hover:border-blue-400 hover:shadow-xs sm:p-4 dark:border-slate-800 dark:bg-slate-900/70 dark:hover:border-blue-700'
+                >
+                  <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
+                    {/* Kolom Kiri: Nomor Pilar, Nama & Deskripsi */}
+                    <div className='flex min-w-0 flex-1 items-center gap-3.5'>
+                      <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100/90 font-black text-blue-700 shadow-2xs dark:bg-blue-900/50 dark:text-blue-300'>
+                        {displayPilarNum}
+                      </span>
+                      <div className='min-w-0 flex-1'>
+                        <div className='flex flex-wrap items-center gap-2'>
+                          <h3 className='truncate text-sm font-bold text-slate-800 dark:text-slate-100'>
+                            {pilar.nama_pilar}
+                          </h3>
+                          <Badge
+                            variant='outline'
+                            className='border-blue-200/80 bg-blue-50/60 py-0 text-[10px] text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300'
+                          >
+                            Pilar {displayPilarNum}
+                          </Badge>
+                        </div>
+                        <p className='mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400'>
+                          {pilar.deskripsi_pilar ||
+                            'Pelaksanaan indikator reformasi birokrasi pada area pemenuhan instansi.'}
+                        </p>
                       </div>
-                    )}
+                    </div>
+
+                    {/* Kolom Kanan: Skor Box (h-11), Progress (h-11), Button Detail (h-11) */}
+                    <div className='flex shrink-0 flex-wrap items-center gap-3 border-t border-slate-100 pt-2 sm:flex-nowrap lg:border-t-0 lg:pt-0 dark:border-slate-800/60'>
+                      {/* Skor Box dengan ukuran lebar & tinggi baku tetap */}
+                      <div className='w-full shrink-0 sm:w-56'>
+                        <SkorBoxPilar
+                          totalSkor={pilar.totalSkor || 0}
+                          totalNilaiMaks={pilar.totalNilaiMaks || 0}
+                        />
+                      </div>
+
+                      {/* Progress Kelengkapan dengan ukuran lebar & tinggi baku tetap */}
+                      <div className='w-full shrink-0 sm:w-48'>
+                        <ProgressPilar
+                          pertanyaanList={pilar.pertanyaanList || []}
+                        />
+                      </div>
+
+                      {/* Tombol Aksi Detail dengan tinggi h-11 seragam */}
+                      <div className='w-full shrink-0 sm:w-28'>
+                        <Link
+                          href={`/rebo/formRB/${pilar.id_pilar}`}
+                          className='block w-full'
+                        >
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            className='group/btn h-11 w-full cursor-pointer justify-center border-blue-200/80 bg-blue-50/40 px-3 text-xs font-semibold text-blue-700 transition-all hover:border-blue-300 hover:bg-blue-100/60 dark:border-blue-900/60 dark:bg-blue-950/20 dark:text-blue-300 dark:hover:bg-blue-900/40'
+                          >
+                            <span>Detail</span>
+                            <ChevronRight className='ml-1 h-3.5 w-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5' />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                {/* Right Side - Action Button */}
-                <div className='ml-4 flex items-center gap-2'>
-                  <Link href={`/rebo/formRB/${pilar.id_pilar}`}>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-600 dark:hover:bg-blue-900/20'
-                    >
-                      <Eye className='mr-2 h-4 w-4' />
-                      Detail
-                    </Button>
-                  </Link>
-                  {/* SkorBoxPilar di samping button Detail */}
-                  <SkorBoxPilar
-                    totalSkor={pilar.totalSkor || 0}
-                    totalNilaiMaks={pilar.totalNilaiMaks || 0}
-                    className='relative static top-0 right-0'
-                  />
-                  {/* ProgressPilar di samping SkorBoxPilar */}
-                  <ProgressPilar pertanyaanList={pilar.pertanyaanList || []} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <div className='rounded-lg border-2 border-dashed border-gray-300 p-6 text-center dark:border-gray-600'>
-            <p className='text-gray-500 dark:text-gray-400'>
-              Tidak ada pilar pemenuhan tersedia
+          <div className='rounded-2xl border-2 border-dashed border-slate-200 p-8 text-center dark:border-slate-800'>
+            <FileText className='mx-auto h-8 w-8 text-slate-400' />
+            <p className='mt-2 text-sm text-slate-500 dark:text-slate-400'>
+              Tidak ada pilar pemenuhan tersedia.
             </p>
           </div>
         )}
       </div>
-
-      {/* Empty State */}
-      {pilarsArea1.length === 0 && (
-        <div className='flex flex-col items-center justify-center py-12'>
-          <div className='mb-4 rounded-full bg-gray-100 p-6 dark:bg-gray-800'>
-            <Settings className='h-8 w-8 text-gray-400 dark:text-gray-600' />
-          </div>
-          <h3 className='mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100'>
-            Belum ada data pilar pemenuhan
-          </h3>
-          <p className='max-w-md text-center text-gray-600 dark:text-gray-400'>
-            Data pilar pemenuhan reformasi birokrasi belum tersedia. Silakan
-            tambahkan data pilar terlebih dahulu.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

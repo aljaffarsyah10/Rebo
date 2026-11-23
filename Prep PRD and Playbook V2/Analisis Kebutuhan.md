@@ -51,10 +51,10 @@ Dokumen ini berisi daftar ringkas kebutuhan perbaikan (**Yang Perlu Diperbaiki/W
 
 ---
 
-## 3. Strategi Diferensiasi: Nilai Tambah REBO vs Web RB Pusat & Fitur Jembatan (Bridge)
+## 3. Strategi Diferensiasi: Nilai Tambah REBO vs Web Pusat (ZIAPP) & Fitur Jembatan (Bridge)
 
-### A. Posisi Strategis REBO terhadap Web RB Pusat
-| Aspek | Web RB Pusat (PMPRB Nasional/Kementerian) | REBO V2 (Platform Satker Daerah) |
+### A. Posisi Strategis REBO terhadap Web Pusat (ZIAPP)
+| Aspek | Web Pusat (ZIAPP BPS RI / Nasional) | REBO V2 (Platform Satker Daerah) |
 | :--- | :--- | :--- |
 | **Fokus Utama** | Pelaporan akhir (*final submission*) & penilaian oleh Asesor Nasional/Pusat. | Manajemen proses harian (*internal staging area*), kolaborasi tim, dan penyiapan bukti. |
 | **Sifat Penggunaan** | Periodik / musiman (aktif saat jendela penilaian dibuka). | Sepanjang tahun (*continuous improvement* & cicil bukti dukung). |
@@ -64,43 +64,43 @@ Dokumen ini berisi daftar ringkas kebutuhan perbaikan (**Yang Perlu Diperbaiki/W
 
 ---
 
-### B. Fitur Unggulan yang Tidak Dimiliki Web RB Pusat (Nilai Tambah Nyata)
+### B. Fitur Unggulan yang Tidak Dimiliki Web Pusat (ZIAPP) (Nilai Tambah Nyata)
 1. **Pre-Submission Quality Assurance (QA Checklist):**
    - Tiap indikator LKE memiliki daftar cek kelengkapan dokumen wajib (misal: *SK Tim*, *Undangan*, *Daftar Hadir*, *Notula Rapat*, *Laporan Akhir*, *Dokumentasi/Foto*).
    - Sistem melarang status "Disetujui Internal / Siap Kirim" jika syarat dokumen minimal belum terpenuhi, mencegah satker mengirim link folder kosong ke pusat.
 2. **Google Drive Link & Permission Guard (Health Checker):**
    - Pengecekan otomatis status izin akses link Google Drive yang diinput.
    - Mendeteksi apakah link berstatus *"Restricted / Perlu Izin Akses"* atau *"Anyone with link can view"*. Hal ini menyelesaikan masalah klasik bukti dukung ditolak asesor pusat karena link tidak bisa dibuka.
-   - Deteksi link mati (404/URL salah format) sebelum waktu submit ke pusat.
+   - Deteksi link mati (404/URL salah format) sebelum waktu submit ke ZIAPP.
 3. **Simulasi Skor & Analisis Gap (What-If Scoring):**
    - Menghitung simulasi perolehan nilai menuju target predikat WBK/WBBM (skor minimal 75 / 85).
    - Memberikan rekomendasi indikator mana yang berbobot besar namun nilainya masih rendah untuk diprioritaskan perbaikannya.
-4. **Early Warning System & Reminder Notifikasi:**
-   - Pengingat otomatis menjelang batas waktu penilaian pusat (*H-30, H-14, H-7, H-1*) melalui webhook notifikasi (WhatsApp/Email/Telegram/Notifikasi Sistem) kepada PIC pilar yang indikatornya belum lengkap.
+4. **Early Warning System & Reminder Notifikasi WhatsApp:**
+   - Pengingat otomatis berkala batas waktu (*deadline reminder*) langsung ke WhatsApp PIC penanggung jawab pilar.
 
 ---
 
-### C. Fitur Jembatan & Auto-Submit ke Web RB Pusat
-Agar operator tidak perlu bekerja dua kali (mengisi di REBO lalu *copy-paste* satu per satu ke Web RB Pusat), dikembangkan mekanisme sinkronisasi otomatis:
+### C. Fitur Jembatan & Auto-Submit ke Web Pusat (ZIAPP)
+Agar operator tidak perlu bekerja dua kali (mengisi di REBO lalu *copy-paste* satu per satu ke Web Pusat ZIAPP), dikembangkan mekanisme sinkronisasi otomatis:
 
 1. **Opsi 1: Ekstensi Browser Pembantu (REBO Chrome Extension / Sync Assistant) — *Paling Direkomendasikan***
    - Ekstensi browser ringan yang diinstal pada browser operator.
-   - Cara kerja: Saat operator membuka halaman form LKE di Web RB Pusat, ekstensi akan mendeteksi indikator yang sedang dibuka, mengambil link GDrive dan skor yang sudah berstatus *"Verified"* di REBO, lalu melakukan pengisian form (*auto-fill*) secara otomatis dengan 1 klik tombol *"Sync from REBO"*.
-   - **Kelebihan:** Aman dari hambatan CAPTCHA, aman dari pembatasan IP server, tidak terhalang SSO kementerian, dan operator tetap dapat meninjau (*human-in-the-loop*) sebelum menekan tombol submit resmi di web pusat.
+   - Cara kerja: Saat operator membuka halaman form LKE di ZIAPP, ekstensi akan mendeteksi indikator yang sedang dibuka, mengambil link GDrive dan skor yang sudah berstatus *"Verified"* di REBO, lalu melakukan pengisian form (*auto-fill*) secara otomatis dengan 1 klik tombol *"Sync from REBO"*.
+   - **Kelebihan:** Aman dari hambatan CAPTCHA, aman dari pembatasan IP server, tidak terhalang SSO kementerian/BPS RI, dan operator tetap dapat meninjau (*human-in-the-loop*) sebelum menekan tombol submit resmi di web pusat.
 
 2. **Opsi 2: Skrip Otomasi RPA / Headless Browser (Puppeteer/Playwright Background Worker)**
    - Modul otomatisasi berbasis bot/headless browser di server.
-   - Skrip menerima kredensial akun Web RB Pusat dari operator, login otomatis, mencocokkan kode indikator, lalu mengunggah/menginputkan seluruh link GDrive hasil verifikasi secara serentak (*batch submit*).
-   - Cocok jika Web RB Pusat memiliki antarmuka standar tanpa proteksi anti-bot/CAPTCHA dinamis.
+   - Skrip menerima kredensial akun ZIAPP dari operator, login otomatis, mencocokkan kode indikator, lalu mengunggah/menginputkan seluruh link GDrive hasil verifikasi secara serentak (*batch submit*).
+   - Cocok jika ZIAPP memiliki antarmuka standar tanpa proteksi anti-bot/CAPTCHA dinamis.
 
 3. **Opsi 3: One-Click Mapping & Batch Export/Import Engine**
-   - Jika Web RB Pusat memiliki fitur impor (misal via Excel template resmi atau format JSON/CSV khusus), REBO menyediakan tombol ekspor dengan struktur kolom yang 100% presisi dan kompatibel tanpa perlu edit manual.
+   - Jika ZIAPP memiliki fitur impor (misal via Excel template resmi atau format JSON/CSV khusus), REBO menyediakan tombol ekspor dengan struktur kolom yang 100% presisi dan kompatibel tanpa perlu edit manual.
 
-4. **Tracking Status Sinkronisasi ke Pusat:**
+4. **Tracking Status Sinkronisasi ke ZIAPP:**
    - Indikator memiliki penanda status:
      - 🟡 `Draft Internal` (Sedang diisi operator pilar)
      - 🔵 `Verified Internal` (Sudah disetujui koordinator & TPI satker)
-     - 🟣 `Siap Kirim ke Pusat` (Lolos QA Checklist & izin link GDrive valid)
-     - 🟢 `Tersinkron ke Web Pusat` (Tercatat tanggal, jam, dan versi link yang dikirim)
-   - Log riwayat pengiriman (*Submission Audit Log*) untuk bukti pertanggungjawaban jika terjadi selisih antara data satker dan data di web pusat.
+     - 🟣 `Siap Kirim ke ZIAPP` (Lolos QA Checklist & izin link GDrive valid)
+     - 🟢 `Tersinkron ke ZIAPP` (Tercatat tanggal, jam, dan versi link yang dikirim)
+   - Log riwayat pengiriman (*Submission Audit Log*) untuk bukti pertanggungjawaban jika terjadi selisih antara data satker dan data di ZIAPP.
 

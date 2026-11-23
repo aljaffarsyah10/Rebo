@@ -16,7 +16,9 @@ import {
   Lock,
   Activity,
   CheckCircle2,
-  MessageSquare
+  MessageSquare,
+  ChevronRight,
+  Download
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -148,7 +150,7 @@ export default function Overview() {
                 </span>
               </div>
               <p className='mt-1 text-base font-bold text-slate-800 dark:text-slate-100'>
-                PMPRB Ready
+                ZIAPP Ready
               </p>
               <p className='text-[11px] text-slate-500 dark:text-slate-400'>
                 Bridge Auto-Submit
@@ -171,51 +173,70 @@ export default function Overview() {
         </div>
 
         <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
-          <Link href='/rebo/formRB/area'>
+          <Link href='/rebo/formRB/area' className='group block'>
             <Button
               variant='outline'
-              className='h-auto w-full justify-start border-blue-200/80 bg-blue-50/50 p-3 text-blue-900 shadow-2xs transition-all hover:border-blue-400 hover:bg-blue-100/70 dark:border-blue-900/60 dark:bg-blue-950/25 dark:text-blue-200 dark:hover:bg-blue-900/40'
+              className='group h-auto w-full cursor-pointer items-center justify-between border-blue-200/80 bg-blue-50/50 p-3 text-blue-900 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-100/70 hover:shadow-sm active:scale-[0.98] dark:border-blue-900/60 dark:bg-blue-950/25 dark:text-blue-200 dark:hover:bg-blue-900/40'
             >
-              <FileText className='mr-2.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400' />
-              <div className='text-left'>
-                <div className='text-xs font-bold'>Input Bukti Dukung</div>
-                <div className='text-[10px] font-normal text-blue-700/80 dark:text-blue-300/80'>
-                  Area Pengungkit &amp; Hasil
+              <div className='flex items-center text-left'>
+                <div className='mr-2.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700 transition-colors group-hover:bg-blue-200/80 dark:bg-blue-900/50 dark:text-blue-300'>
+                  <FileText className='h-4 w-4' />
+                </div>
+                <div>
+                  <div className='text-xs font-bold text-slate-800 dark:text-slate-100'>
+                    Input Bukti Dukung
+                  </div>
+                  <div className='text-[10px] font-normal text-blue-700/80 dark:text-blue-300/80'>
+                    Area Pengungkit &amp; Hasil
+                  </div>
                 </div>
               </div>
+              <ChevronRight className='ml-2 h-4 w-4 shrink-0 text-blue-500/70 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-blue-700 dark:text-blue-400 dark:group-hover:text-blue-300' />
             </Button>
           </Link>
 
-          <Link href='/rebo/monitoring'>
+          <Link href='/rebo/monitoring' className='group block'>
             <Button
               variant='outline'
-              className='h-auto w-full justify-start border-emerald-200/80 bg-emerald-50/50 p-3 text-emerald-900 shadow-2xs transition-all hover:border-emerald-400 hover:bg-emerald-100/70 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200 dark:hover:bg-emerald-900/40'
+              className='group h-auto w-full cursor-pointer items-center justify-between border-emerald-200/80 bg-emerald-50/50 p-3 text-emerald-900 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-100/70 hover:shadow-sm active:scale-[0.98] dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200 dark:hover:bg-emerald-900/40'
             >
-              <TrendingUp className='mr-2.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400' />
-              <div className='text-left'>
-                <div className='text-xs font-bold'>Monitoring Capaian</div>
-                <div className='text-[10px] font-normal text-emerald-700/80 dark:text-emerald-300/80'>
-                  Grafik &amp; Deviasi Nilai
+              <div className='flex items-center text-left'>
+                <div className='mr-2.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 transition-colors group-hover:bg-emerald-200/80 dark:bg-emerald-900/50 dark:text-emerald-300'>
+                  <TrendingUp className='h-4 w-4' />
+                </div>
+                <div>
+                  <div className='text-xs font-bold text-slate-800 dark:text-slate-100'>
+                    Monitoring Capaian
+                  </div>
+                  <div className='text-[10px] font-normal text-emerald-700/80 dark:text-emerald-300/80'>
+                    Grafik &amp; Deviasi Nilai
+                  </div>
                 </div>
               </div>
+              <ChevronRight className='ml-2 h-4 w-4 shrink-0 text-emerald-500/70 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-emerald-700 dark:text-emerald-400 dark:group-hover:text-emerald-300' />
             </Button>
           </Link>
 
-          <Link href='/rebo/kanban'>
+          <Link href='/rebo/kanban' className='group block'>
             <Button
               variant='outline'
-              className='h-auto w-full justify-start border-amber-200/80 bg-amber-50/50 p-3 text-amber-900 shadow-2xs transition-all hover:border-amber-400 hover:bg-amber-100/70 dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-200 dark:hover:bg-amber-900/40'
+              className='group h-auto w-full cursor-pointer items-center justify-between border-amber-200/80 bg-amber-50/50 p-3 text-amber-900 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-400 hover:bg-amber-100/70 hover:shadow-sm active:scale-[0.98] dark:border-amber-900/60 dark:bg-amber-950/25 dark:text-amber-200 dark:hover:bg-amber-900/40'
             >
-              <Kanban className='mr-2.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400' />
-              <div className='text-left'>
-                <div className='flex items-center gap-1.5 text-xs font-bold'>
-                  <span>Kanban Tindak Lanjut</span>
-                  <span className='h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500'></span>
+              <div className='flex items-center text-left'>
+                <div className='mr-2.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 transition-colors group-hover:bg-amber-200/80 dark:bg-amber-950/50 dark:text-amber-300'>
+                  <Kanban className='h-4 w-4' />
                 </div>
-                <div className='text-[10px] font-normal text-amber-700/80 dark:text-amber-300/80'>
-                  Kartu Perbaikan Bukti
+                <div>
+                  <div className='flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100'>
+                    <span>Kanban Tindak Lanjut</span>
+                    <span className='h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500'></span>
+                  </div>
+                  <div className='text-[10px] font-normal text-amber-700/80 dark:text-amber-300/80'>
+                    Kartu Perbaikan Bukti
+                  </div>
                 </div>
               </div>
+              <ChevronRight className='ml-2 h-4 w-4 shrink-0 text-amber-500/70 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-amber-700 dark:text-amber-400 dark:group-hover:text-amber-300' />
             </Button>
           </Link>
 
@@ -223,19 +244,26 @@ export default function Overview() {
             href='/api/export/lke'
             target='_blank'
             rel='noopener noreferrer'
-            className='block'
+            className='group block'
           >
             <Button
               variant='outline'
-              className='h-auto w-full justify-start border-slate-200/80 bg-slate-50/60 p-3 text-slate-800 shadow-2xs transition-all hover:border-emerald-400 hover:bg-emerald-50/60 dark:border-slate-700/70 dark:bg-slate-800/40 dark:text-slate-200 dark:hover:bg-emerald-950/30'
+              className='group h-auto w-full cursor-pointer items-center justify-between border-slate-200/80 bg-slate-50/60 p-3 text-slate-800 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-50/60 hover:shadow-sm active:scale-[0.98] dark:border-slate-700/70 dark:bg-slate-800/40 dark:text-slate-200 dark:hover:bg-emerald-950/30'
             >
-              <FileSpreadsheet className='mr-2.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400' />
-              <div className='text-left'>
-                <div className='text-xs font-bold'>Unduh Excel LKE</div>
-                <div className='text-[10px] font-normal text-slate-500 dark:text-slate-400'>
-                  Format Resmi KemenPAN-RB
+              <div className='flex items-center text-left'>
+                <div className='mr-2.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100/80 text-emerald-700 transition-colors group-hover:bg-emerald-200/80 dark:bg-emerald-950/50 dark:text-emerald-300'>
+                  <FileSpreadsheet className='h-4 w-4' />
+                </div>
+                <div>
+                  <div className='text-xs font-bold text-slate-800 dark:text-slate-100'>
+                    Unduh Excel LKE
+                  </div>
+                  <div className='text-[10px] font-normal text-slate-500 dark:text-slate-400'>
+                    Format Resmi KemenPAN-RB
+                  </div>
                 </div>
               </div>
+              <Download className='ml-2 h-4 w-4 shrink-0 text-emerald-600/70 transition-transform duration-200 group-hover:translate-y-0.5 group-hover:text-emerald-700 dark:text-emerald-400 dark:group-hover:text-emerald-300' />
             </Button>
           </a>
         </div>
@@ -462,16 +490,16 @@ export default function Overview() {
 
               <div>
                 <h3 className='text-sm font-bold text-slate-800 dark:text-slate-100'>
-                  Jembatan &amp; Auto-Submit Pusat
+                  Jembatan &amp; Auto-Submit ZIAPP
                 </h3>
                 <p className='mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400'>
-                  Sinergi dengan Portal PMPRB Nasional
+                  Sinergi dengan Portal ZIAPP Pusat
                 </p>
               </div>
 
               <p className='text-xs leading-relaxed text-slate-600 dark:text-slate-300'>
                 Arsitektur sinkronisasi link bukti dukung terverifikasi ke
-                portal evaluasi pusat via ekstensi REBO Sync Assistant.
+                portal evaluasi ZIAPP pusat via ekstensi REBO Sync Assistant.
               </p>
             </div>
 
@@ -618,7 +646,7 @@ export default function Overview() {
                 Asesmen Nasional
               </p>
               <p className='mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400'>
-                Data terverifikasi siap disubmit ke portal PMPRB nasional.
+                Data terverifikasi siap disubmit ke portal ZIAPP pusat.
               </p>
             </div>
           </div>

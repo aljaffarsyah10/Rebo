@@ -8,7 +8,7 @@
   <br />
   <p>
     <a href="#-fitur-utama-v2">Fitur Utama</a> •
-    <a href="#-sinergi--integrasi-dengan-web-rb-pusat-pmprb">Integrasi Web Pusat</a> •
+    <a href="#-sinergi--integrasi-dengan-web-pusat-ziapp">Integrasi Web Pusat (ZIAPP)</a> •
     <a href="#-tangkapan-layar--antarmuka-aplikasi">Tangkapan Layar</a> •
     <a href="#-arsitektur--tech-stack">Arsitektur</a> •
     <a href="#-struktur-modul--navigasi">Modul Sistem</a> •
@@ -30,29 +30,86 @@
 
 ## 📸 Tangkapan Layar & Antarmuka Aplikasi
 
-<div align="center">
-  <h3>Pratinjau Dasbor Web & Visualisasi Progres</h3>
-  <img src="public/Homepage_rebo.png" alt="Antarmuka Dasbor Monitoring & Evaluasi REBO" style="max-width: 850px; width: 100%; border-radius: 10px; border: 1px solid #cbd5e1; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-bottom: 24px;" />
-</div>
+Berikut adalah visualisasi antarmuka pengguna pada sistem REBO V2:
+
+### 1. Dasbor Beranda (Executive Overview & Quick Actions)
+> Menampilkan ringkasan platform, metrik utama zona integritas, status periode aktif, sorotan fitur terbaru, dan pusat aksi cepat terpadu.
 
 <div align="center">
-  <table style="border: none; margin: 0 auto;">
-    <tr align="center">
-      <td width="50%" style="vertical-align: top; padding: 12px;">
-        <img src="public/assets/rebo.png" alt="Brand Logo REBO" width="180" style="margin-bottom: 8px;" />
-        <br />
-        <strong>Identitas Resmi REBO</strong>
-        <p style="font-size: 13px; color: #64748b;">Logo dan identitas visual Reformasi Birokrasi BPS Kabupaten Kepulauan Sitaro</p>
-      </td>
-      <td width="50%" style="vertical-align: top; padding: 12px;">
-        <img src="public/icons/manifest-icon-192.maskable.png" alt="PWA App Icon" width="110" style="border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 8px;" />
-        <br />
-        <strong>Mobile PWA Standalone Icon</strong>
-        <p style="font-size: 13px; color: #64748b;">Aplikasi siap pasang di perangkat smartphone Android & iOS tim kerja lapangan</p>
-      </td>
-    </tr>
-  </table>
+  <img src="public/docs/01_overview_dashboard.png" alt="Dasbor Beranda REBO V2" style="max-width: 950px; width: 100%; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 10px 28px rgba(0,0,0,0.08); margin-bottom: 24px;" />
 </div>
+
+---
+
+### 2. Manajemen Pengisian Bukti Dukung (Formulir LKE & Daftar Pilar)
+
+<table width="100%" style="border-collapse: collapse; margin-bottom: 24px;">
+  <tr>
+    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
+      <img src="public/docs/02_area_rb.png" alt="Pemilihan Area Reformasi Birokrasi" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+      <br /><br />
+      <strong>Pemilihan Area RB</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Pemisahan antara Area 1 (Pemenuhan Eviden Dasar) dan Area 2 (Reformasi & Transformasi).</p>
+    </td>
+    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
+      <img src="public/docs/03_pilar_pemenuhan.png" alt="Daftar Pilar Area Pemenuhan" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+      <br /><br />
+      <strong>Pilar Pemenuhan (Card Memanjang)</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Tampilan baris list pilar sistematis dengan Skor Box dan progress kelengkapan berukuran seragam.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
+      <img src="public/docs/04_pilar_reform.png" alt="Daftar Pilar Area Reformasi" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+      <br /><br />
+      <strong>Pilar Reformasi (Nuansa Ungu Lembut)</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Pilar inovasi dan perbaikan tata kelola dengan palet warna soft dan navigasi cepat antar area.</p>
+    </td>
+    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
+      <img src="public/docs/07_kanban_tindak_lanjut.png" alt="Kanban Board Tindak Lanjut" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+      <br /><br />
+      <strong>Kanban Board Tindak Lanjut</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Indikator revisi otomatis masuk ke kolom To Do dengan kartu interaktif dan filter pilar.</p>
+    </td>
+  </tr>
+</table>
+
+---
+
+### 3. Pengawasan Kinerja, Informasi & Arsip Digital
+
+<table width="100%" style="border-collapse: collapse; margin-bottom: 24px;">
+  <tr>
+    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
+      <img src="public/docs/05_monitoring_capaian.png" alt="Monitoring Real-Time & Chart Capaian" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+      <br /><br />
+      <strong>Monitoring Capaian & Grafik Interaktif</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Kartu KPI perbandingan skor mandiri vs verifikasi, grafik batang capaian pilar, dan ekspor Excel LKE.</p>
+    </td>
+    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
+      <img src="public/docs/06_informasi_dan_bagan.png" alt="Pusat Informasi & Bagan Hierarki" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+      <br /><br />
+      <strong>Pusat Informasi & Bagan Interaktif</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Diagram visual relasi hierarkis Komponen, Area, Pilar, Subpilar, Pertanyaan, hingga Bukti Dukung.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
+      <img src="public/docs/08_arsip_lke.png" alt="Katalog Arsip Digital LKE" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+      <br /><br />
+      <strong>Katalog Arsip Digital</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Repositori terpadu dokumen SK Tim ZI, laporan hasil evaluasi, dan kertas kerja historis multi-tahun.</p>
+    </td>
+    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
+      <div style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px 0;">
+        <img src="public/assets/rebo.png" alt="Brand Logo REBO" width="140" />
+        <img src="public/icons/manifest-icon-192.maskable.png" alt="PWA App Icon" width="90" style="border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+      </div>
+      <strong>Identitas Visual & PWA Mobile App</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Ikon adaptif standalone PWA siap pasang di smartphone tim kerja lapangan (Android & iOS).</p>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -113,15 +170,15 @@
 
 ---
 
-## 🔄 Sinergi & Integrasi dengan Web RB Pusat (PMPRB)
+## 🔄 Sinergi & Integrasi dengan Web Pusat (ZIAPP)
 
-Meskipun sudah ada portal pengumpulan evaluasi RB dari pusat (misal: PMPRB Nasional/Kementerian), **REBO V2 diposisikan sebagai *Internal Staging & Collaboration Workspace*** bagi tim kerja satker, sementara **Web RB Pusat adalah *Final Reporting Gate*** bagi asesor nasional.
+Meskipun sudah ada portal pengumpulan evaluasi RB dari pusat yaitu **ZIAPP**, **REBO V2 diposisikan sebagai *Internal Staging & Collaboration Workspace*** bagi tim kerja satker, sementara **Web Pusat (ZIAPP) adalah *Final Reporting Gate*** bagi asesor nasional.
 
 ```
-[ Kerja Tim Satker ] ➔ [ REBO V2 (Pre-Audit, GDrive Guard, QA) ] ➔ [ Auto-Submit / Ekstensi ] ➔ [ Web RB Pusat ]
+[ Kerja Tim Satker ] ➔ [ REBO V2 (Pre-Audit, GDrive Guard, QA) ] ➔ [ Auto-Submit / Ekstensi ] ➔ [ Web Pusat ZIAPP ]
 ```
 
-### 🎯 Nilai Tambah Utama yang Tidak Dimiliki Web Pusat:
+### 🎯 Nilai Tambah Utama yang Tidak Dimiliki Web Pusat ZIAPP:
 1. **Google Drive Permission Guard (Health Checker):**
    - Mendeteksi otomatis apakah link Google Drive berstatus publik (*Anyone with the link can view*) atau masih terkunci (*Restricted*), mencegah bukti dukung ditolak asesor karena akses ditutup.
 2. **Pre-Submission QA Checklist:**
@@ -131,10 +188,10 @@ Meskipun sudah ada portal pengumpulan evaluasi RB dari pusat (misal: PMPRB Nasio
 4. **Tindak Lanjut via Kanban Otomatis:**
    - Rekomendasi/catatan revisi langsung terkonversi menjadi kartu tugas berbatas waktu (*deadline*).
 
-### 🤖 Mekanisme Jembatan & Auto-Submit ke Web Pusat:
-- **REBO Chrome Extension (Sync Assistant — Direkomendasikan):** Ekstensi browser ringan yang membaca data link REBO yang sudah *verified*, lalu mengisikan form pada Web RB Pusat secara otomatis (*auto-fill*) dengan 1 klik tanpa kendala CAPTCHA/SSO.
+### 🤖 Mekanisme Jembatan & Auto-Submit ke Web Pusat (ZIAPP):
+- **REBO Chrome Extension (Sync Assistant — Direkomendasikan):** Ekstensi browser ringan yang membaca data link REBO yang sudah *verified*, lalu mengisikan form pada Web Pusat ZIAPP secara otomatis (*auto-fill*) dengan 1 klik tanpa kendala CAPTCHA/SSO.
 - **RPA / Headless Browser Worker:** Skrip otomatisasi (Puppeteer/Playwright) untuk proses submit batch berkala.
-- **Submission Status Tracking:** Status indikator tercatat transparan: `Draft` ➔ `Verified Internal` ➔ `Siap Kirim` ➔ `Tersinkron ke Pusat` lengkap dengan bukti *audit log*.
+- **Submission Status Tracking:** Status indikator tercatat transparan: `Draft` ➔ `Verified Internal` ➔ `Siap Kirim ke ZIAPP` ➔ `Tersinkron ke ZIAPP` lengkap dengan bukti *audit log*.
 
 > 📖 **Pelajari arsitektur dan perbandingan lengkap:**  
 > Silakan baca dokumentasi khusus pada **[INTEGRASI_DAN_DIFERENSIASI_WEB_PUSAT.md](INTEGRASI_DAN_DIFERENSIASI_WEB_PUSAT.md)**.
@@ -286,6 +343,7 @@ Di dalam direktori `scripts/` tersedia serangkaian skrip otomasi untuk mempermud
 | **Backup Supabase Live** | `node scripts/backup_supabase.js` | Mengambil snapshot penuh data remote Supabase ke format JSON & SQL (`supabase/backups/`) |
 | **Apply V2 Migration** | `node scripts/apply_v2_migration.js` | Menjalankan migrasi DDL pembuatan tabel V2 langsung ke server PostgreSQL Supabase |
 | **Seed Rich Data** | `node scripts/seed_rich_data.js` | Mengisi data peraga realistis dan menyinkronkan data lama ke periode berjalan |
+| **Capture All Screenshots** | `node scripts/capture_all_docs_screenshots.js` | Menangkap tangkapan layar otomatis seluruh modul web secara headless untuk dokumentasi |
 
 ---
 
