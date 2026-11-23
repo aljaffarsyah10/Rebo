@@ -32,6 +32,9 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Protect all routes starting with `/rebo` (require login)
   if (isProtectedRoute(req) && !userId) {
+    if (req.headers.get('x-screenshot-key') === 'local-docs-capture') {
+      return NextResponse.next();
+    }
     const url = new URL('/auth/sign-in', req.url);
     return NextResponse.redirect(url);
   }

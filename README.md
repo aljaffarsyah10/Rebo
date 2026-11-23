@@ -30,86 +30,57 @@
 
 ## 📸 Tangkapan Layar & Antarmuka Aplikasi
 
-Berikut adalah visualisasi antarmuka pengguna pada sistem REBO V2:
-
-### 1. Dasbor Beranda (Executive Overview & Quick Actions)
-> Menampilkan ringkasan platform, metrik utama zona integritas, status periode aktif, sorotan fitur terbaru, dan pusat aksi cepat terpadu.
-
-<div align="center">
-  <img src="public/docs/01_overview_dashboard.png" alt="Dasbor Beranda REBO V2" style="max-width: 950px; width: 100%; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 10px 28px rgba(0,0,0,0.08); margin-bottom: 24px;" />
-</div>
-
----
-
-### 2. Manajemen Pengisian Bukti Dukung (Formulir LKE & Daftar Pilar)
+Berikut adalah visualisasi antarmuka utama yang mewakili ekosistem sistem REBO V2:
 
 <table width="100%" style="border-collapse: collapse; margin-bottom: 24px;">
   <tr>
-    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
-      <img src="public/docs/02_area_rb.png" alt="Pemilihan Area Reformasi Birokrasi" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+    <td width="50%" align="center" style="vertical-align: top; padding: 12px;">
+      <img src="public/docs/01_overview_dashboard.png" alt="Dasbor Beranda REBO V2" style="width: 100%; border-radius: 10px; border: 1px solid #cbd5e1; box-shadow: 0 6px 18px rgba(0,0,0,0.07);" />
       <br /><br />
-      <strong>Pemilihan Area RB</strong>
-      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Pemisahan antara Area 1 (Pemenuhan Eviden Dasar) dan Area 2 (Reformasi & Transformasi).</p>
+      <strong>1. Dasbor Utama & Pusat Aksi Cepat</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Ringkasan progres Zona Integritas, status periode aktif, sorotan fitur v2, dan akses aksi cepat.</p>
     </td>
-    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
-      <img src="public/docs/03_pilar_pemenuhan.png" alt="Daftar Pilar Area Pemenuhan" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+    <td width="50%" align="center" style="vertical-align: top; padding: 12px;">
+      <img src="public/docs/02_pilar_pemenuhan.png" alt="Daftar Pilar Area Pemenuhan" style="width: 100%; border-radius: 10px; border: 1px solid #cbd5e1; box-shadow: 0 6px 18px rgba(0,0,0,0.07);" />
       <br /><br />
-      <strong>Pilar Pemenuhan (Card Memanjang)</strong>
-      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Tampilan baris list pilar sistematis dengan Skor Box dan progress kelengkapan berukuran seragam.</p>
+      <strong>2. Formulir LKE & Daftar Pilar (Card Memanjang)</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Susunan baris list pilar sistematis dengan Skor Box dan progress kelengkapan berukuran seragam.</p>
     </td>
   </tr>
   <tr>
-    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
-      <img src="public/docs/04_pilar_reform.png" alt="Daftar Pilar Area Reformasi" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+    <td width="50%" align="center" style="vertical-align: top; padding: 12px;">
+      <img src="public/docs/03_monitoring_capaian.png" alt="Monitoring Real-Time & Chart Capaian" style="width: 100%; border-radius: 10px; border: 1px solid #cbd5e1; box-shadow: 0 6px 18px rgba(0,0,0,0.07);" />
       <br /><br />
-      <strong>Pilar Reformasi (Nuansa Ungu Lembut)</strong>
-      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Pilar inovasi dan perbaikan tata kelola dengan palet warna soft dan navigasi cepat antar area.</p>
-    </td>
-    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
-      <img src="public/docs/07_kanban_tindak_lanjut.png" alt="Kanban Board Tindak Lanjut" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
-      <br /><br />
-      <strong>Kanban Board Tindak Lanjut</strong>
-      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Indikator revisi otomatis masuk ke kolom To Do dengan kartu interaktif dan filter pilar.</p>
-    </td>
-  </tr>
-</table>
-
----
-
-### 3. Pengawasan Kinerja, Informasi & Arsip Digital
-
-<table width="100%" style="border-collapse: collapse; margin-bottom: 24px;">
-  <tr>
-    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
-      <img src="public/docs/05_monitoring_capaian.png" alt="Monitoring Real-Time & Chart Capaian" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
-      <br /><br />
-      <strong>Monitoring Capaian & Grafik Interaktif</strong>
+      <strong>3. Monitoring Capaian & Grafik Interaktif</strong>
       <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Kartu KPI perbandingan skor mandiri vs verifikasi, grafik batang capaian pilar, dan ekspor Excel LKE.</p>
     </td>
-    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
-      <img src="public/docs/06_informasi_dan_bagan.png" alt="Pusat Informasi & Bagan Hierarki" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
+    <td width="50%" align="center" style="vertical-align: top; padding: 12px;">
+      <img src="public/docs/04_login_page.png" alt="Halaman Masuk Resmi REBO" style="width: 100%; border-radius: 10px; border: 1px solid #cbd5e1; box-shadow: 0 6px 18px rgba(0,0,0,0.07);" />
       <br /><br />
-      <strong>Pusat Informasi & Bagan Interaktif</strong>
-      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Diagram visual relasi hierarkis Komponen, Area, Pilar, Subpilar, Pertanyaan, hingga Bukti Dukung.</p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
-      <img src="public/docs/08_arsip_lke.png" alt="Katalog Arsip Digital LKE" style="width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);" />
-      <br /><br />
-      <strong>Katalog Arsip Digital</strong>
-      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Repositori terpadu dokumen SK Tim ZI, laporan hasil evaluasi, dan kertas kerja historis multi-tahun.</p>
-    </td>
-    <td width="50%" align="center" style="vertical-align: top; padding: 10px;">
-      <div style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px 0;">
-        <img src="public/assets/rebo.png" alt="Brand Logo REBO" width="140" />
-        <img src="public/icons/manifest-icon-192.maskable.png" alt="PWA App Icon" width="90" style="border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
-      </div>
-      <strong>Identitas Visual & PWA Mobile App</strong>
-      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Ikon adaptif standalone PWA siap pasang di smartphone tim kerja lapangan (Android & iOS).</p>
+      <strong>4. Portal Autentikasi & Masuk</strong>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">Autentikasi aman terintegrasi Clerk SSO untuk verifikasi pengguna dan proteksi hak akses (RBAC).</p>
     </td>
   </tr>
 </table>
+
+<div align="center">
+  <table style="border: none; margin: 0 auto;">
+    <tr align="center">
+      <td width="50%" style="vertical-align: top; padding: 8px;">
+        <img src="public/assets/rebo.png" alt="Brand Logo REBO" width="160" style="margin-bottom: 6px;" />
+        <br />
+        <strong>Identitas Resmi REBO</strong>
+        <p style="font-size: 12px; color: #64748b;">Logo resmi Zona Integritas Reformasi Birokrasi BPS Kabupaten Kepulauan Sitaro</p>
+      </td>
+      <td width="50%" style="vertical-align: top; padding: 8px;">
+        <img src="public/icons/manifest-icon-192.maskable.png" alt="PWA App Icon" width="95" style="border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 6px;" />
+        <br />
+        <strong>Mobile PWA Standalone Icon</strong>
+        <p style="font-size: 12px; color: #64748b;">Aplikasi siap pasang di perangkat smartphone Android & iOS tim kerja lapangan</p>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 

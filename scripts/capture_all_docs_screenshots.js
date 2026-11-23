@@ -6,41 +6,25 @@ const targets = [
   {
     url: 'http://localhost:3000/rebo/overview',
     name: '01_overview_dashboard.png',
-    wait: 3500
-  },
-  {
-    url: 'http://localhost:3000/rebo/formRB/area',
-    name: '02_area_rb.png',
-    wait: 3000
+    auth: true,
+    wait: 4000
   },
   {
     url: 'http://localhost:3000/rebo/formRB/pemenuhan',
-    name: '03_pilar_pemenuhan.png',
-    wait: 3500
-  },
-  {
-    url: 'http://localhost:3000/rebo/formRB/reform',
-    name: '04_pilar_reform.png',
-    wait: 3500
+    name: '02_pilar_pemenuhan.png',
+    auth: true,
+    wait: 4000
   },
   {
     url: 'http://localhost:3000/rebo/monitoring',
-    name: '05_monitoring_capaian.png',
-    wait: 4000
+    name: '03_monitoring_capaian.png',
+    auth: true,
+    wait: 4500
   },
   {
-    url: 'http://localhost:3000/rebo/informasi',
-    name: '06_informasi_dan_bagan.png',
-    wait: 4000
-  },
-  {
-    url: 'http://localhost:3000/rebo/kanban',
-    name: '07_kanban_tindak_lanjut.png',
-    wait: 3500
-  },
-  {
-    url: 'http://localhost:3000/rebo/arsip',
-    name: '08_arsip_lke.png',
+    url: 'http://localhost:3000/auth/sign-in',
+    name: '04_login_page.png',
+    auth: false,
     wait: 3000
   }
 ];
@@ -66,18 +50,28 @@ const targets = [
     const outPath = path.join(outputDir, item.name);
     console.log(`Capturing ${item.name} from ${item.url}...`);
     try {
+      if (item.auth) {
+        await page.setExtraHTTPHeaders({
+          'x-screenshot-key': 'local-docs-capture'
+        });
+      } else {
+        await page.setExtraHTTPHeaders({});
+      }
+
       await page.goto(item.url, {
         waitUntil: 'domcontentloaded',
-        timeout: 20000
+        timeout: 60000
       });
       await new Promise((r) => setTimeout(r, item.wait));
       await page.screenshot({ path: outPath, fullPage: false });
-      console.log(`Saved: ${item.name}`);
+      console.log(`Saved: ${item.name} (URL: ${page.url()})`);
 
       if (item.name === '01_overview_dashboard.png') {
         const homePath = path.resolve(__dirname, '../public/Homepage_rebo.png');
         fs.copyFileSync(outPath, homePath);
-        console.log('Updated public/Homepage_rebo.png');
+        console.log(
+          'Updated public/Homepage_rebo.png with real dashboard screenshot'
+        );
       }
     } catch (err) {
       console.error(`Failed ${item.name}: ${err.message}`);
@@ -85,5 +79,5 @@ const targets = [
   }
 
   await browser.close();
-  console.log('All screenshots captured successfully!');
+  console.log('Representative screenshots captured successfully!');
 })();
