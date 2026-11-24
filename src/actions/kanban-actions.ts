@@ -216,7 +216,11 @@ export async function getKanbanBoardData(params?: {
           nilai_maksimal: Number(maxNilai.toFixed(2)),
           gdrive_folder_url: gdriveUrl,
           total_dokumen: dokumenFiles.length,
-          dokumen_files: dokumenFiles
+          dokumen_files: dokumenFiles,
+          ziapp_status:
+            pp?.ziapp_status || (status === 2 ? 'VERIFIED_INTERNAL' : 'DRAFT'),
+          ziapp_synced_at: pp?.ziapp_synced_at || null,
+          ziapp_synced_by: pp?.ziapp_synced_by || null
         };
 
         // Filter search jika ada

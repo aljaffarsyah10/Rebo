@@ -74,6 +74,76 @@ export const STATUS_KELENGKAPAN_MAP: Record<
 };
 
 // ==============================================================================
+// REBO V2: Status & Log Pengiriman ke Web Pusat (ZIAPP)
+// ==============================================================================
+
+export type ZIAPPSyncStatus =
+  | 'DRAFT'
+  | 'VERIFIED_INTERNAL'
+  | 'READY_FOR_ZIAPP'
+  | 'SYNCED_TO_ZIAPP';
+
+export interface ZIAPPSyncStatusInfo {
+  code: ZIAPPSyncStatus;
+  label: string;
+  badgeClass: string;
+  iconName: string;
+  description: string;
+}
+
+export const ZIAPP_STATUS_MAP: Record<ZIAPPSyncStatus, ZIAPPSyncStatusInfo> = {
+  DRAFT: {
+    code: 'DRAFT',
+    label: 'Draf',
+    badgeClass:
+      'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700',
+    iconName: 'FileEdit',
+    description:
+      'Indikator masih dalam proses pemenuhan bukti internal oleh tim kerja.'
+  },
+  VERIFIED_INTERNAL: {
+    code: 'VERIFIED_INTERNAL',
+    label: 'Terverifikasi Internal',
+    badgeClass:
+      'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    iconName: 'ShieldCheck',
+    description:
+      'Telah disetujui Koordinator/TPI namun belum ditandai siap kirim ke ZIAPP.'
+  },
+  READY_FOR_ZIAPP: {
+    code: 'READY_FOR_ZIAPP',
+    label: 'Siap Kirim ke ZIAPP',
+    badgeClass:
+      'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700',
+    iconName: 'Send',
+    description:
+      'Bukti dan skor telah disetujui serta siap disinkronkan ke Web Pusat ZIAPP.'
+  },
+  SYNCED_TO_ZIAPP: {
+    code: 'SYNCED_TO_ZIAPP',
+    label: 'Tersinkron ke ZIAPP',
+    badgeClass:
+      'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700',
+    iconName: 'CheckCircle2',
+    description:
+      'Data indikator dan tautan berkas bukti telah berhasil disubmit ke Web Pusat ZIAPP.'
+  }
+};
+
+/**
+ * Menentukan status ZIAPP efektif berdasarkan status kelengkapan dan field ziapp_status
+ */
+export function getEffectiveZIAPPStatus(
+  statusKelengkapan?: number | string | null,
+  ziappStatus?: ZIAPPSyncStatus | string | null
+): ZIAPPSyncStatus {
+  if (ziappStatus === 'SYNCED_TO_ZIAPP') return 'SYNCED_TO_ZIAPP';
+  if (ziappStatus === 'READY_FOR_ZIAPP') return 'READY_FOR_ZIAPP';
+  if (Number(statusKelengkapan) === 2) return 'VERIFIED_INTERNAL';
+  return 'DRAFT';
+}
+
+// ==============================================================================
 // REBO V2: Core Database Entities
 // ==============================================================================
 
@@ -114,6 +184,9 @@ export interface PertanyaanPeriode {
   catatan_koordinator?: string | null;
   verified_by?: string | null;
   verified_at?: string | null;
+  ziapp_status?: ZIAPPSyncStatus | string;
+  ziapp_synced_at?: string | null;
+  ziapp_synced_by?: string | null;
   created_at?: string;
   updated_at?: string;
 
@@ -283,6 +356,9 @@ export interface KanbanIndicatorCard {
   nilai_maksimal: number;
   gdrive_folder_url?: string | null;
   total_dokumen: number;
+  ziapp_status?: ZIAPPSyncStatus | string;
+  ziapp_synced_at?: string | null;
+  ziapp_synced_by?: string | null;
   dokumen_files: Array<{
     id?: string;
     nama_dokumen: string;
@@ -328,6 +404,9 @@ export interface BuktiDukung {
   catatan_user?: string | null;
   catatan_operator?: string | null;
   catatan_koordinator?: string | null;
+  ziapp_status?: ZIAPPSyncStatus | string;
+  ziapp_synced_at?: string | null;
+  ziapp_synced_by?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
   statusBukti?: { id_status: string; nama_status: string } | null;
@@ -443,3 +522,70 @@ export const KATEGORI_ARSIP_MAP: Record<KategoriArsip, KategoriArsipInfo> = {
     description: 'Peraturan MenPAN-RB, Petunjuk Teknis, dan Buku Saku BPS RI'
   }
 };
+
+// ==============================================================================
+// REBO V2: Model Payload & Ringkasan Sinkronisasi ZIAPP
+// ==============================================================================
+
+export interface ZIAPPSyncItem {
+  id_pertanyaan: string;
+  kode_indikator: string;
+  pilar_id: string;
+  pilar_kode?: string;
+  pilar_nama: string;
+  subpilar_id?: string;
+  subpilar_nama?: string;
+  uraian_pertanyaan: string;
+  uraian_singkat?: string;
+  uraian_buktidukung?: string;
+  nilai_mandiri: number;
+  nilai_verifikasi: number;
+  catatan_koordinator?: string | null;
+  gdrive_folder_url?: string | null;
+  public_drive_links?: string[];
+  dokumen_files: Array<{
+    id?: string;
+    nama_dokumen: string;
+    file_url: string;
+    tipe_dokumen?: string | null;
+  }>;
+  ziapp_status: ZIAPPSyncStatus;
+  ziapp_synced_at?: string | null;
+  ziapp_synced_by?: string | null;
+  verified_by?: string | null;
+  verified_at?: string | null;
+}
+
+export interface ZIAPPSyncPayload {
+  metadata: {
+    source: string;
+    satker: string;
+    kode_satker?: string;
+    generated_at: string;
+    periode: {
+      id: string;
+      tahun: number;
+      nama_periode: string;
+    };
+    total_items: number;
+    total_ready: number;
+    total_synced: number;
+    version: string;
+  };
+  items: ZIAPPSyncItem[];
+}
+
+export interface ZIAPPSyncSummary {
+  periodeId: string;
+  periodeNama: string;
+  tahun: number;
+  totalIndikator: number;
+  totalDraft: number;
+  totalVerifiedInternal: number;
+  totalReadyForZIAPP: number;
+  totalSyncedToZIAPP: number;
+  persentaseSiapKirim: number;
+  persentaseTersinkron: number;
+  readyItems: ZIAPPSyncItem[];
+  syncedItems: ZIAPPSyncItem[];
+}

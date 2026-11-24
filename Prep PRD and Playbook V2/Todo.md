@@ -61,9 +61,9 @@
 - [ ] **Pengembangan Fitur Auto-Fill / Auto-Submit:**
   - [ ] **Opsi Utama (Ekstensi Chrome / Script Helper):** Buat ekstensi peramban ringan "REBO Sync Assistant" yang membaca data link REBO dan mengisikan form Web Pusat ZIAPP dengan 1 klik.
   - [ ] **Opsi Alternatif (Headless Bot / RPA Service):** Skrip otomasi Puppeteer/Playwright untuk submit batch data terverifikasi jika tidak terhalang CAPTCHA/SSO.
-- [ ] **Status & Log Pengiriman ke ZIAPP:**
-  - [ ] Tambahkan status badge pada tiap indikator: `Draft` ➔ `Verified Internal` ➔ `Siap Kirim ke ZIAPP` ➔ `Tersinkron ke ZIAPP`.
-  - [ ] Catat log pengiriman (waktu submit, PIC pengirim, tautan yang dikirimkan).
+- [x] **Status & Log Pengiriman ke ZIAPP:**
+  - [x] Tambahkan status badge pada tiap indikator: `Draft` ➔ `Verified Internal` ➔ `Siap Kirim ke ZIAPP` ➔ `Tersinkron ke ZIAPP`.
+  - [x] Catat log pengiriman (waktu submit, PIC pengirim, tautan yang dikirimkan).
 
 ### 2. Fitur Unggulan Pra-Pengumpulan (Pre-Audit & Quality Assurance)
 - [x] **Google Drive Link & Permission Health Checker:**

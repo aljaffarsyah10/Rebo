@@ -16,7 +16,8 @@ import {
   HelpCircle,
   ExternalLink,
   FolderOpen,
-  FileText
+  FileText,
+  Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -27,11 +28,18 @@ import { Badge } from '@/components/ui/badge';
 import {
   STATUS_KELENGKAPAN,
   STATUS_KELENGKAPAN_MAP,
+  ZIAPP_STATUS_MAP,
+  getEffectiveZIAPPStatus,
   type Pertanyaan,
   type BuktiDukung,
-  type StatusKelengkapan
+  type StatusKelengkapan,
+  type ZIAPPSyncStatus
 } from '@/types/rebo';
 import { submitVerifikasiAction } from '@/actions/verifikasi-actions';
+import {
+  markAsReadyForZIAPPAction,
+  markAsSyncedToZIAPPAction
+} from '@/actions/ziapp-sync-actions';
 import { checkBatchGDriveHealthAction } from '@/actions/gdrive-actions';
 import {
   GDriveHealthBadge,
@@ -87,6 +95,12 @@ export default function VerifikasiPanel({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // State sinkronisasi ZIAPP
+  const [ziappStatus, setZiappStatus] = useState<ZIAPPSyncStatus>(
+    getEffectiveZIAPPStatus(currentStatus, bukti?.ziapp_status)
+  );
+  const [isMarkingZIAPP, setIsMarkingZIAPP] = useState(false);
 
   // Pre-Audit Guard: Health check status state
   const [healthResults, setHealthResults] = useState<
@@ -193,7 +207,80 @@ export default function VerifikasiPanel({
     );
     setCatatan(bukti?.catatan_koordinator || '');
     setValidationError(null);
-  }, [currentStatus, currentNilaiVerifikasi, bukti?.catatan_koordinator]);
+    setZiappStatus(getEffectiveZIAPPStatus(currentStatus, bukti?.ziapp_status));
+  }, [
+    currentStatus,
+    currentNilaiVerifikasi,
+    bukti?.catatan_koordinator,
+    bukti?.ziapp_status
+  ]);
+
+  // Handler: Tandai Siap Kirim ke ZIAPP
+  const handleMarkReadyForZIAPP = async () => {
+    if (currentStatus !== STATUS_KELENGKAPAN.DISETUJUI) {
+      toast.error(
+        'Indikator harus berstatus Disetujui (Approved) sebelum dapat ditandai Siap Kirim ke ZIAPP.'
+      );
+      return;
+    }
+
+    setIsMarkingZIAPP(true);
+    const toastId = toast.loading('Menandai indikator siap kirim ke ZIAPP...');
+    try {
+      const res = await markAsReadyForZIAPPAction(
+        pertanyaan.id_pertanyaan,
+        activePeriodeId
+      );
+      if (res.success) {
+        toast.success(res.message || 'Indikator siap dikirim ke ZIAPP!', {
+          id: toastId
+        });
+        setZiappStatus('READY_FOR_ZIAPP');
+        if (onVerifikasiSuccess) {
+          onVerifikasiSuccess({ ziapp_status: 'READY_FOR_ZIAPP' });
+        }
+      } else {
+        toast.error(res.error || 'Gagal mengubah status ZIAPP.', {
+          id: toastId
+        });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem.', { id: toastId });
+    } finally {
+      setIsMarkingZIAPP(false);
+    }
+  };
+
+  // Handler: Tandai Tersinkron ke ZIAPP
+  const handleMarkSyncedToZIAPP = async () => {
+    setIsMarkingZIAPP(true);
+    const toastId = toast.loading(
+      'Menandai indikator telah tersinkron ke ZIAPP...'
+    );
+    try {
+      const res = await markAsSyncedToZIAPPAction(
+        pertanyaan.id_pertanyaan,
+        activePeriodeId
+      );
+      if (res.success) {
+        toast.success(res.message || 'Tersinkron ke Web Pusat ZIAPP!', {
+          id: toastId
+        });
+        setZiappStatus('SYNCED_TO_ZIAPP');
+        if (onVerifikasiSuccess) {
+          onVerifikasiSuccess({ ziapp_status: 'SYNCED_TO_ZIAPP' });
+        }
+      } else {
+        toast.error(res.error || 'Gagal memperbarui status ZIAPP.', {
+          id: toastId
+        });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem.', { id: toastId });
+    } finally {
+      setIsMarkingZIAPP(false);
+    }
+  };
 
   // Tombol aksi cepat: Samakan dengan skor mandiri
   const handleCopyMandiriScore = () => {
@@ -341,12 +428,23 @@ export default function VerifikasiPanel({
             </span>
           </div>
 
-          <Badge
-            variant='outline'
-            className={`text-xs font-semibold ${statusInfo.badgeClass}`}
-          >
-            {statusInfo.label}
-          </Badge>
+          <div className='flex flex-wrap items-center gap-2'>
+            <Badge
+              variant='outline'
+              className={`text-xs font-semibold ${statusInfo.badgeClass}`}
+            >
+              {statusInfo.label}
+            </Badge>
+
+            <Badge
+              variant='outline'
+              className={`text-xs font-semibold ${ZIAPP_STATUS_MAP[ziappStatus].badgeClass}`}
+              title={`Status Sinkronisasi ZIAPP: ${ZIAPP_STATUS_MAP[ziappStatus].description}`}
+            >
+              <Send className='mr-1 h-3 w-3' />
+              {ZIAPP_STATUS_MAP[ziappStatus].label}
+            </Badge>
+          </div>
         </div>
 
         {/* Ringkasan Skor Verifikasi vs Usulan */}
@@ -862,8 +960,72 @@ export default function VerifikasiPanel({
           )}
         </div>
 
-        {/* Action Button: Simpan Verifikasi */}
-        <div className='flex items-center justify-end gap-3 pt-2'>
+        {/* Action Button: Simpan Verifikasi & Status ZIAPP */}
+        <div className='flex flex-wrap items-center justify-between gap-3 border-t border-blue-100 pt-3 dark:border-blue-900/40'>
+          {/* Tombol Aksi ZIAPP (Khusus Koordinator/Admin jika status Disetujui) */}
+          <div className='flex flex-wrap items-center gap-2'>
+            {currentStatus === STATUS_KELENGKAPAN.DISETUJUI ? (
+              ziappStatus === 'READY_FOR_ZIAPP' ? (
+                <div className='flex flex-wrap items-center gap-2'>
+                  <Badge
+                    variant='outline'
+                    className={`text-xs font-semibold ${ZIAPP_STATUS_MAP.READY_FOR_ZIAPP.badgeClass}`}
+                  >
+                    <Send className='mr-1 h-3 w-3' />
+                    Siap Kirim ke ZIAPP
+                  </Badge>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant='outline'
+                    onClick={handleMarkSyncedToZIAPP}
+                    disabled={isMarkingZIAPP}
+                    className='h-8 border-emerald-300 bg-emerald-50 text-xs font-medium text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                  >
+                    {isMarkingZIAPP ? (
+                      <Loader2 className='mr-1.5 h-3.5 w-3.5 animate-spin' />
+                    ) : (
+                      <CheckCircle2 className='mr-1.5 h-3.5 w-3.5 text-emerald-600' />
+                    )}
+                    Tandai Tersinkron ke ZIAPP
+                  </Button>
+                </div>
+              ) : ziappStatus === 'SYNCED_TO_ZIAPP' ? (
+                <Badge
+                  variant='outline'
+                  className={`text-xs font-semibold ${ZIAPP_STATUS_MAP.SYNCED_TO_ZIAPP.badgeClass}`}
+                >
+                  <CheckCircle2 className='mr-1 h-3 w-3 text-emerald-600' />
+                  Tersinkron ke Web Pusat ZIAPP
+                </Badge>
+              ) : (
+                <Button
+                  type='button'
+                  size='sm'
+                  variant='outline'
+                  onClick={handleMarkReadyForZIAPP}
+                  disabled={isMarkingZIAPP}
+                  className='h-8 border-amber-300 bg-amber-50 text-xs font-medium text-amber-800 hover:bg-amber-100 hover:text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                >
+                  {isMarkingZIAPP ? (
+                    <Loader2 className='mr-1.5 h-3.5 w-3.5 animate-spin' />
+                  ) : (
+                    <Send className='mr-1.5 h-3.5 w-3.5 text-amber-600' />
+                  )}
+                  Tandai Siap Kirim ke ZIAPP
+                </Button>
+              )
+            ) : (
+              <Badge
+                variant='outline'
+                className={`text-xs font-semibold ${ZIAPP_STATUS_MAP[ziappStatus].badgeClass}`}
+              >
+                <Send className='mr-1 h-3 w-3' />
+                {ZIAPP_STATUS_MAP[ziappStatus].label}
+              </Badge>
+            )}
+          </div>
+
           <Button
             type='button'
             onClick={handleSaveVerifikasi}

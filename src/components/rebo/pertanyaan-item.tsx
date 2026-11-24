@@ -14,7 +14,9 @@ import {
   XCircle,
   TrendingUp,
   TrendingDown,
-  Equal
+  Equal,
+  Send,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import BuktiForm from '@/components/rebo/bukti-form';
@@ -24,10 +26,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   STATUS_KELENGKAPAN_MAP,
+  ZIAPP_STATUS_MAP,
+  getEffectiveZIAPPStatus,
   type Pertanyaan,
   type BuktiDukung,
-  type StatusKelengkapan
+  type StatusKelengkapan,
+  type ZIAPPSyncStatus
 } from '@/types/rebo';
+import { markAsReadyForZIAPPAction } from '@/actions/ziapp-sync-actions';
 import type { Dispatch, SetStateAction } from 'react';
 
 type Props = {
@@ -66,6 +72,7 @@ export default function PertanyaanItem({
     bukti || (buktiDukungMap ? buktiDukungMap[pertanyaan.id_pertanyaan] : null);
 
   const [copied, setCopied] = useState(false);
+  const [isMarkingZIAPP, setIsMarkingZIAPP] = useState(false);
 
   // Status kelengkapan mapping
   const rawStatus = currentBukti?.status_kelengkapan;
@@ -78,6 +85,13 @@ export default function PertanyaanItem({
 
   const statusInfo =
     STATUS_KELENGKAPAN_MAP[statusCode] || STATUS_KELENGKAPAN_MAP[0];
+
+  // Status sinkronisasi ZIAPP
+  const effectiveZiappStatus = getEffectiveZIAPPStatus(
+    statusCode,
+    currentBukti?.ziapp_status
+  );
+  const ziappStatusInfo = ZIAPP_STATUS_MAP[effectiveZiappStatus];
 
   // GDrive folder URL detection
   const gdriveFolderUrl =
@@ -149,6 +163,23 @@ export default function PertanyaanItem({
     }
   };
 
+  const getZIAPPIcon = (code: ZIAPPSyncStatus) => {
+    switch (code) {
+      case 'SYNCED_TO_ZIAPP':
+        return (
+          <CheckCircle2 className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
+        );
+      case 'READY_FOR_ZIAPP':
+        return <Send className='h-3 w-3 text-amber-600 dark:text-amber-400' />;
+      case 'VERIFIED_INTERNAL':
+        return (
+          <FileCheck2 className='h-3 w-3 text-blue-600 dark:text-blue-400' />
+        );
+      default:
+        return <Clock className='h-3 w-3 text-slate-500 dark:text-slate-400' />;
+    }
+  };
+
   // Handler callback saat verifikasi berhasil disimpan
   const handleVerifikasiSuccess = (updatedData: Partial<BuktiDukung>) => {
     if (setBuktiDukungMap) {
@@ -163,6 +194,39 @@ export default function PertanyaanItem({
           }
         };
       });
+    }
+  };
+
+  // Quick Action: Tandai Siap Kirim ke ZIAPP dari kartu indikator
+  const handleQuickMarkReadyForZIAPP = async () => {
+    if (statusCode !== 2) {
+      toast.error(
+        'Indikator harus berstatus Disetujui (Approved) sebelum dapat ditandai Siap Kirim ke ZIAPP.'
+      );
+      return;
+    }
+
+    setIsMarkingZIAPP(true);
+    const toastId = toast.loading('Menandai indikator siap kirim ke ZIAPP...');
+    try {
+      const res = await markAsReadyForZIAPPAction(
+        pertanyaan.id_pertanyaan,
+        activePeriodeId
+      );
+      if (res.success) {
+        toast.success(res.message || 'Indikator siap dikirim ke ZIAPP!', {
+          id: toastId
+        });
+        handleVerifikasiSuccess({ ziapp_status: 'READY_FOR_ZIAPP' });
+      } else {
+        toast.error(res.error || 'Gagal mengubah status ZIAPP.', {
+          id: toastId
+        });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem.', { id: toastId });
+    } finally {
+      setIsMarkingZIAPP(false);
     }
   };
 
@@ -194,6 +258,37 @@ export default function PertanyaanItem({
                 {getStatusIcon(statusCode)}
                 <span>{statusInfo.label}</span>
               </span>
+
+              {/* Status ZIAPP Badge */}
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${ziappStatusInfo.badgeClass}`}
+                title={`Status Sinkronisasi Web Pusat ZIAPP: ${ziappStatusInfo.description}`}
+              >
+                {getZIAPPIcon(effectiveZiappStatus)}
+                <span>{ziappStatusInfo.label}</span>
+              </span>
+
+              {/* Quick Action Button: Tandai Siap Kirim ke ZIAPP jika status Disetujui */}
+              {canVerify &&
+                statusCode === 2 &&
+                effectiveZiappStatus !== 'READY_FOR_ZIAPP' &&
+                effectiveZiappStatus !== 'SYNCED_TO_ZIAPP' && (
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant='outline'
+                    onClick={handleQuickMarkReadyForZIAPP}
+                    disabled={isMarkingZIAPP}
+                    className='text-3xs h-6 border-amber-300 bg-amber-50 px-2 font-semibold text-amber-800 hover:bg-amber-100 hover:text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                  >
+                    {isMarkingZIAPP ? (
+                      <Loader2 className='mr-1 h-3 w-3 animate-spin' />
+                    ) : (
+                      <Send className='mr-1 h-3 w-3 text-amber-600' />
+                    )}
+                    Tandai Siap ZIAPP
+                  </Button>
+                )}
             </div>
 
             <h3 className='text-base leading-relaxed font-semibold text-gray-900 dark:text-gray-100'>
