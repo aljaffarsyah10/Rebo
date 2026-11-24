@@ -39,7 +39,8 @@ import {
   FileSpreadsheet,
   Compass,
   BarChart3,
-  LayoutGrid
+  LayoutGrid,
+  Printer
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
@@ -177,6 +178,20 @@ export default function MonitoringDashboardClient({
               </Button>
             </Link>
 
+            <Link
+              href={`/rebo/monitoring/lke-pdf${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`}
+              target='_blank'
+            >
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-9 border-blue-300 bg-blue-50/90 text-blue-800 shadow-xs hover:bg-blue-100 hover:text-blue-900 dark:border-blue-700 dark:bg-blue-950/60 dark:text-blue-200 dark:hover:bg-blue-900/80'
+              >
+                <Printer className='mr-1.5 h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+                Cetak PDF Eksekutif
+              </Button>
+            </Link>
+
             <a
               href={`/api/export/lke${selectedPeriodeId ? `?periodeId=${selectedPeriodeId}` : ''}`}
               target='_blank'
@@ -188,7 +203,7 @@ export default function MonitoringDashboardClient({
                 className='h-9 border-emerald-300 bg-emerald-50/90 text-emerald-800 shadow-xs hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-200 dark:hover:bg-emerald-900/80'
               >
                 <FileSpreadsheet className='mr-1.5 h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
-                📊 Unduh Kertas Kerja LKE (Excel)
+                Unduh Kertas Kerja LKE (Excel)
               </Button>
             </a>
           </div>

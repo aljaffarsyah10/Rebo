@@ -12,6 +12,7 @@
 - [x] Grafik Radar / Spider Web Capaian 6 Pilar (Visualisasi Eksekutif Monitoring)
 - [x] Batch Upload & Drag-and-Drop Bukti Dukung dengan Auto-Tagging Kategori Dokumen
 - [x] Sticky Summary & Auto-Save Draft Indikator pada Form LKE (Penyimpanan lokal otomatis & Bilah Ringkasan Melayang)
+- [x] Export LKE Terformat Resmi (Excel Resmi Standar PermenPAN-RB & Cetak PDF Ringkasan Eksekutif BPS Sitaro)
 
 ---
 
@@ -112,8 +113,8 @@
 - [x] **Simulasi & Gap Analysis Predikat WBK/WBBM:**
   - [x] Panel kalkulator predikat WBK: menghitung proyeksi total nilai dan menampilkan indikator-indikator prioritas berbobot tinggi yang belum optimal.
   - [x] Notifikasi status kelayakan: Memberikan sinyal apakah satker sudah memenuhi syarat minimal WBK (Nilai total $\ge 75.00$ dan tidak ada pilar di bawah batas ambang).
-- [ ] **Export LKE Terformat Resmi (Excel & PDF Eksekutif):**
-  - [ ] Ekspor template lembar kerja evaluasi lengkap sesuai standar format PermenPAN-RB / BPS RI dengan header resmi, kop surat, dan tandatangan digital pimpinan.
+- [x] **Export LKE Terformat Resmi (Excel & PDF Eksekutif):**
+  - [x] Ekspor template lembar kerja evaluasi lengkap sesuai standar format PermenPAN-RB / BPS RI dengan header resmi, kop surat, dan tandatangan digital pimpinan.
 
 ### 4. Optimalisasi Kanban Board & Kolaborasi Tim
 - [x] **Filter Cepat "Tugas Saya" (My Tasks):**
