@@ -717,3 +717,44 @@ export interface SurveiSummaryData {
     targetIpakWBBM: number;
   }[];
 }
+
+// ==============================================================================
+// REBO V2: Matriks Mitigasi Risiko & SPIP (Pilar 5 Penguatan Pengawasan) (Task 19)
+// ==============================================================================
+
+export type TingkatRisiko = 'TINGGI' | 'SEDANG' | 'RENDAH';
+export type StatusPengendalian =
+  | 'TERKENDALI'
+  | 'DALAM_PROSES'
+  | 'MONITORING_BERKALA';
+
+export interface MatriksRisikoItem {
+  id: string;
+  proses_bisnis: string; // misal: "Pelayanan Statistik Terpadu", "Pengadaan Barang & Jasa", "Pembayaran Honor Mitra Statistik", "Pengelolaan BMN", "Penetapan Angka Kredit/Kinerja"
+  potensi_risiko: string;
+  tingkat_risiko: TingkatRisiko;
+  dampak_risiko: string;
+  rencana_pengendalian: string;
+  pic_pengendali: string;
+  status_pengendalian: StatusPengendalian;
+  bukti_dukung_url?: string;
+  kategori_fraud?:
+    | 'Pungli'
+    | 'Gratifikasi'
+    | 'Fraud Keuangan'
+    | 'Penyalahgunaan Wewenang'
+    | 'Kualitas Layanan'
+    | 'Lainnya';
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MatriksRisikoSummary {
+  total: number;
+  tinggi: number;
+  sedang: number;
+  rendah: number;
+  terkendali: number;
+  dalam_proses: number;
+  monitoring: number;
+}

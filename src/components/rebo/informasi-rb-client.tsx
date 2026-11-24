@@ -19,7 +19,8 @@ import {
   FileSpreadsheet,
   Layers,
   ChevronRight,
-  FileCheck
+  FileCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -27,17 +28,21 @@ import RBStructureGraph, {
   AreaItem,
   PilarHasilItem
 } from '@/components/rebo/rb-structure-graph';
+import MatriksRisikoCard from '@/components/rebo/matriks-risiko-card';
+import type { MatriksRisikoItem } from '@/types/rebo';
 
 interface InformasiRBClientProps {
   areasData: AreaItem[];
   pilarHasilData: PilarHasilItem[];
   gdriveLink: string;
+  matriksRisikoList?: MatriksRisikoItem[];
 }
 
 export default function InformasiRBClient({
   areasData,
   pilarHasilData,
-  gdriveLink
+  gdriveLink,
+  matriksRisikoList = []
 }: InformasiRBClientProps) {
   const [activeMainTab, setActiveMainTab] = useState('struktur');
 
@@ -228,7 +233,7 @@ export default function InformasiRBClient({
       >
         {/* Navigation Bar */}
         <div className='sticky top-16 z-30 -mx-4 border-b border-slate-200/80 bg-white/80 px-4 py-2 backdrop-blur-md transition-all dark:border-slate-800 dark:bg-slate-900/80'>
-          <TabsList className='grid h-12 w-full grid-cols-2 rounded-2xl bg-slate-100 p-1.5 md:grid-cols-5 dark:bg-slate-800/80'>
+          <TabsList className='grid h-auto w-full grid-cols-2 rounded-2xl bg-slate-100 p-1.5 md:grid-cols-3 lg:grid-cols-6 dark:bg-slate-800/80'>
             <TabsTrigger
               value='struktur'
               className='flex items-center justify-center gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400'
@@ -267,6 +272,14 @@ export default function InformasiRBClient({
             >
               <FolderGit2 className='h-4 w-4' />
               <span>5. Pedoman & Repositori</span>
+            </TabsTrigger>
+
+            <TabsTrigger
+              value='spip'
+              className='flex items-center justify-center gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400'
+            >
+              <ShieldAlert className='h-4 w-4 text-amber-600' />
+              <span>6. Matriks Risiko & SPIP</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -1158,6 +1171,13 @@ export default function InformasiRBClient({
               </div>
             </div>
           </div>
+        </TabsContent>
+
+        {/* ============================================================================== */}
+        {/* TAB 6: MATRIKS MITIGASI RISIKO & SPIP (PILAR 5 PENGUATAN PENGAWASAN) */}
+        {/* ============================================================================== */}
+        <TabsContent value='spip' className='mt-6 space-y-6'>
+          <MatriksRisikoCard initialData={matriksRisikoList} />
         </TabsContent>
       </Tabs>
     </div>

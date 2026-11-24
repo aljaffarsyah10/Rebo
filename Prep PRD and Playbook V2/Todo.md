@@ -146,8 +146,8 @@
 - [x] **Integrasi Indeks Kepuasan Masyarakat (IKM) & Survei Persepsi Anti Korupsi (IPAK):**
   - [x] Input data dan visualisasi tren berkala hasil survei pelayanan publik (Pilar 6) dan persepsi integritas (Pilar 5).
   - [x] Perhitungan otomatis skor ketercapaian target minimal IKM/IPAK untuk pemenuhan syarat mutlak WBK/WBBM.
-- [ ] **Matriks Mitigasi Risiko & SPIP (Pilar 5 Pengawasan):**
-  - [ ] Tabel interaktif pemetaan titik rawan gratifikasi/fraud dan rencana aksi pengendalian intern.
+- [x] **Matriks Mitigasi Risiko & SPIP (Pilar 5 Pengawasan):**
+  - [x] Tabel interaktif pemetaan titik rawan gratifikasi/fraud dan rencana aksi pengendalian intern.
 
 ### 8. Peningkatan Menu Informasi RB, Regulasi & Panduan Pegawai
 - [ ] **Timeline & Roadmap Interaktif Tahapan ZI BPS Sitaro:**

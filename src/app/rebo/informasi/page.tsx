@@ -5,6 +5,8 @@ import {
   DEFAULT_AREAS_DATA,
   DEFAULT_PILAR_HASIL_DATA
 } from '@/constants/rb-structure-default';
+import { getMatriksRisikoListAction } from '@/actions/spip-actions';
+import type { MatriksRisikoItem } from '@/types/rebo';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,10 +20,11 @@ export default async function InformasiPage() {
 
   let areasData: any[] = [];
   let pilarHasilData: any[] = [];
+  let matriksRisikoList: MatriksRisikoItem[] = [];
 
   try {
     const supabase = await createClient();
-    const [areasRes, pilarHasilRes] = await Promise.all([
+    const [areasRes, pilarHasilRes, spipRes] = await Promise.all([
       supabase
         .from('area')
         .select(
@@ -52,7 +55,8 @@ export default async function InformasiPage() {
       supabase
         .from('pilarHasil')
         .select('*')
-        .order('id_pilarHasil', { ascending: true })
+        .order('id_pilarHasil', { ascending: true }),
+      getMatriksRisikoListAction()
     ]);
 
     if (areasRes.data && areasRes.data.length > 0) {
@@ -64,6 +68,9 @@ export default async function InformasiPage() {
       pilarHasilData = pilarHasilRes.data;
     } else {
       pilarHasilData = DEFAULT_PILAR_HASIL_DATA;
+    }
+    if (spipRes.success && spipRes.data) {
+      matriksRisikoList = spipRes.data;
     }
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -79,6 +86,7 @@ export default async function InformasiPage() {
           areasData={areasData}
           pilarHasilData={pilarHasilData}
           gdriveLink={gdriveLink}
+          matriksRisikoList={matriksRisikoList}
         />
       </div>
     </PageContainer>
