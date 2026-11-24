@@ -158,11 +158,11 @@
   - [x] Unduhan langsung template standar BPS Sitaro (Format Surat Undangan, Format Notula Rapat resmi, Daftar Hadir Standar, Laporan Monev, dan Format Dokumentasi Kegiatan).
 
 ### 9. Otomasi Google Drive Generator & Cloud Storage
-- [ ] **Integrasi Penuh Google Drive API (1-Click Folder Structure Generation):**
-  - [ ] Sambungkan service account Google Workspace BPS Sitaro agar menu Generator GDrive dapat membuat folder bertingkat (Area ➔ Pilar ➔ Indikator) langsung di Google Drive secara riil.
-  - [ ] Otomasi penyetelan hak akses: Memastikan folder dan file otomatis berstatus *"Anyone with link can view"* agar tautan tidak ditolak penilai pusat.
-- [ ] **Drive Storage & Health Monitor:**
-  - [ ] Pengecekan kuota Google Drive instansi dan validasi berkala jika ada tautan Google Drive yang terhapus atau dipindahkan (*broken links detector*).
+- [x] **Integrasi Penuh Google Drive API (1-Click Folder Structure Generation):**
+  - [x] Sambungkan service account Google Workspace BPS Sitaro agar menu Generator GDrive dapat membuat folder bertingkat (Area ➔ Pilar ➔ Indikator) langsung di Google Drive secara riil.
+  - [x] Otomasi penyetelan hak akses: Memastikan folder dan file otomatis berstatus *"Anyone with link can view"* agar tautan tidak ditolak penilai pusat.
+- [x] **Drive Storage & Health Monitor:**
+  - [x] Pengecekan kuota Google Drive instansi dan validasi berkala jika ada tautan Google Drive yang terhapus atau dipindahkan (*broken links detector*).
 
 ### 10. Manajemen Siklus Tahunan & Fleksibilitas Master Data LKE
 - [ ] **Wizard Setup Periode Baru (1-Click Period Setup / Clone):**

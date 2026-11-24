@@ -381,6 +381,11 @@ export function createReboFoldersScript(options: GasScriptOptions): string {
  * Tanggal Dibuat   : ${new Date().toISOString()}
  * Jumlah Indikator : ${options.items.length}
  *
+ * FITUR UTAMA & AUTO-PROVISIONING:
+ * - Otomasi Hak Akses : Menyetel 'DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW'
+ *   pada semua folder agar dokumen bukti dapat langsung dibaca oleh Tim Asesor/Penilai Pusat.
+ * - Idempotent Creation: Mencegah duplikasi folder jika skrip dijalankan ulang.
+ *
  * CARA MENGGUNAKAN SKRIP INI:
  * -------------------------------------------------------------------------
  * 1. Buka browser dan kunjungi: https://script.google.com
@@ -434,6 +439,13 @@ function mainCreateReboFolders() {
     }
   } else {
     rootFolder = getOrCreateSubFolder(DriveApp.getRootFolder(), CONFIG.ROOT_FOLDER_NAME);
+  }
+
+  // Auto-Provisioning: Setel hak akses root folder ke Anyone with link can view
+  try {
+    rootFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (rootPermErr) {
+    Logger.log("Info perizinan root folder: " + rootPermErr.message);
   }
 
   Logger.log("Root Folder URL: " + rootFolder.getUrl());
@@ -527,13 +539,25 @@ function mainCreateReboFolders() {
 
 /**
  * Helper: Mencari folder anak yang sudah ada atau membuatnya jika belum ada.
+ * Sekaligus menyetel hak akses ANYONE_WITH_LINK, VIEW (Auto-Provisioning).
  */
 function getOrCreateSubFolder(parentFolder, subFolderName) {
   var folders = parentFolder.getFoldersByName(subFolderName);
+  var targetFolder;
   if (folders.hasNext()) {
-    return folders.next();
+    targetFolder = folders.next();
+  } else {
+    targetFolder = parentFolder.createFolder(subFolderName);
   }
-  return parentFolder.createFolder(subFolderName);
+
+  // Auto-set hak akses: Siapa saja yang memiliki link dapat melihat
+  try {
+    targetFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (err) {
+    // Shared drive instansi mungkin mengelola hak akses di tingkat induk
+  }
+
+  return targetFolder;
 }
 
 /**
