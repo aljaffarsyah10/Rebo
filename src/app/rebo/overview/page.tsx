@@ -18,7 +18,10 @@ import {
   CheckCircle2,
   MessageSquare,
   ChevronRight,
-  Download
+  Download,
+  Milestone,
+  Calendar,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -32,6 +35,90 @@ export default function Overview() {
         : currentTime < 18
           ? 'Selamat Sore'
           : 'Selamat Malam';
+
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const bulanList = [
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember'
+  ];
+  const namaBulanAktif = bulanList[currentMonth];
+
+  const tahapanList = [
+    {
+      id: 1,
+      no: 'Tahap 1',
+      title: 'Pencanangan & Tim Kerja',
+      period: 'Jan - Feb',
+      desc: 'SK Tim Kerja, Sosialisasi, dan Pakta Integritas seluruh pegawai.',
+      start: 0,
+      end: 1,
+      actionText: 'Kelola Tim Kerja',
+      actionUrl: '/rebo/admin/kontak'
+    },
+    {
+      id: 2,
+      no: 'Tahap 2',
+      title: 'Rencana Aksi & Eviden REBO',
+      period: 'Mar - Mei',
+      desc: 'Input bukti dukung 6 pilar, QA Check 5 Dokumen, dan Health Guard GDrive.',
+      start: 2,
+      end: 4,
+      actionText: 'Input Bukti LKE',
+      actionUrl: '/rebo/formRB/area'
+    },
+    {
+      id: 3,
+      no: 'Tahap 3',
+      title: 'Penilaian Mandiri & Reviu TPI',
+      period: 'Jun - Jul',
+      desc: 'Dual-Scoring, reviu berjenjang internal, dan perbaikan catatan Kanban.',
+      start: 5,
+      end: 6,
+      actionText: 'Buka Kanban Reviu',
+      actionUrl: '/rebo/kanban'
+    },
+    {
+      id: 4,
+      no: 'Tahap 4',
+      title: 'Sinkronisasi ZIAPP & Desk TPN',
+      period: 'Agu - Sep',
+      desc: 'Auto-fill ZIAPP via ekstensi, Showcase Inovasi PST, dan Survei IKM/IPAK.',
+      start: 7,
+      end: 8,
+      actionText: 'Showcase Inovasi',
+      actionUrl: '/rebo/inovasi'
+    },
+    {
+      id: 5,
+      no: 'Tahap 5',
+      title: 'Verifikasi Lapangan & WBK',
+      period: 'Okt - Nov',
+      desc: 'Mystery shopping sarpras PST Sitaro dan pengumuman resmi predikat WBK.',
+      start: 9,
+      end: 10,
+      actionText: 'Arsip Dokumen',
+      actionUrl: '/rebo/arsip'
+    }
+  ];
+
+  const activeStage =
+    tahapanList.find((t) => currentMonth >= t.start && currentMonth <= t.end) ||
+    (currentMonth > 10 ? tahapanList[4] : tahapanList[0]);
+  const cyclePercent = Math.min(
+    100,
+    Math.max(8, Math.round(((currentMonth + 1) / 12) * 100))
+  );
 
   return (
     <div className='mx-auto max-w-7xl space-y-6 p-4 md:p-6'>
@@ -159,6 +246,142 @@ export default function Overview() {
           </div>
         </div>
       </div>
+
+      {/* Kartu Ringkas Status Siklus Tahapan ZI Saat Ini */}
+      <Card className='border-blue-200/70 bg-gradient-to-r from-blue-50/60 via-indigo-50/40 to-white shadow-xs dark:border-slate-800 dark:from-slate-900/80 dark:via-blue-950/20 dark:to-slate-900/80'>
+        <CardContent className='space-y-4 p-4 sm:p-5'>
+          <div className='flex flex-col gap-3 border-b border-blue-100/80 pb-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800'>
+            <div className='space-y-1'>
+              <div className='flex items-center gap-2'>
+                <Badge
+                  variant='outline'
+                  className='border-blue-300 bg-blue-100/70 text-[10px] font-bold text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300'
+                >
+                  <Milestone className='mr-1 h-3 w-3' />
+                  Siklus Tahunan {currentYear}
+                </Badge>
+                <div className='flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400'>
+                  <Calendar className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+                  <span>
+                    Bulan Berjalan:{' '}
+                    <strong className='text-slate-800 dark:text-slate-200'>
+                      {namaBulanAktif}
+                    </strong>
+                  </span>
+                </div>
+              </div>
+              <h2 className='flex flex-wrap items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100'>
+                <span>Status Siklus Tahapan ZI Saat Ini</span>
+                <span className='inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'>
+                  {activeStage.no}: {activeStage.title}
+                </span>
+              </h2>
+            </div>
+
+            <Link href='/rebo/informasi?tab=roadmap'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-8 shrink-0 gap-1.5 border-blue-300 bg-white text-xs font-semibold text-blue-700 shadow-2xs hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800 dark:text-blue-300'
+              >
+                <Milestone className='h-3.5 w-3.5' />
+                <span>Buka Roadmap Interaktif</span>
+                <ArrowRight className='h-3 w-3' />
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stepper Progress Visual Mini */}
+          <div className='space-y-2'>
+            <div className='flex items-center justify-between text-xs'>
+              <span className='text-[11px] font-semibold text-slate-600 dark:text-slate-300'>
+                Progres Tahunan Menuju WBK:{' '}
+                <strong className='text-blue-600 dark:text-blue-400'>
+                  {cyclePercent}%
+                </strong>
+              </span>
+              <span className='text-[10px] text-slate-400'>
+                {activeStage.period} • Fokus: {activeStage.title}
+              </span>
+            </div>
+
+            {/* Stepper Bar Grid */}
+            <div className='grid grid-cols-5 gap-1.5 sm:gap-2'>
+              {tahapanList.map((t) => {
+                const isCompleted = currentMonth > t.end;
+                const isActive =
+                  currentMonth >= t.start && currentMonth <= t.end;
+
+                return (
+                  <Link
+                    key={t.id}
+                    href='/rebo/informasi?tab=roadmap'
+                    className={`rounded-lg p-2 text-center transition-all ${
+                      isActive
+                        ? 'border-2 border-blue-500 bg-blue-100/70 shadow-xs dark:bg-blue-950/50'
+                        : isCompleted
+                          ? 'border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/80 dark:border-emerald-800/60 dark:bg-emerald-950/30'
+                          : 'border border-slate-200/80 bg-white/60 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/40'
+                    }`}
+                  >
+                    <div className='flex items-center justify-center gap-1 text-[10px] font-bold'>
+                      {isCompleted ? (
+                        <CheckCircle2 className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
+                      ) : isActive ? (
+                        <span className='relative flex h-2 w-2'>
+                          <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75'></span>
+                          <span className='relative inline-flex h-2 w-2 rounded-full bg-blue-600'></span>
+                        </span>
+                      ) : (
+                        <span className='h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-600' />
+                      )}
+                      <span
+                        className={
+                          isActive
+                            ? 'text-blue-800 dark:text-blue-200'
+                            : isCompleted
+                              ? 'text-emerald-800 dark:text-emerald-300'
+                              : 'text-slate-500'
+                        }
+                      >
+                        {t.no}
+                      </span>
+                    </div>
+                    <div className='mt-0.5 hidden truncate text-[10px] font-medium text-slate-600 sm:block dark:text-slate-400'>
+                      {t.period}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Fokus Aktif Saat Ini Card */}
+          <div className='flex flex-col gap-2.5 rounded-xl border border-blue-200/60 bg-white/80 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900/60'>
+            <div className='space-y-0.5 text-xs'>
+              <div className='flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200'>
+                <Sparkles className='h-3.5 w-3.5 text-amber-500' />
+                <span>Sasaran Kerja Aktif ({activeStage.period}):</span>
+              </div>
+              <p className='text-[11px] leading-snug text-slate-600 dark:text-slate-400'>
+                {activeStage.desc}
+              </p>
+            </div>
+
+            <div className='flex shrink-0 items-center gap-2 pt-1 sm:pt-0'>
+              <Link href={activeStage.actionUrl}>
+                <Button
+                  size='sm'
+                  className='h-7.5 gap-1 bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700'
+                >
+                  <span>{activeStage.actionText}</span>
+                  <ArrowRight className='h-3 w-3' />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Aksi Cepat Utama (Quick Action Hub) */}
       <div className='space-y-2.5'>

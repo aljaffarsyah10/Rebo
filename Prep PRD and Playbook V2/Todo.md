@@ -150,8 +150,8 @@
   - [x] Tabel interaktif pemetaan titik rawan gratifikasi/fraud dan rencana aksi pengendalian intern.
 
 ### 8. Peningkatan Menu Informasi RB, Regulasi & Panduan Pegawai
-- [ ] **Timeline & Roadmap Interaktif Tahapan ZI BPS Sitaro:**
-  - [ ] Visual progress bar tahapan evaluasi tahunan: Pencanangan ➔ Pengisian LKE Mandiri ➔ Penilaian Internal (TPI) ➔ Desk Evaluation TPN ➔ Verifikasi Lapangan.
+- [x] **Timeline & Roadmap Interaktif Tahapan ZI BPS Sitaro:**
+  - [x] Visual progress bar tahapan evaluasi tahunan: Pencanangan ➔ Pengisian LKE Mandiri ➔ Penilaian Internal (TPI) ➔ Desk Evaluation TPN ➔ Verifikasi Lapangan.
 - [x] **Kamus & Glosarium Digital Reformasi Birokrasi:**
   - [x] Glosarium istilah penting ZI/RB (PMPRB, LKE, Komponen Pengungkit, Komponen Hasil, WBK, WBBM, TPI BPS RI, TPN KemenPAN-RB) untuk mempermudah pegawai baru.
 - [x] **Pusat Template & Format Baku Bukti Dukung (Standard Template Hub):**

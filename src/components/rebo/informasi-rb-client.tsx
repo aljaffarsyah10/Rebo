@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Building2,
@@ -40,6 +40,7 @@ import RBStructureGraph, {
 } from '@/components/rebo/rb-structure-graph';
 import MatriksRisikoCard from '@/components/rebo/matriks-risiko-card';
 import TemplateHubCard from '@/components/rebo/template-hub-card';
+import ZiRoadmapTimeline from '@/components/rebo/zi-roadmap-timeline';
 import {
   GLOSARIUM_LIST,
   GLOSARIUM_KATEGORI_LIST,
@@ -69,6 +70,27 @@ export default function InformasiRBClient({
   const [copiedGlosariumId, setCopiedGlosariumId] = useState<string | null>(
     null
   );
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (
+        tab &&
+        [
+          'struktur',
+          'pilar',
+          'konsep',
+          'template',
+          'roadmap',
+          'repositori',
+          'spip'
+        ].includes(tab)
+      ) {
+        setActiveMainTab(tab);
+      }
+    }
+  }, []);
 
   const filteredGlosarium = GLOSARIUM_LIST.filter((item) => {
     const matchSearch =
@@ -1021,180 +1043,13 @@ export default function InformasiRBClient({
         </TabsContent>
 
         {/* ============================================================================== */}
-        {/* TAB 4: ROADMAP & ALUR EVALUASI MENUJU WBK/WBBM */}
+        {/* TAB 5: ROADMAP & ALUR EVALUASI MENUJU WBK/WBBM */}
         {/* ============================================================================== */}
         <TabsContent value='roadmap' className='mt-6 space-y-6'>
-          <div className='rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950'>
-            <div className='mb-6 border-b pb-4 dark:border-slate-800'>
-              <div className='inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'>
-                <Milestone className='h-3.5 w-3.5' /> Siklus Berkelanjutan
-              </div>
-              <h2 className='mt-1 text-xl font-bold text-slate-900 dark:text-slate-100'>
-                Roadmap 7 Tahapan Evaluasi Menuju Predikat WBK/WBBM
-              </h2>
-              <p className='text-xs text-slate-500'>
-                Alur tahapan terencana mulai dari pencanangan komitmen bersama
-                hingga desk evaluation nasional.
-              </p>
-            </div>
-
-            <div className='relative space-y-8 pl-6 before:absolute before:top-2 before:bottom-2 before:left-3 before:w-0.5 before:bg-gradient-to-b before:from-blue-600 before:via-purple-600 before:to-emerald-600'>
-              {/* Step 1 */}
-              <div className='relative flex items-start gap-4'>
-                <span className='absolute -left-6 mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white ring-4 ring-white dark:ring-slate-950'>
-                  1
-                </span>
-                <div className='w-full rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60'>
-                  <div className='flex items-center justify-between'>
-                    <h4 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
-                      Pencanangan & Deklarasi Zona Integritas
-                    </h4>
-                    <Badge variant='outline' className='text-[10px]'>
-                      Tahap Awal
-                    </Badge>
-                  </div>
-                  <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                    Penandatanganan Piagam Pencanangan Pembangunan ZI bersama
-                    seluruh pegawai, disaksikan instansi vertikal
-                    (KPK/Kejaksaan/Pemerintah Daerah) dan publikasi terbuka.
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className='relative flex items-start gap-4'>
-                <span className='absolute -left-6 mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white ring-4 ring-white dark:ring-slate-950'>
-                  2
-                </span>
-                <div className='w-full rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60'>
-                  <div className='flex items-center justify-between'>
-                    <h4 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
-                      Pembentukan Tim Kerja & Penetapan Role Model
-                    </h4>
-                    <Badge variant='outline' className='text-[10px]'>
-                      Pengorganisasian
-                    </Badge>
-                  </div>
-                  <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                    Penerbitan Surat Keputusan (SK) Kepala BPS terkait susunan
-                    Tim Pembangunan ZI (Koordinator & Operator 6 Pilar) serta
-                    penetapan agen perubahan (Agent of Change).
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className='relative flex items-start gap-4'>
-                <span className='absolute -left-6 mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-xs font-bold text-white ring-4 ring-white dark:ring-slate-950'>
-                  3
-                </span>
-                <div className='w-full rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60'>
-                  <div className='flex items-center justify-between'>
-                    <h4 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
-                      Penyusunan Rencana Aksi & Target Capaian
-                    </h4>
-                    <Badge variant='outline' className='text-[10px]'>
-                      Perencanaan
-                    </Badge>
-                  </div>
-                  <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                    Menyusun road map rencana aksi pembangunan ZI, kalender
-                    kegiatan, matriks peran hasil, serta penetapan indikator
-                    inovasi pelayanan statistik terpadu.
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 4 */}
-              <div className='relative flex items-start gap-4'>
-                <span className='absolute -left-6 mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white ring-4 ring-white dark:ring-slate-950'>
-                  4
-                </span>
-                <div className='w-full rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60'>
-                  <div className='flex items-center justify-between'>
-                    <h4 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
-                      Implementasi & Pengumpulan Dokumen Eviden
-                    </h4>
-                    <Badge variant='outline' className='text-[10px]'>
-                      Pelaksanaan
-                    </Badge>
-                  </div>
-                  <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                    Mengunggah seluruh dokumen bukti dukung fisik/digital
-                    (notula rapat, SOP, dokumentasi foto/video, screenshot
-                    sistem, laporan berkala) ke Google Drive & sistem REBO.
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 5 */}
-              <div className='relative flex items-start gap-4'>
-                <span className='absolute -left-6 mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white ring-4 ring-white dark:ring-slate-950'>
-                  5
-                </span>
-                <div className='w-full rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60'>
-                  <div className='flex items-center justify-between'>
-                    <h4 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
-                      Penilaian Mandiri (ZIAPP / PMPRB) oleh Satker
-                    </h4>
-                    <Badge variant='outline' className='text-[10px]'>
-                      Self-Assessment
-                    </Badge>
-                  </div>
-                  <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                    Operator dan koordinator pilar mengisi opsi skor LKE secara
-                    objektif berdasarkan eviden nyata pada aplikasi REBO,
-                    dilengkapi catatan tindak lanjut.
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 6 */}
-              <div className='relative flex items-start gap-4'>
-                <span className='absolute -left-6 mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs font-bold text-white ring-4 ring-white dark:ring-slate-950'>
-                  6
-                </span>
-                <div className='w-full rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60'>
-                  <div className='flex items-center justify-between'>
-                    <h4 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
-                      Reviu & Evaluasi oleh TPI (Inspektorat Utama BPS)
-                    </h4>
-                    <Badge variant='outline' className='text-[10px]'>
-                      Verifikasi Internal
-                    </Badge>
-                  </div>
-                  <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                    Tim Penilai Internal menguji kelayakan dokumen eviden,
-                    melakukan wawancara/klarifikasi, memberikan rekomendasi
-                    perbaikan, serta menentukan usulan satker WBK/WBBM ke level
-                    nasional.
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 7 */}
-              <div className='relative flex items-start gap-4'>
-                <span className='absolute -left-6 mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white ring-4 ring-white dark:ring-slate-950'>
-                  7
-                </span>
-                <div className='w-full rounded-xl border-2 border-emerald-300 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/20'>
-                  <div className='flex items-center justify-between'>
-                    <h4 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
-                      Desk Evaluation TPN & Penetapan Predikat WBK/WBBM
-                    </h4>
-                    <Badge className='bg-emerald-600 text-[10px] text-white'>
-                      Hasil Akhir
-                    </Badge>
-                  </div>
-                  <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                    Evaluasi lapangan & presentasi pimpinan satker di hadapan
-                    Tim Penilai Nasional KemenPAN-RB, dilanjutkan pengumuman
-                    resmi penganugerahan predikat nasional.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ZiRoadmapTimeline
+            onNavigateTab={(tab) => setActiveMainTab(tab)}
+            gdriveLink={gdriveLink}
+          />
         </TabsContent>
 
         {/* ============================================================================== */}
