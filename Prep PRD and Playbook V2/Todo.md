@@ -135,4 +135,38 @@
   - [ ] Penyesuaian kontras warna dan kenyamanan membaca teks panjang pada Dark Mode.
   - [ ] Optimalisasi layout tabel dan kartu saat dibuka dari smartphone petugas di lapangan.
 
+### 7. Showcase Inovasi Pelayanan & Bukti Dampak Nyata (Game Changer TPN)
+- [ ] **Modul Showcase Inovasi Pelayanan Publik & Reform:**
+  - [ ] Halaman khusus dokumentasi inovasi unggulan BPS Kabupaten Kepulauan Sitaro (misal: inovasi PST, layanan data statistik daerah, dsb.).
+  - [ ] Analisis dampak sebelum vs sesudah (*Before vs After Impact Assessment*), grafik utilisasi pengguna layanan, dan testimoni pengguna.
+  - [ ] Ekspor infografis / one-pager profil inovasi untuk paparan di hadapan Tim Penilai Nasional (TPN KemenPAN-RB).
+- [ ] **Integrasi Indeks Kepuasan Masyarakat (IKM) & Survei Persepsi Anti Korupsi (IPAK):**
+  - [ ] Input data dan visualisasi tren berkala hasil survei pelayanan publik (Pilar 6) dan persepsi integritas (Pilar 5).
+  - [ ] Perhitungan otomatis skor ketercapaian target minimal IKM/IPAK untuk pemenuhan syarat mutlak WBK/WBBM.
+- [ ] **Matriks Mitigasi Risiko & SPIP (Pilar 5 Pengawasan):**
+  - [ ] Tabel interaktif pemetaan titik rawan gratifikasi/fraud dan rencana aksi pengendalian intern.
+
+### 8. Peningkatan Menu Informasi RB, Regulasi & Panduan Pegawai
+- [ ] **Timeline & Roadmap Interaktif Tahapan ZI BPS Sitaro:**
+  - [ ] Visual progress bar tahapan evaluasi tahunan: Pencanangan ➔ Pengisian LKE Mandiri ➔ Penilaian Internal (TPI) ➔ Desk Evaluation TPN ➔ Verifikasi Lapangan.
+- [ ] **Kamus & Glosarium Digital Reformasi Birokrasi:**
+  - [ ] Glosarium istilah penting ZI/RB (PMPRB, LKE, Komponen Pengungkit, Komponen Hasil, WBK, WBBM, TPI BPS RI, TPN KemenPAN-RB) untuk mempermudah pegawai baru.
+- [ ] **Pusat Template & Format Baku Bukti Dukung (Standard Template Hub):**
+  - [ ] Unduhan langsung template standar BPS Sitaro (Format Surat Undangan, Format Notula Rapat resmi, Daftar Hadir Standar, Laporan Monev, dan Format Dokumentasi Kegiatan).
+
+### 9. Otomasi Google Drive Generator & Cloud Storage
+- [ ] **Integrasi Penuh Google Drive API (1-Click Folder Structure Generation):**
+  - [ ] Sambungkan service account Google Workspace BPS Sitaro agar menu Generator GDrive dapat membuat folder bertingkat (Area ➔ Pilar ➔ Indikator) langsung di Google Drive secara riil.
+  - [ ] Otomasi penyetelan hak akses: Memastikan folder dan file otomatis berstatus *"Anyone with link can view"* agar tautan tidak ditolak penilai pusat.
+- [ ] **Drive Storage & Health Monitor:**
+  - [ ] Pengecekan kuota Google Drive instansi dan validasi berkala jika ada tautan Google Drive yang terhapus atau dipindahkan (*broken links detector*).
+
+### 10. Manajemen Siklus Tahunan & Fleksibilitas Master Data LKE
+- [ ] **Wizard Setup Periode Baru (1-Click Period Setup / Clone):**
+  - [ ] Fitur duplikasi seluruh indikator dan struktur LKE dari tahun sebelumnya ke tahun baru dengan 1 klik, sehingga admin tidak perlu input manual dari awal.
+  - [ ] Pengaturan jadwal cutoff dan auto-lock periode (kunci otomatis edit saat masa penilaian mandiri telah berakhir).
+- [ ] **Editor Bobot & Rumus Dinamis:**
+  - [ ] Fleksibilitas penyesuaian bobot pilar/indikator jika KemenPAN-RB atau BPS RI memperbarui peraturan/juknis LKE PMPRB terbaru.
+
+
 
