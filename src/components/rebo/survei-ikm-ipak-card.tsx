@@ -45,7 +45,7 @@ import {
   DEFAULT_SURVEI_LIST,
   THRESHOLD_SYARAT_MUTLAK,
   formatSurveiSummaryData
-} from '@/actions/survei-actions';
+} from '@/lib/survei/survei-utils';
 import { cn } from '@/lib/utils';
 
 interface SurveiIkmIpakCardProps {

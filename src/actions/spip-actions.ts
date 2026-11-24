@@ -15,7 +15,7 @@ import type {
 // (5 Area Rawan Utama: Pelayanan, PBJ, Honor Mitra, BMN, SKP/Kinerja)
 // ==============================================================================
 
-export const DEFAULT_MATRIKS_RISIKO_LIST: MatriksRisikoItem[] = [
+const DEFAULT_MATRIKS_RISIKO_LIST: MatriksRisikoItem[] = [
   {
     id: 'spip-sitaro-001',
     proses_bisnis: 'Pelayanan Statistik Terpadu (PST)',

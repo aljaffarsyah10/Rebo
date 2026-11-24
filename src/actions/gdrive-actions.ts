@@ -15,7 +15,6 @@ import {
 import {
   checkGDrivePermission,
   checkBatchGDrivePermission,
-  parseGDriveUrl,
   type GDriveHealthCheckResult,
   type GDriveHealthStatus
 } from '@/lib/gdrive/health-checker';

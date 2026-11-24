@@ -38,7 +38,7 @@ const DuplicateStructureSchema = z.object({
   setAsActive: z.boolean().default(false)
 });
 
-export const SetupPeriodWizardSchema = z.object({
+const SetupPeriodWizardSchema = z.object({
   tahun: z.coerce
     .number()
     .min(2020, 'Tahun evaluasi minimal 2020')
@@ -57,7 +57,7 @@ export const SetupPeriodWizardSchema = z.object({
 
 export type SetupPeriodWizardInput = z.infer<typeof SetupPeriodWizardSchema>;
 
-export const UpdatePeriodeSchema = z.object({
+const UpdatePeriodeSchema = z.object({
   id: z.string().min(1, 'ID periode wajib ada'),
   nama_periode: z.string().min(5, 'Nama periode minimal 5 karakter').optional(),
   tanggal_mulai: z.string().optional().nullable(),
@@ -80,7 +80,7 @@ export interface PeriodeWithStats extends PeriodeEvaluasi {
   daysRemaining?: number | null;
 }
 
-export function calculateCutoffStatus(tanggal_cutoff?: string | null): {
+function calculateCutoffStatus(tanggal_cutoff?: string | null): {
   hasCutoff: boolean;
   isCutoffPassed: boolean;
   daysRemaining: number | null;

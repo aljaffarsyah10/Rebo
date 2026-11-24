@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import type { InovasiLayanan } from '@/types/rebo';
 
 // Data default inovasi unggulan BPS Kabupaten Kepulauan Siau Tagulandang Biaro
-export const DEFAULT_INOVASI_LIST: InovasiLayanan[] = [
+const DEFAULT_INOVASI_LIST: InovasiLayanan[] = [
   {
     id: 'inovasi-pst-sidatu',
     nama_inovasi: 'PST Si-Datu (Pelayanan Statistik Terpadu Digital Sitaro)',
