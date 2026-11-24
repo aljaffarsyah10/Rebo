@@ -36,10 +36,15 @@ import {
   ChevronRight,
   TrendingUp,
   Award,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Compass,
+  BarChart3,
+  LayoutGrid
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
 import SimulasiWBKCard from '@/components/rebo/simulasi-wbk-card';
+import RadarCapaianPilar from '@/components/rebo/radar-capaian-pilar';
 import { calculateWBKSimulation } from '@/lib/simulation/wbk-gap-analysis';
 import type { MonitoringDashboardData, PeriodeEvaluasi } from '@/types/rebo';
 import { toast } from 'sonner';
@@ -61,6 +66,7 @@ export default function MonitoringDashboardClient({
   const [expandedPilars, setExpandedPilars] = useState<Record<string, boolean>>(
     {}
   );
+  const [chartView, setChartView] = useState<'radar' | 'bar' | 'both'>('radar');
   const [isPending, startTransition] = useTransition();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -321,197 +327,392 @@ export default function MonitoringDashboardClient({
         <SimulasiWBKCard simulation={resolvedSimulation} />
       )}
 
-      {/* 3. Visualizations Section (Recharts Bar Chart & Donut Chart) */}
-      <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-        {/* Bar Chart: Komparasi per Pilar (2 Kolom) */}
-        <Card className='border-slate-200/70 shadow-xs lg:col-span-2 dark:border-slate-800'>
-          <CardHeader>
-            <div className='flex flex-wrap items-center justify-between gap-2'>
-              <div>
-                <CardTitle className='text-lg font-bold text-slate-800 dark:text-slate-100'>
-                  Komparasi Capaian per Pilar LKE
-                </CardTitle>
-                <CardDescription className='text-xs text-slate-500 dark:text-slate-400'>
-                  Perbandingan Skor Usulan Mandiri, Skor Verifikasi
-                  Koordinator/TPI, dan Skor Maksimal
-                </CardDescription>
-              </div>
-              <div className='flex items-center gap-3 text-xs'>
-                <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
-                  <span className='h-3 w-3 rounded-xs bg-blue-500' /> Mandiri
-                </span>
-                <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
-                  <span className='h-3 w-3 rounded-xs bg-emerald-500' />{' '}
-                  Verifikasi
-                </span>
-                <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
-                  <span className='h-3 w-3 rounded-xs bg-slate-300 dark:bg-slate-700' />{' '}
-                  Maksimal
-                </span>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className='h-[360px] w-full'>
-              {isMounted ? (
-                <ResponsiveContainer width='100%' height='100%'>
-                  <BarChart
-                    data={barChartData}
-                    margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
-                    barCategoryGap='20%'
-                  >
-                    <CartesianGrid
-                      strokeDasharray='3 3'
-                      vertical={false}
-                      stroke='#e2e8f0'
-                      className='dark:stroke-slate-800'
-                    />
-                    <XAxis
-                      dataKey='name'
-                      tick={{ fontSize: 12, fill: '#64748b' }}
-                      axisLine={{ stroke: '#cbd5e1' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: '#64748b' }}
-                      axisLine={{ stroke: '#cbd5e1' }}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.1)',
-                        border: '1px solid #e2e8f0',
-                        fontSize: '12px'
-                      }}
-                      formatter={(value: any, name: string) => {
-                        if (name === 'skorMandiri')
-                          return [Number(value).toFixed(2), 'Skor Mandiri'];
-                        if (name === 'skorVerifikasi')
-                          return [Number(value).toFixed(2), 'Skor Verifikasi'];
-                        if (name === 'skorMaksimal')
-                          return [Number(value).toFixed(2), 'Skor Maksimal'];
-                        return [value, name];
-                      }}
-                      labelFormatter={(label) => {
-                        const item = barChartData.find((b) => b.name === label);
-                        return `${label}: ${item?.fullName || ''}`;
-                      }}
-                    />
-                    <Bar
-                      dataKey='skorMandiri'
-                      name='Skor Mandiri'
-                      fill='#3b82f6'
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar
-                      dataKey='skorVerifikasi'
-                      name='Skor Verifikasi'
-                      fill='#10b981'
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar
-                      dataKey='skorMaksimal'
-                      name='Skor Maksimal'
-                      fill='#94a3b8'
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className='flex h-full w-full items-center justify-center text-xs text-slate-400'>
-                  Memuat grafik capaian...
-                </div>
+      {/* 3. Visualizations Section (Spider Web Radar, Bar Chart & Donut Chart) */}
+      <div className='space-y-4'>
+        <div className='flex flex-col justify-between gap-3 sm:flex-row sm:items-center'>
+          <div>
+            <h2 className='flex items-center gap-2 text-lg font-bold text-slate-800 dark:text-slate-100'>
+              <TrendingUp className='h-5 w-5 text-indigo-600 dark:text-indigo-400' />
+              Visualisasi Eksekutif & Capaian LKE
+            </h2>
+            <p className='text-xs text-slate-500 dark:text-slate-400'>
+              Analisis komparatif spider web capaian 6 pilar, perbandingan skor
+              mandiri vs verifikasi, dan status kelengkapan bukti dukung
+            </p>
+          </div>
+
+          {/* Toggle Mode Visualisasi */}
+          <div className='inline-flex items-center rounded-xl border border-slate-200 bg-slate-100/90 p-1 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90'>
+            <button
+              type='button'
+              onClick={() => setChartView('radar')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                chartView === 'radar'
+                  ? 'bg-white text-indigo-700 shadow-xs dark:bg-slate-800 dark:text-indigo-300'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
               )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Donut Chart: Distribusi Status (1 Kolom) */}
-        <Card className='border-slate-200/70 shadow-xs dark:border-slate-800'>
-          <CardHeader>
-            <CardTitle className='text-lg font-bold text-slate-800 dark:text-slate-100'>
-              Status Kelengkapan
-            </CardTitle>
-            <CardDescription className='text-xs text-slate-500 dark:text-slate-400'>
-              Distribusi indikator berdasarkan tahap penyelesaian
-            </CardDescription>
-          </CardHeader>
-          <CardContent className='flex flex-col items-center justify-center space-y-4'>
-            <div className='relative h-[220px] w-full'>
-              {isMounted ? (
-                <ResponsiveContainer width='100%' height='100%'>
-                  <PieChart>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
-                        fontSize: '12px'
-                      }}
-                      formatter={(val: any, name: string) => [
-                        `${val} Indikator (${kpi.totalPertanyaan > 0 ? Math.round((Number(val) / kpi.totalPertanyaan) * 100) : 0}%)`,
-                        name
-                      ]}
-                    />
-                    <Pie
-                      data={statusDistribution}
-                      dataKey='value'
-                      nameKey='name'
-                      cx='50%'
-                      cy='50%'
-                      innerRadius={55}
-                      outerRadius={85}
-                      paddingAngle={3}
-                    >
-                      {statusDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className='flex h-full w-full items-center justify-center text-xs text-slate-400'>
-                  Memuat grafik distribusi...
-                </div>
+            >
+              <Compass className='h-3.5 w-3.5' />
+              Spider Web 6 Pilar
+            </button>
+            <button
+              type='button'
+              onClick={() => setChartView('bar')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                chartView === 'bar'
+                  ? 'bg-white text-blue-700 shadow-xs dark:bg-slate-800 dark:text-blue-300'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
               )}
+            >
+              <BarChart3 className='h-3.5 w-3.5' />
+              Grafik Batang
+            </button>
+            <button
+              type='button'
+              onClick={() => setChartView('both')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                chartView === 'both'
+                  ? 'bg-white text-emerald-700 shadow-xs dark:bg-slate-800 dark:text-emerald-300'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+              )}
+            >
+              <LayoutGrid className='h-3.5 w-3.5' />
+              Semua Grafik
+            </button>
+          </div>
+        </div>
 
-              {/* Center Stat */}
-              <div className='pointer-events-none absolute inset-0 flex flex-col items-center justify-center'>
-                <span className='text-2xl font-black text-slate-800 dark:text-slate-100'>
-                  {kpi.persentaseKelengkapan}%
-                </span>
-                <span className='text-[10px] font-semibold text-slate-500 uppercase'>
-                  Selesai
-                </span>
-              </div>
-            </div>
+        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+          {/* Komponen Radar / Spider Web Capaian 6 Pilar */}
+          {(chartView === 'radar' || chartView === 'both') && (
+            <RadarCapaianPilar
+              data={barChartData}
+              className='lg:col-span-2'
+              title='Spider Web Capaian 6 Pilar'
+              description='Visualisasi radar persentase capaian per pilar terhadap target skor maksimal (0 - 100%)'
+            />
+          )}
 
-            {/* Status Legend Breakdown */}
-            <div className='grid w-full grid-cols-2 gap-2 text-xs'>
-              {statusDistribution.map((item) => (
-                <div
-                  key={item.name}
-                  className='flex items-center justify-between rounded-lg border border-slate-200/60 bg-slate-50/50 p-2 dark:border-slate-800 dark:bg-slate-900/50'
-                >
-                  <div className='flex items-center gap-2 truncate'>
-                    <span
-                      className='h-2.5 w-2.5 shrink-0 rounded-full'
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className='truncate text-slate-600 dark:text-slate-400'>
-                      {item.name}
+          {/* Bar Chart: Komparasi per Pilar */}
+          {chartView === 'bar' && (
+            <Card className='border-slate-200/70 shadow-xs lg:col-span-2 dark:border-slate-800'>
+              <CardHeader>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
+                  <div>
+                    <CardTitle className='text-lg font-bold text-slate-800 dark:text-slate-100'>
+                      Komparasi Capaian per Pilar LKE
+                    </CardTitle>
+                    <CardDescription className='text-xs text-slate-500 dark:text-slate-400'>
+                      Perbandingan Skor Usulan Mandiri, Skor Verifikasi
+                      Koordinator/TPI, dan Skor Maksimal
+                    </CardDescription>
+                  </div>
+                  <div className='flex items-center gap-3 text-xs'>
+                    <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
+                      <span className='h-3 w-3 rounded-xs bg-blue-500' />{' '}
+                      Mandiri
+                    </span>
+                    <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
+                      <span className='h-3 w-3 rounded-xs bg-emerald-500' />{' '}
+                      Verifikasi
+                    </span>
+                    <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
+                      <span className='h-3 w-3 rounded-xs bg-slate-300 dark:bg-slate-700' />{' '}
+                      Maksimal
                     </span>
                   </div>
-                  <span className='font-bold text-slate-900 dark:text-slate-100'>
-                    {item.value}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='h-[360px] w-full'>
+                  {isMounted ? (
+                    <ResponsiveContainer width='100%' height='100%'>
+                      <BarChart
+                        data={barChartData}
+                        margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+                        barCategoryGap='20%'
+                      >
+                        <CartesianGrid
+                          strokeDasharray='3 3'
+                          vertical={false}
+                          stroke='#e2e8f0'
+                          className='dark:stroke-slate-800'
+                        />
+                        <XAxis
+                          dataKey='name'
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                          axisLine={{ stroke: '#cbd5e1' }}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                          axisLine={{ stroke: '#cbd5e1' }}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            borderRadius: '12px',
+                            boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.1)',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '12px'
+                          }}
+                          formatter={(value: any, name: string) => {
+                            if (name === 'skorMandiri')
+                              return [Number(value).toFixed(2), 'Skor Mandiri'];
+                            if (name === 'skorVerifikasi')
+                              return [
+                                Number(value).toFixed(2),
+                                'Skor Verifikasi'
+                              ];
+                            if (name === 'skorMaksimal')
+                              return [
+                                Number(value).toFixed(2),
+                                'Skor Maksimal'
+                              ];
+                            return [value, name];
+                          }}
+                          labelFormatter={(label) => {
+                            const item = barChartData.find(
+                              (b) => b.name === label
+                            );
+                            return `${label}: ${item?.fullName || ''}`;
+                          }}
+                        />
+                        <Bar
+                          dataKey='skorMandiri'
+                          name='Skor Mandiri'
+                          fill='#3b82f6'
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey='skorVerifikasi'
+                          name='Skor Verifikasi'
+                          fill='#10b981'
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey='skorMaksimal'
+                          name='Skor Maksimal'
+                          fill='#94a3b8'
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className='flex h-full w-full items-center justify-center text-xs text-slate-400'>
+                      Memuat grafik capaian...
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Donut Chart: Distribusi Status (1 Kolom) */}
+          <Card className='border-slate-200/70 shadow-xs lg:col-span-1 dark:border-slate-800'>
+            <CardHeader>
+              <CardTitle className='text-lg font-bold text-slate-800 dark:text-slate-100'>
+                Status Kelengkapan
+              </CardTitle>
+              <CardDescription className='text-xs text-slate-500 dark:text-slate-400'>
+                Distribusi indikator berdasarkan tahap penyelesaian
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='flex flex-col items-center justify-center space-y-4'>
+              <div className='relative h-[220px] w-full'>
+                {isMounted ? (
+                  <ResponsiveContainer width='100%' height='100%'>
+                    <PieChart>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '12px'
+                        }}
+                        formatter={(val: any, name: string) => [
+                          `${val} Indikator (${kpi.totalPertanyaan > 0 ? Math.round((Number(val) / kpi.totalPertanyaan) * 100) : 0}%)`,
+                          name
+                        ]}
+                      />
+                      <Pie
+                        data={statusDistribution}
+                        dataKey='value'
+                        nameKey='name'
+                        cx='50%'
+                        cy='50%'
+                        innerRadius={55}
+                        outerRadius={85}
+                        paddingAngle={3}
+                      >
+                        {statusDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className='flex h-full w-full items-center justify-center text-xs text-slate-400'>
+                    Memuat grafik distribusi...
+                  </div>
+                )}
+
+                {/* Center Stat */}
+                <div className='pointer-events-none absolute inset-0 flex flex-col items-center justify-center'>
+                  <span className='text-2xl font-black text-slate-800 dark:text-slate-100'>
+                    {kpi.persentaseKelengkapan}%
+                  </span>
+                  <span className='text-[10px] font-semibold text-slate-500 uppercase'>
+                    Selesai
                   </span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+
+              {/* Status Legend Breakdown */}
+              <div className='grid w-full grid-cols-2 gap-2 text-xs'>
+                {statusDistribution.map((item) => (
+                  <div
+                    key={item.name}
+                    className='flex items-center justify-between rounded-lg border border-slate-200/60 bg-slate-50/50 p-2 dark:border-slate-800 dark:bg-slate-900/50'
+                  >
+                    <div className='flex items-center gap-2 truncate'>
+                      <span
+                        className='h-2.5 w-2.5 shrink-0 rounded-full'
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className='truncate text-slate-600 dark:text-slate-400'>
+                        {item.name}
+                      </span>
+                    </div>
+                    <span className='font-bold text-slate-900 dark:text-slate-100'>
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bar Chart saat mode 'both' (Tampil full width di bawah radar & donut) */}
+          {chartView === 'both' && (
+            <Card className='border-slate-200/70 shadow-xs lg:col-span-3 dark:border-slate-800'>
+              <CardHeader>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
+                  <div>
+                    <CardTitle className='text-lg font-bold text-slate-800 dark:text-slate-100'>
+                      Komparasi Capaian per Pilar LKE
+                    </CardTitle>
+                    <CardDescription className='text-xs text-slate-500 dark:text-slate-400'>
+                      Perbandingan Skor Usulan Mandiri, Skor Verifikasi
+                      Koordinator/TPI, dan Skor Maksimal
+                    </CardDescription>
+                  </div>
+                  <div className='flex items-center gap-3 text-xs'>
+                    <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
+                      <span className='h-3 w-3 rounded-xs bg-blue-500' />{' '}
+                      Mandiri
+                    </span>
+                    <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
+                      <span className='h-3 w-3 rounded-xs bg-emerald-500' />{' '}
+                      Verifikasi
+                    </span>
+                    <span className='inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300'>
+                      <span className='h-3 w-3 rounded-xs bg-slate-300 dark:bg-slate-700' />{' '}
+                      Maksimal
+                    </span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className='h-[340px] w-full'>
+                  {isMounted ? (
+                    <ResponsiveContainer width='100%' height='100%'>
+                      <BarChart
+                        data={barChartData}
+                        margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+                        barCategoryGap='20%'
+                      >
+                        <CartesianGrid
+                          strokeDasharray='3 3'
+                          vertical={false}
+                          stroke='#e2e8f0'
+                          className='dark:stroke-slate-800'
+                        />
+                        <XAxis
+                          dataKey='name'
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                          axisLine={{ stroke: '#cbd5e1' }}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: '#64748b' }}
+                          axisLine={{ stroke: '#cbd5e1' }}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            borderRadius: '12px',
+                            boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.1)',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '12px'
+                          }}
+                          formatter={(value: any, name: string) => {
+                            if (name === 'skorMandiri')
+                              return [Number(value).toFixed(2), 'Skor Mandiri'];
+                            if (name === 'skorVerifikasi')
+                              return [
+                                Number(value).toFixed(2),
+                                'Skor Verifikasi'
+                              ];
+                            if (name === 'skorMaksimal')
+                              return [
+                                Number(value).toFixed(2),
+                                'Skor Maksimal'
+                              ];
+                            return [value, name];
+                          }}
+                          labelFormatter={(label) => {
+                            const item = barChartData.find(
+                              (b) => b.name === label
+                            );
+                            return `${label}: ${item?.fullName || ''}`;
+                          }}
+                        />
+                        <Bar
+                          dataKey='skorMandiri'
+                          name='Skor Mandiri'
+                          fill='#3b82f6'
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey='skorVerifikasi'
+                          name='Skor Verifikasi'
+                          fill='#10b981'
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey='skorMaksimal'
+                          name='Skor Maksimal'
+                          fill='#94a3b8'
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className='flex h-full w-full items-center justify-center text-xs text-slate-400'>
+                      Memuat grafik capaian...
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
 
       {/* 4. Detailed Breakdown Table (Pilars & Subpilars) */}
