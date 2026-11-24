@@ -68,8 +68,8 @@
 ### 2. Fitur Unggulan Pra-Pengumpulan (Pre-Audit & Quality Assurance)
 - [x] **Google Drive Link & Permission Health Checker:**
   - [x] Validasi otomatis apakah link GDrive aktif dan memiliki status izin akses publik/dapat dibaca oleh penilai (*Anyone with link can view*), bukan terkunci (*Restricted*).
-- [ ] **Checklist Dokumen Wajib per Indikator (QA Checklist):**
-  - [ ] Buat daftar periksa dokumen minimal (Undangan, Daftar Hadir, Notula, Laporan, Dokumentasi) sebelum indikator diizinkan berstatus siap kirim ke pusat.
+- [x] **Checklist Dokumen Wajib per Indikator (QA Checklist):**
+  - [x] Buat daftar periksa dokumen minimal (Undangan, Daftar Hadir, Notula, Laporan, Dokumentasi) sebelum indikator diizinkan berstatus siap kirim ke pusat.
 - [ ] **Simulasi Nilai & Gap Analysis (Predikat WBK/WBBM):**
   - [ ] Hitung estimasi skor akhir berdasarkan bukti yang sudah valid serta tandai indikator berbobot tinggi yang belum optimal.
 

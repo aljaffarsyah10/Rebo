@@ -25,20 +25,18 @@ import {
   GDriveHealthButton
 } from '@/components/rebo/gdrive-health-badge';
 import type { GDriveHealthCheckResult } from '@/lib/gdrive/health-checker';
+import { QAChecklistCard } from '@/components/rebo/qa-checklist-card';
 import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 const TIPE_DOKUMEN_OPTIONS = [
-  'Surat Keputusan (SK)',
-  'Notula Rapat',
-  'Daftar Hadir',
   'Undangan',
-  'Laporan Pelaksanaan',
-  'SOP / Pedoman',
+  'Daftar Hadir',
+  'Notula',
+  'Laporan / Output / SK / SOP',
   'Dokumentasi / Foto',
-  'Tangkapan Layar Sistem',
-  'Lainnya'
+  'Dokumen Pendukung Lainnya'
 ];
 
 type Props = {
@@ -93,7 +91,7 @@ export default function BuktiForm({
   // 3. Inline new document input state
   const [newDocNama, setNewDocNama] = useState('');
   const [newDocUrl, setNewDocUrl] = useState('');
-  const [newDocTipe, setNewDocTipe] = useState('Notula Rapat');
+  const [newDocTipe, setNewDocTipe] = useState('Undangan');
   const [showAddForm, setShowAddForm] = useState(false);
 
   const [isPending, startTransition] = useTransition();
@@ -627,6 +625,11 @@ export default function BuktiForm({
           pemenuhan indikator ini (misal: Notula Rapat, Daftar Hadir, SK Tim
           Kerja):
         </p>
+
+        {/* Pre-Audit QA Checklist (5 Dokumen Kunci) */}
+        <div className='mb-4'>
+          <QAChecklistCard dokumenList={dokumenList} />
+        </div>
 
         {/* Existing / Uploaded Documents List */}
         {dokumenList.length === 0 && !showAddForm ? (

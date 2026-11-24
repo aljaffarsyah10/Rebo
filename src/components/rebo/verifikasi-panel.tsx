@@ -38,6 +38,8 @@ import {
   GDriveHealthButton
 } from '@/components/rebo/gdrive-health-badge';
 import type { GDriveHealthCheckResult } from '@/lib/gdrive/health-checker';
+import { QAChecklistCard } from '@/components/rebo/qa-checklist-card';
+import { evaluateQAChecklist } from '@/lib/qa/checklist';
 
 interface VerifikasiPanelProps {
   pertanyaan: Pertanyaan;
@@ -236,8 +238,16 @@ export default function VerifikasiPanel({
       return;
     }
 
-    // Pre-Audit Guard: Peringatan jika koordinator menyetujui dokumen yang izinnya masih terkunci
+    // Pre-Audit Guard: Peringatan jika koordinator menyetujui dokumen yang belum memenuhi QA Checklist atau izin terkunci
     if (selectedStatus === STATUS_KELENGKAPAN.DISETUJUI) {
+      const qaResult = evaluateQAChecklist(dokumenBuktiList);
+      if (!qaResult.isComplete) {
+        const confirmQA = window.confirm(
+          `Peringatan QA Checklist: Dokumen standar belum lengkap (${qaResult.fulfilledCount}/${qaResult.totalRequired} terpenuhi).\n\nDokumen yang belum terdeteksi:\n- ${qaResult.missingLabels.join('\n- ')}\n\nDisarankan meminta operator melengkapi dokumen sebelum disetujui.\nApakah Anda yakin tetap ingin Menyetujui (Approve) indikator ini?`
+        );
+        if (!confirmQA) return;
+      }
+
       const restrictedDocs = dokumenBuktiList.filter(
         (d) => healthResults[d.file_url]?.status === 'RESTRICTED'
       );
@@ -390,6 +400,15 @@ export default function VerifikasiPanel({
           </div>
         )}
 
+        {/* Pre-Audit QA Checklist (Read-Only) */}
+        {dokumenBuktiList.length > 0 && (
+          <QAChecklistCard
+            dokumenList={dokumenBuktiList}
+            compact={true}
+            className='mt-3.5'
+          />
+        )}
+
         {/* Pratinjau Dokumen Bukti & Izin Akses (Read-Only) */}
         {dokumenBuktiList.length > 0 && (
           <div className='mt-3.5 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-800/80'>
@@ -515,6 +534,9 @@ export default function VerifikasiPanel({
       </div>
 
       <div className='mt-4 space-y-4'>
+        {/* Pre-Audit QA Checklist (5 Dokumen Kunci) */}
+        <QAChecklistCard dokumenList={dokumenBuktiList} />
+
         {/* Pre-Audit Guard: Pratinjau Dokumen & Pemeriksaan Izin Akses */}
         <div className='rounded-xl border border-blue-200/80 bg-white p-4 shadow-2xs dark:border-blue-900/50 dark:bg-gray-800/80'>
           <div className='flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5 dark:border-gray-700/60'>
