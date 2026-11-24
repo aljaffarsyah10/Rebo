@@ -12,9 +12,19 @@ import {
   Lock,
   Paperclip,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  FolderOpen,
+  ShieldCheck,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { submitBuktiAction, deleteDokumenBukti } from '@/actions/bukti-actions';
+import { checkBatchGDriveHealthAction } from '@/actions/gdrive-actions';
+import {
+  GDriveHealthBadge,
+  GDriveHealthButton
+} from '@/components/rebo/gdrive-health-badge';
+import type { GDriveHealthCheckResult } from '@/lib/gdrive/health-checker';
 import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -90,6 +100,83 @@ export default function BuktiForm({
   const [submittingType, setSubmittingType] = useState<
     'draft' | 'review' | null
   >(null);
+
+  // Health check state for Google Drive links (Pre-Audit Guard)
+  const [healthResults, setHealthResults] = useState<
+    Record<string, GDriveHealthCheckResult>
+  >({});
+  const [isCheckingAll, setIsCheckingAll] = useState(false);
+
+  // Detect indicator-level Google Drive folder URL
+  const indicatorFolderUrl =
+    currentBukti?.gdrive_folder_url ||
+    (currentBukti?.link_bukti &&
+    (currentBukti.link_bukti.includes('/drive/folders') ||
+      currentBukti.link_bukti.includes('drive.google.com/drive/folders'))
+      ? currentBukti.link_bukti
+      : null);
+
+  const handleHealthResult = (url: string, result: GDriveHealthCheckResult) => {
+    setHealthResults((prev) => ({
+      ...prev,
+      [url]: result
+    }));
+  };
+
+  const handleCheckAllDocuments = async () => {
+    const allUrls: string[] = [];
+    if (indicatorFolderUrl) allUrls.push(indicatorFolderUrl);
+    dokumenList.forEach((d) => {
+      if (d.file_url) allUrls.push(d.file_url);
+    });
+
+    if (allUrls.length === 0) {
+      toast.info('Tidak ada tautan Google Drive untuk diperiksa.');
+      return;
+    }
+
+    setIsCheckingAll(true);
+    const toastId = toast.loading(
+      `Memeriksa izin akses ${allUrls.length} tautan Google Drive...`
+    );
+
+    try {
+      const res = await checkBatchGDriveHealthAction(allUrls);
+      if (res.success && res.results) {
+        setHealthResults((prev) => ({
+          ...prev,
+          ...res.results
+        }));
+
+        const restrictedCount = Object.values(res.results).filter(
+          (r) => r.status === 'RESTRICTED'
+        ).length;
+
+        if (restrictedCount > 0) {
+          toast.warning(
+            `Pemeriksaan selesai: ${restrictedCount} tautan berstatus TERKUNCI (Restricted). Harap ubah setelan izin ke publik!`,
+            { id: toastId, duration: 6000 }
+          );
+        } else {
+          toast.success(
+            `Semua ${allUrls.length} tautan Google Drive memiliki akses terbuka (Anyone with link)!`,
+            { id: toastId }
+          );
+        }
+      } else {
+        toast.error(res.error || 'Gagal memeriksa izin tautan.', {
+          id: toastId
+        });
+      }
+    } catch (err: any) {
+      toast.error(
+        err?.message || 'Terjadi kesalahan sistem saat pemeriksaan.',
+        { id: toastId }
+      );
+    } finally {
+      setIsCheckingAll(false);
+    }
+  };
 
   // Synchronize initial data from props
   useEffect(() => {
@@ -237,6 +324,17 @@ export default function BuktiForm({
         );
         return;
       }
+
+      // Pre-Audit Guard: Peringatan jika terdeteksi tautan berstatus RESTRICTED
+      const restrictedDoc = dokumenList.find(
+        (d) => healthResults[d.file_url]?.status === 'RESTRICTED'
+      );
+      if (restrictedDoc) {
+        const proceed = window.confirm(
+          `Peringatan Pre-Audit Guard: Berkas "${restrictedDoc.nama_dokumen}" terdeteksi berstatus Izin Terkunci (Restricted).\n\nVerifikator atau Penilai tidak dapat membaca berkas ini jika izin belum diubah menjadi "Siapa saja yang memiliki link".\n\nTetap lanjutkan pengajuan verifikasi?`
+        );
+        if (!proceed) return;
+      }
     }
 
     setSubmittingType(submitForReview ? 'review' : 'draft');
@@ -340,6 +438,57 @@ export default function BuktiForm({
         </div>
       )}
 
+      {/* SECTION: DIREKTORI GDRIVE INDIKATOR & PRE-AUDIT HEALTH CHECK */}
+      {indicatorFolderUrl && (
+        <div className='rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/70 via-white to-indigo-50/50 p-4 shadow-xs dark:border-blue-900/60 dark:from-blue-950/20 dark:via-gray-900 dark:to-indigo-950/20'>
+          <div className='flex flex-col justify-between gap-3 sm:flex-row sm:items-center'>
+            <div className='flex items-start gap-3'>
+              <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300'>
+                <FolderOpen className='h-5 w-5' />
+              </div>
+              <div>
+                <div className='flex flex-wrap items-center gap-2'>
+                  <span className='text-xs font-bold tracking-wider text-blue-900 uppercase dark:text-blue-200'>
+                    Direktori Folder Google Drive Indikator
+                  </span>
+                  {healthResults[indicatorFolderUrl] && (
+                    <GDriveHealthBadge
+                      status={healthResults[indicatorFolderUrl].status}
+                      message={healthResults[indicatorFolderUrl].message}
+                      statusCode={healthResults[indicatorFolderUrl].statusCode}
+                      compact={true}
+                    />
+                  )}
+                </div>
+                <p className='mt-0.5 text-xs text-gray-600 dark:text-gray-400'>
+                  Folder resmi untuk menyimpan bukti dukung indikator ini.
+                  Pastikan izin akses disetel ke publik.
+                </p>
+              </div>
+            </div>
+
+            <div className='flex shrink-0 items-center gap-2'>
+              <GDriveHealthButton
+                url={indicatorFolderUrl}
+                label='Periksa Izin Akses'
+                currentResult={healthResults[indicatorFolderUrl]}
+                onResult={(res) => handleHealthResult(indicatorFolderUrl, res)}
+                showBadge={false}
+              />
+              <a
+                href={indicatorFolderUrl}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+              >
+                <ExternalLink className='h-3.5 w-3.5' />
+                <span>Buka Folder</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. SECTION: PENILAIAN MANDIRI (SELF-ASSESSMENT) */}
       {pertanyaan.kategoriPenilaian &&
         pertanyaan.kategoriPenilaian.length > 0 && (
@@ -421,7 +570,7 @@ export default function BuktiForm({
 
       {/* 2. SECTION: DOKUMEN BUKTI DUKUNG (MULTI-EVIDENCE) */}
       <div className='rounded-xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-700 dark:bg-gray-800/80'>
-        <div className='mb-3 flex items-center justify-between'>
+        <div className='mb-3 flex flex-wrap items-center justify-between gap-2'>
           <div className='flex items-center gap-2'>
             <Paperclip className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
             <h4 className='text-sm font-bold text-gray-900 dark:text-gray-100'>
@@ -432,19 +581,45 @@ export default function BuktiForm({
             </Badge>
           </div>
 
-          {canEdit && !showAddForm && (
-            <Button
-              type='button'
-              size='sm'
-              variant='outline'
-              onClick={() => setShowAddForm(true)}
-              disabled={isPending}
-              className='h-8 text-xs font-semibold'
-            >
-              <Plus className='mr-1.5 h-3.5 w-3.5' />
-              Tambah Berkas
-            </Button>
-          )}
+          <div className='flex items-center gap-2'>
+            {dokumenList.length > 0 && (
+              <Button
+                type='button'
+                size='sm'
+                variant='outline'
+                onClick={handleCheckAllDocuments}
+                disabled={isCheckingAll}
+                className='h-8 border-blue-200 text-xs font-semibold text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40'
+                title='Uji izin akses seluruh link bukti dukung'
+              >
+                {isCheckingAll ? (
+                  <>
+                    <Loader2 className='mr-1.5 h-3.5 w-3.5 animate-spin' />
+                    <span>Memeriksa Izin...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className='mr-1.5 h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+                    <span>Periksa Semua Izin Akses</span>
+                  </>
+                )}
+              </Button>
+            )}
+
+            {canEdit && !showAddForm && (
+              <Button
+                type='button'
+                size='sm'
+                variant='outline'
+                onClick={() => setShowAddForm(true)}
+                disabled={isPending}
+                className='h-8 text-xs font-semibold'
+              >
+                <Plus className='mr-1.5 h-3.5 w-3.5' />
+                Tambah Berkas
+              </Button>
+            )}
+          </div>
         </div>
 
         <p className='mb-3 text-xs text-gray-500 dark:text-gray-400'>
@@ -511,6 +686,31 @@ export default function BuktiForm({
                         <ExternalLink className='h-3 w-3 shrink-0' />
                       </a>
                     </div>
+
+                    {/* Pre-Audit Health Check Button & Status */}
+                    <div className='mt-2 flex flex-wrap items-center gap-2'>
+                      <GDriveHealthButton
+                        url={doc.file_url}
+                        label='Periksa Izin Akses'
+                        size='xs'
+                        currentResult={healthResults[doc.file_url]}
+                        onResult={(res) =>
+                          handleHealthResult(doc.file_url, res)
+                        }
+                        compactBadge={true}
+                      />
+                    </div>
+
+                    {healthResults[doc.file_url]?.status === 'RESTRICTED' && (
+                      <div className='text-2xs mt-2 flex items-center gap-1.5 rounded border border-rose-200 bg-rose-50 px-2.5 py-1 font-medium text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
+                        <AlertCircle className='h-3.5 w-3.5 shrink-0 text-rose-600' />
+                        <span>
+                          Izin Terkunci (Restricted): Harap ubah setelan akses
+                          berkas di Google Drive menjadi &quot;Siapa saja yang
+                          memiliki link&quot;.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -588,9 +788,24 @@ export default function BuktiForm({
             </div>
 
             <div className='mb-3'>
-              <label className='mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300'>
-                URL Google Drive Berkas <span className='text-rose-500'>*</span>
-              </label>
+              <div className='mb-1 flex items-center justify-between'>
+                <label className='block text-xs font-semibold text-gray-700 dark:text-gray-300'>
+                  URL Google Drive Berkas{' '}
+                  <span className='text-rose-500'>*</span>
+                </label>
+                {newDocUrl.trim() && (
+                  <GDriveHealthButton
+                    url={newDocUrl.trim()}
+                    label='Uji Izin Akses'
+                    size='xs'
+                    currentResult={healthResults[newDocUrl.trim()]}
+                    onResult={(res) =>
+                      handleHealthResult(newDocUrl.trim(), res)
+                    }
+                    compactBadge={true}
+                  />
+                )}
+              </div>
               <input
                 type='url'
                 value={newDocUrl}

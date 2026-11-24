@@ -13,7 +13,10 @@ import {
   Loader2,
   MessageSquare,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  ExternalLink,
+  FolderOpen,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -29,6 +32,12 @@ import {
   type StatusKelengkapan
 } from '@/types/rebo';
 import { submitVerifikasiAction } from '@/actions/verifikasi-actions';
+import { checkBatchGDriveHealthAction } from '@/actions/gdrive-actions';
+import {
+  GDriveHealthBadge,
+  GDriveHealthButton
+} from '@/components/rebo/gdrive-health-badge';
+import type { GDriveHealthCheckResult } from '@/lib/gdrive/health-checker';
 
 interface VerifikasiPanelProps {
   pertanyaan: Pertanyaan;
@@ -76,6 +85,103 @@ export default function VerifikasiPanel({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Pre-Audit Guard: Health check status state
+  const [healthResults, setHealthResults] = useState<
+    Record<string, GDriveHealthCheckResult>
+  >({});
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+
+  // Dokumen bukti list & folder resolution
+  const dokumenBuktiList: Array<{
+    id?: string;
+    nama_dokumen: string;
+    file_url: string;
+    tipe_dokumen?: string | null;
+  }> =
+    bukti?.dokumen_bukti && bukti.dokumen_bukti.length > 0
+      ? bukti.dokumen_bukti
+      : pertanyaan.dokumen_bukti && pertanyaan.dokumen_bukti.length > 0
+        ? (pertanyaan.dokumen_bukti as any)
+        : bukti?.link_bukti && !bukti.link_bukti.includes('/drive/folders')
+          ? [
+              {
+                nama_dokumen: 'Berkas Bukti Dukung',
+                file_url: bukti.link_bukti,
+                tipe_dokumen: 'Dokumen'
+              }
+            ]
+          : [];
+
+  const indicatorFolderUrl =
+    bukti?.gdrive_folder_url ||
+    (bukti?.link_bukti &&
+    (bukti.link_bukti.includes('/drive/folders') ||
+      bukti.link_bukti.includes('drive.google.com/drive/folders'))
+      ? bukti.link_bukti
+      : null);
+
+  const handleHealthResult = (url: string, result: GDriveHealthCheckResult) => {
+    setHealthResults((prev) => ({
+      ...prev,
+      [url]: result
+    }));
+  };
+
+  const handleCheckAllHealth = async () => {
+    const allUrls: string[] = [];
+    if (indicatorFolderUrl) allUrls.push(indicatorFolderUrl);
+    dokumenBuktiList.forEach((d) => {
+      if (d.file_url) allUrls.push(d.file_url);
+    });
+
+    if (allUrls.length === 0) {
+      toast.info('Tidak ada tautan Google Drive untuk diperiksa.');
+      return;
+    }
+
+    setIsCheckingHealth(true);
+    const toastId = toast.loading(
+      `Memeriksa izin akses ${allUrls.length} tautan bukti...`
+    );
+
+    try {
+      const res = await checkBatchGDriveHealthAction(allUrls);
+      if (res.success && res.results) {
+        setHealthResults((prev) => ({
+          ...prev,
+          ...res.results
+        }));
+
+        const restrictedCount = Object.values(res.results).filter(
+          (r) => r.status === 'RESTRICTED'
+        ).length;
+
+        if (restrictedCount > 0) {
+          toast.warning(
+            `Pemeriksaan selesai: ${restrictedCount} berkas/folder berstatus TERKUNCI (Restricted). Disarankan meminta revisi kepada operator!`,
+            { id: toastId, duration: 6000 }
+          );
+        } else {
+          toast.success(
+            `Semua ${allUrls.length} tautan bukti memiliki izin akses terbuka (Anyone with link)!`,
+            { id: toastId }
+          );
+        }
+      } else {
+        toast.error(res.error || 'Gagal memeriksa izin akses.', {
+          id: toastId
+        });
+      }
+    } catch (err: any) {
+      toast.error(
+        err?.message || 'Terjadi kesalahan sistem saat pemeriksaan.',
+        { id: toastId }
+      );
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
 
   // Sinkronisasi state internal jika props bukti diperbarui dari luar
   useEffect(() => {
@@ -128,6 +234,19 @@ export default function VerifikasiPanel({
       setValidationError(errorMsg);
       toast.error(errorMsg);
       return;
+    }
+
+    // Pre-Audit Guard: Peringatan jika koordinator menyetujui dokumen yang izinnya masih terkunci
+    if (selectedStatus === STATUS_KELENGKAPAN.DISETUJUI) {
+      const restrictedDocs = dokumenBuktiList.filter(
+        (d) => healthResults[d.file_url]?.status === 'RESTRICTED'
+      );
+      if (restrictedDocs.length > 0) {
+        const confirmApprove = window.confirm(
+          `Peringatan Pre-Audit Guard: Terdeteksi ${restrictedDocs.length} berkas bukti dengan Izin Akses Terkunci (Restricted).\n\nPenilai eksternal (TPI/Pusat) tidak akan dapat membaca dokumen ini jika izin belum diubah menjadi publik.\nDisarankan untuk memilih "Perlu Revisi" agar operator membuka akses terlebih dahulu.\n\nApakah Anda yakin tetap ingin Menyetujui (Approve) indikator ini?`
+        );
+        if (!confirmApprove) return;
+      }
     }
 
     setIsSubmitting(true);
@@ -271,6 +390,68 @@ export default function VerifikasiPanel({
           </div>
         )}
 
+        {/* Pratinjau Dokumen Bukti & Izin Akses (Read-Only) */}
+        {dokumenBuktiList.length > 0 && (
+          <div className='mt-3.5 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-800/80'>
+            <div className='mb-2 flex items-center justify-between'>
+              <span className='text-2xs font-semibold text-gray-500 uppercase dark:text-gray-400'>
+                Dokumen Bukti Terlampir ({dokumenBuktiList.length})
+              </span>
+              <Button
+                type='button'
+                size='sm'
+                variant='ghost'
+                onClick={handleCheckAllHealth}
+                disabled={isCheckingHealth}
+                className='text-3xs h-6 px-2 font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40'
+              >
+                {isCheckingHealth ? (
+                  <>
+                    <Loader2 className='mr-1 h-3 w-3 animate-spin' />
+                    <span>Memeriksa...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className='mr-1 h-3 w-3' />
+                    <span>Periksa Izin Akses</span>
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className='space-y-1.5'>
+              {dokumenBuktiList.map((doc, idx) => (
+                <div
+                  key={doc.id || `ro-doc-${idx}`}
+                  className='flex items-center justify-between gap-2 rounded border border-gray-100 bg-gray-50/60 p-2 text-xs dark:border-gray-700/60 dark:bg-gray-900/40'
+                >
+                  <div className='flex min-w-0 items-center gap-2'>
+                    <FileText className='h-3.5 w-3.5 shrink-0 text-indigo-500' />
+                    <span className='truncate font-medium text-gray-800 dark:text-gray-200'>
+                      {doc.nama_dokumen}
+                    </span>
+                    {healthResults[doc.file_url] && (
+                      <GDriveHealthBadge
+                        status={healthResults[doc.file_url].status}
+                        message={healthResults[doc.file_url].message}
+                        compact={true}
+                      />
+                    )}
+                  </div>
+                  <a
+                    href={doc.file_url}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-3xs inline-flex shrink-0 items-center gap-1 text-blue-600 hover:underline'
+                  >
+                    <span>Buka</span>
+                    <ExternalLink className='h-2.5 w-2.5' />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Metadata Verifikator */}
         {(bukti?.verified_by || formattedVerifiedAt) && (
           <div className='text-2xs mt-3 flex flex-wrap items-center gap-4 text-gray-500 dark:text-gray-400'>
@@ -334,6 +515,181 @@ export default function VerifikasiPanel({
       </div>
 
       <div className='mt-4 space-y-4'>
+        {/* Pre-Audit Guard: Pratinjau Dokumen & Pemeriksaan Izin Akses */}
+        <div className='rounded-xl border border-blue-200/80 bg-white p-4 shadow-2xs dark:border-blue-900/50 dark:bg-gray-800/80'>
+          <div className='flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5 dark:border-gray-700/60'>
+            <div className='flex items-center gap-2'>
+              <ShieldCheck className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+              <span className='text-xs font-bold text-gray-800 dark:text-gray-200'>
+                Kesiapan Dokumen Bukti & Izin Akses Google Drive
+              </span>
+              <Badge variant='secondary' className='text-3xs'>
+                {dokumenBuktiList.length} Berkas
+              </Badge>
+            </div>
+
+            {(dokumenBuktiList.length > 0 || indicatorFolderUrl) && (
+              <Button
+                type='button'
+                size='sm'
+                variant='outline'
+                onClick={handleCheckAllHealth}
+                disabled={isCheckingHealth}
+                className='text-2xs h-7 border-blue-200 font-semibold text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40'
+              >
+                {isCheckingHealth ? (
+                  <>
+                    <Loader2 className='mr-1.5 h-3 w-3 animate-spin' />
+                    <span>Memeriksa Akses...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className='mr-1.5 h-3 w-3 text-blue-600' />
+                    <span>Uji Izin Semua Berkas</span>
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+
+          {/* List of Evidence Documents */}
+          <div className='mt-3 space-y-2'>
+            {indicatorFolderUrl && (
+              <div className='flex flex-col justify-between gap-2 rounded-lg border border-blue-100 bg-blue-50/40 p-2.5 text-xs sm:flex-row sm:items-center dark:border-blue-900/30 dark:bg-blue-950/20'>
+                <div className='flex min-w-0 items-center gap-2'>
+                  <FolderOpen className='h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400' />
+                  <div className='min-w-0'>
+                    <div className='flex flex-wrap items-center gap-1.5'>
+                      <span className='font-semibold text-gray-800 dark:text-gray-200'>
+                        Folder Google Drive Indikator
+                      </span>
+                      {healthResults[indicatorFolderUrl] && (
+                        <GDriveHealthBadge
+                          status={healthResults[indicatorFolderUrl].status}
+                          message={healthResults[indicatorFolderUrl].message}
+                          statusCode={
+                            healthResults[indicatorFolderUrl].statusCode
+                          }
+                          compact={true}
+                        />
+                      )}
+                    </div>
+                    <div className='text-3xs truncate text-gray-500 dark:text-gray-400'>
+                      {indicatorFolderUrl}
+                    </div>
+                  </div>
+                </div>
+
+                <div className='flex shrink-0 items-center gap-2'>
+                  <GDriveHealthButton
+                    url={indicatorFolderUrl}
+                    label='Cek Folder'
+                    size='xs'
+                    currentResult={healthResults[indicatorFolderUrl]}
+                    onResult={(res) =>
+                      handleHealthResult(indicatorFolderUrl, res)
+                    }
+                    showBadge={false}
+                  />
+                  <a
+                    href={indicatorFolderUrl}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-2xs inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200'
+                  >
+                    <ExternalLink className='h-3 w-3' />
+                    <span>Buka Folder</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {dokumenBuktiList.length === 0 && !indicatorFolderUrl ? (
+              <p className='text-2xs text-gray-500 italic dark:text-gray-400'>
+                Belum ada berkas bukti dukung yang dilampirkan oleh operator
+                untuk indikator ini.
+              </p>
+            ) : (
+              dokumenBuktiList.map((doc, idx) => {
+                const docHealth = healthResults[doc.file_url];
+                return (
+                  <div
+                    key={doc.id || `v-doc-${idx}`}
+                    className={`rounded-lg border p-2.5 text-xs transition-colors ${
+                      docHealth?.status === 'RESTRICTED'
+                        ? 'border-rose-200 bg-rose-50/60 dark:border-rose-900/50 dark:bg-rose-950/30'
+                        : docHealth?.status === 'PUBLIC'
+                          ? 'border-emerald-200 bg-emerald-50/40 dark:border-emerald-900/40 dark:bg-emerald-950/20'
+                          : 'border-gray-200 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/40'
+                    }`}
+                  >
+                    <div className='flex flex-col justify-between gap-2 sm:flex-row sm:items-center'>
+                      <div className='flex min-w-0 items-start gap-2.5'>
+                        <FileText className='mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400' />
+                        <div className='min-w-0'>
+                          <div className='flex flex-wrap items-center gap-1.5'>
+                            <span className='font-semibold text-gray-800 dark:text-gray-200'>
+                              {doc.nama_dokumen}
+                            </span>
+                            {doc.tipe_dokumen && (
+                              <span className='text-3xs py-0.2 rounded border border-indigo-200 bg-indigo-50 px-1.5 font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'>
+                                {doc.tipe_dokumen}
+                              </span>
+                            )}
+                          </div>
+                          <a
+                            href={doc.file_url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-3xs mt-0.5 inline-flex max-w-sm items-center gap-1 truncate text-blue-600 hover:underline dark:text-blue-400'
+                          >
+                            <span className='truncate'>{doc.file_url}</span>
+                            <ExternalLink className='h-2.5 w-2.5 shrink-0' />
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className='flex shrink-0 items-center gap-2 self-end sm:self-center'>
+                        <GDriveHealthButton
+                          url={doc.file_url}
+                          label='Cek Izin'
+                          size='xs'
+                          currentResult={docHealth}
+                          onResult={(res) =>
+                            handleHealthResult(doc.file_url, res)
+                          }
+                          compactBadge={true}
+                        />
+                        <a
+                          href={doc.file_url}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='text-2xs inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2 py-1 font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200'
+                        >
+                          <ExternalLink className='h-3 w-3' />
+                          <span>Buka Berkas</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Alert jika izin terkunci */}
+                    {docHealth?.status === 'RESTRICTED' && (
+                      <div className='text-2xs mt-2 flex items-center gap-1.5 rounded bg-rose-100/80 px-2 py-1 font-medium text-rose-900 dark:bg-rose-950/60 dark:text-rose-200'>
+                        <AlertCircle className='h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400' />
+                        <span>
+                          Perhatian: Dokumen ini memerlukan login Google (Izin
+                          Terkunci). Minta operator untuk mengubah akses ke
+                          publik sebelum menyetujui.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
         {/* Tombol Status Cepat */}
         <div>
           <Label className='text-xs font-semibold text-gray-800 dark:text-gray-200'>

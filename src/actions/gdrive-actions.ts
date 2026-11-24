@@ -12,6 +12,13 @@ import {
   extractGoogleDriveFolderId,
   type GasScriptItem
 } from '@/lib/gdrive/generator';
+import {
+  checkGDrivePermission,
+  checkBatchGDrivePermission,
+  parseGDriveUrl,
+  type GDriveHealthCheckResult,
+  type GDriveHealthStatus
+} from '@/lib/gdrive/health-checker';
 import type { PeriodeEvaluasi } from '@/types/rebo';
 
 // ==============================================================================
@@ -557,6 +564,94 @@ export async function getGasScriptForPeriode(
       script: '',
       totalIndicators: 0,
       message: error?.message || 'Gagal menyusun skrip Google Apps Script.'
+    };
+  }
+}
+
+// ==============================================================================
+// 5. Google Drive Link & Permission Health Checker
+// ==============================================================================
+
+/**
+ * Server action untuk memeriksa izin akses sebuah tautan Google Drive / Docs secara aman.
+ */
+export async function checkGDriveHealthAction(url: string): Promise<{
+  success: boolean;
+  result: GDriveHealthCheckResult;
+  error?: string;
+}> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!session.userId) {
+      throw new Error('Sesi masuk kedaluwarsa. Silakan masuk kembali.');
+    }
+
+    if (!url || typeof url !== 'string' || !url.trim()) {
+      return {
+        success: false,
+        result: {
+          status: 'INVALID',
+          message: 'URL Google Drive tidak boleh kosong.',
+          statusCode: 400,
+          url: '',
+          checkedAt: new Date().toISOString()
+        },
+        error: 'URL Google Drive tidak boleh kosong.'
+      };
+    }
+
+    const result = await checkGDrivePermission(url.trim());
+    return {
+      success: true,
+      result
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      result: {
+        status: 'ERROR',
+        message:
+          error?.message || 'Terjadi kesalahan saat memeriksa izin akses.',
+        url,
+        checkedAt: new Date().toISOString()
+      },
+      error: error?.message || 'Gagal menjalankan pemeriksaan Google Drive.'
+    };
+  }
+}
+
+/**
+ * Server action untuk memeriksa izin akses beberapa tautan Google Drive sekaligus secara paralel.
+ */
+export async function checkBatchGDriveHealthAction(urls: string[]): Promise<{
+  success: boolean;
+  results: Record<string, GDriveHealthCheckResult>;
+  error?: string;
+}> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!session.userId) {
+      throw new Error('Sesi masuk kedaluwarsa. Silakan masuk kembali.');
+    }
+
+    if (!Array.isArray(urls) || urls.length === 0) {
+      return {
+        success: true,
+        results: {}
+      };
+    }
+
+    const results = await checkBatchGDrivePermission(urls);
+    return {
+      success: true,
+      results
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      results: {},
+      error:
+        error?.message || 'Gagal menjalankan batch pemeriksaan Google Drive.'
     };
   }
 }

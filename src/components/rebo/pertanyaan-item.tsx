@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import BuktiForm from '@/components/rebo/bukti-form';
 import VerifikasiPanel from '@/components/rebo/verifikasi-panel';
+import { GDriveHealthButton } from '@/components/rebo/gdrive-health-badge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -342,9 +343,16 @@ export default function PertanyaanItem({
             </div>
           </div>
 
-          <div className='flex shrink-0 items-center gap-2 self-start sm:self-center'>
+          <div className='flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-center'>
             {gdriveFolderUrl ? (
               <>
+                <GDriveHealthButton
+                  url={gdriveFolderUrl}
+                  label='Periksa Izin Folder'
+                  size='sm'
+                  compactBadge={true}
+                />
+
                 <a
                   href={gdriveFolderUrl}
                   target='_blank'
