@@ -15,6 +15,7 @@ import {
   AlertCircle,
   HelpCircle,
   ExternalLink,
+  Eye,
   FolderOpen,
   FileText,
   Send
@@ -48,6 +49,7 @@ import {
 import type { GDriveHealthCheckResult } from '@/lib/gdrive/health-checker';
 import { QAChecklistCard } from '@/components/rebo/qa-checklist-card';
 import { evaluateQAChecklist } from '@/lib/qa/checklist';
+import { DocumentPreviewModal } from '@/components/rebo/document-preview-modal';
 
 interface VerifikasiPanelProps {
   pertanyaan: Pertanyaan;
@@ -107,6 +109,13 @@ export default function VerifikasiPanel({
     Record<string, GDriveHealthCheckResult>
   >({});
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+
+  // Document preview modal state
+  const [previewDoc, setPreviewDoc] = useState<{
+    url: string;
+    title: string;
+    type?: string;
+  } | null>(null);
 
   // Dokumen bukti list & folder resolution
   const dokumenBuktiList: Array<{
@@ -711,6 +720,21 @@ export default function VerifikasiPanel({
                     }
                     showBadge={false}
                   />
+                  <button
+                    type='button'
+                    onClick={() =>
+                      setPreviewDoc({
+                        url: indicatorFolderUrl,
+                        title: `Folder Bukti Indikator: ${pertanyaan.nomor_pertanyaan || 'Direktori Google Drive'}`,
+                        type: 'Folder Google Drive'
+                      })
+                    }
+                    className='text-2xs inline-flex items-center gap-1 rounded border border-indigo-200 bg-indigo-50/70 px-2 py-1 font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/60'
+                    title='Pratinjau Isi Folder di Aplikasi'
+                  >
+                    <Eye className='h-3 w-3' />
+                    <span>Pratinjau</span>
+                  </button>
                   <a
                     href={indicatorFolderUrl}
                     target='_blank'
@@ -780,6 +804,21 @@ export default function VerifikasiPanel({
                           }
                           compactBadge={true}
                         />
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setPreviewDoc({
+                              url: doc.file_url,
+                              title: doc.nama_dokumen,
+                              type: doc.tipe_dokumen || undefined
+                            })
+                          }
+                          className='text-2xs inline-flex items-center gap-1 rounded border border-indigo-200 bg-indigo-50/70 px-2 py-1 font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/60'
+                          title='Pratinjau Dokumen Terpadu'
+                        >
+                          <Eye className='h-3 w-3' />
+                          <span>Pratinjau</span>
+                        </button>
                         <a
                           href={doc.file_url}
                           target='_blank'
@@ -1052,6 +1091,15 @@ export default function VerifikasiPanel({
           </Button>
         </div>
       </div>
+
+      {/* Modal Pratinjau Dokumen Terpadu */}
+      <DocumentPreviewModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url}
+        title={previewDoc?.title}
+        fileType={previewDoc?.type}
+      />
     </div>
   );
 }

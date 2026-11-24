@@ -7,6 +7,7 @@ import {
   Plus,
   Trash2,
   ExternalLink,
+  Eye,
   Save,
   Send,
   Lock,
@@ -26,6 +27,7 @@ import {
 } from '@/components/rebo/gdrive-health-badge';
 import type { GDriveHealthCheckResult } from '@/lib/gdrive/health-checker';
 import { QAChecklistCard } from '@/components/rebo/qa-checklist-card';
+import { DocumentPreviewModal } from '@/components/rebo/document-preview-modal';
 import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -104,6 +106,13 @@ export default function BuktiForm({
     Record<string, GDriveHealthCheckResult>
   >({});
   const [isCheckingAll, setIsCheckingAll] = useState(false);
+
+  // Document preview modal state
+  const [previewDoc, setPreviewDoc] = useState<{
+    url: string;
+    title: string;
+    type?: string;
+  } | null>(null);
 
   // Detect indicator-level Google Drive folder URL
   const indicatorFolderUrl =
@@ -473,6 +482,23 @@ export default function BuktiForm({
                 onResult={(res) => handleHealthResult(indicatorFolderUrl, res)}
                 showBadge={false}
               />
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() =>
+                  setPreviewDoc({
+                    url: indicatorFolderUrl,
+                    title: `Folder Bukti Indikator: ${pertanyaan.nomor_pertanyaan || 'Direktori Google Drive'}`,
+                    type: 'Folder Google Drive'
+                  })
+                }
+                className='inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50/60 px-3 py-1.5 text-xs font-semibold text-indigo-700 shadow-xs hover:bg-indigo-100 hover:text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300'
+                title='Pratinjau Isi Folder di Aplikasi'
+              >
+                <Eye className='h-3.5 w-3.5' />
+                <span>Pratinjau</span>
+              </Button>
               <a
                 href={indicatorFolderUrl}
                 target='_blank'
@@ -718,6 +744,24 @@ export default function BuktiForm({
                 </div>
 
                 <div className='flex shrink-0 items-center gap-2 self-end sm:self-center'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() =>
+                      setPreviewDoc({
+                        url: doc.file_url,
+                        title: doc.nama_dokumen,
+                        type: doc.tipe_dokumen || undefined
+                      })
+                    }
+                    className='inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50/70 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/60'
+                    title='Pratinjau Dokumen Terpadu'
+                  >
+                    <Eye className='h-3.5 w-3.5' />
+                    <span>Pratinjau</span>
+                  </Button>
+
                   <a
                     href={doc.file_url}
                     target='_blank'
@@ -920,6 +964,15 @@ export default function BuktiForm({
           </Button>
         </div>
       )}
+
+      {/* Modal Pratinjau Dokumen Terpadu */}
+      <DocumentPreviewModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url}
+        title={previewDoc?.title}
+        fileType={previewDoc?.type}
+      />
     </div>
   );
 }

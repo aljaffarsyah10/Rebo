@@ -95,8 +95,8 @@
   - [x] Arahkan notifikasi hasil verifikasi (Disetujui / Perlu Revisi) **langsung ke nomor WhatsApp pegawai yang mengunggah berkas tersebut**, bukan hanya nomor umum koordinator pilar.
 
 ### 2. Peningkatan Pengalaman Pengguna Form Bukti Dukung (Form RB & Input)
-- [ ] **Inline Document Preview (Modal Pratinjau Terpadu):**
-  - [ ] Pratinjau langsung file PDF, gambar, dan dokumen Google Drive di dalam aplikasi REBO tanpa harus membuka tab baru browser.
+- [x] **Inline Document Preview (Modal Pratinjau Terpadu):**
+  - [x] Pratinjau langsung file PDF, gambar, dan dokumen Google Drive di dalam aplikasi REBO tanpa harus membuka tab baru browser.
 - [ ] **Batch Upload & Drag-and-Drop Bukti Dukung:**
   - [ ] Pengunggahan multi-berkas sekaligus dengan progress bar status upload dan auto-tagging kategori dokumen (Undangan, Notula, Daftar Hadir, Laporan, Dokumentasi Foto).
 - [ ] **Sticky Summary & Auto-Save Indikator:**
