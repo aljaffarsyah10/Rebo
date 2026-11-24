@@ -343,9 +343,9 @@ export function DocumentPreviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className='fixed top-[50%] left-[50%] z-50 flex h-[88vh] max-h-[92vh] w-[95vw] translate-x-[-50%] translate-y-[-50%] flex-col gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-2xl sm:max-w-5xl dark:border-slate-800 dark:bg-slate-900'>
+      <DialogContent className='fixed top-[50%] left-[50%] z-50 flex h-[90dvh] max-h-[92dvh] w-[95vw] translate-x-[-50%] translate-y-[-50%] flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 pb-[env(safe-area-inset-bottom,0px)] shadow-2xl sm:max-w-5xl dark:border-slate-800 dark:bg-slate-900'>
         {/* Header Modal */}
-        <div className='flex items-center justify-between border-b border-slate-200 px-5 py-3.5 dark:border-slate-800'>
+        <div className='flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-5 sm:py-3.5 dark:border-slate-800'>
           <div className='flex min-w-0 items-center gap-3 pr-4'>
             <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800'>
               {renderCategoryIcon()}
@@ -372,7 +372,7 @@ export function DocumentPreviewModal({
               href={previewInfo.originalUrl}
               target='_blank'
               rel='noopener noreferrer'
-              className='inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+              className='inline-flex min-h-[36px] touch-manipulation items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:min-h-[30px] sm:px-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
               title='Buka tautan asli di tab browser baru'
             >
               <ExternalLink className='h-3.5 w-3.5' />
@@ -392,7 +392,7 @@ export function DocumentPreviewModal({
                 type='button'
                 variant='ghost'
                 size='icon'
-                className='h-7 w-7'
+                className='h-8 min-h-[32px] w-8 min-w-[32px] touch-manipulation sm:h-7 sm:min-h-[28px] sm:w-7 sm:min-w-[28px]'
                 onClick={handleZoomOut}
                 disabled={zoom <= 0.5}
                 title='Perkecil'
@@ -403,7 +403,7 @@ export function DocumentPreviewModal({
                 type='button'
                 variant='ghost'
                 size='icon'
-                className='h-7 w-7'
+                className='h-8 min-h-[32px] w-8 min-w-[32px] touch-manipulation sm:h-7 sm:min-h-[28px] sm:w-7 sm:min-w-[28px]'
                 onClick={handleResetZoom}
                 title='Reset Skala'
               >
@@ -413,7 +413,7 @@ export function DocumentPreviewModal({
                 type='button'
                 variant='ghost'
                 size='icon'
-                className='h-7 w-7'
+                className='h-8 min-h-[32px] w-8 min-w-[32px] touch-manipulation sm:h-7 sm:min-h-[28px] sm:w-7 sm:min-w-[28px]'
                 onClick={handleZoomIn}
                 disabled={zoom >= 3}
                 title='Perbesar'
@@ -425,7 +425,7 @@ export function DocumentPreviewModal({
                 type='button'
                 variant='ghost'
                 size='icon'
-                className='h-7 w-7'
+                className='h-8 min-h-[32px] w-8 min-w-[32px] touch-manipulation sm:h-7 sm:min-h-[28px] sm:w-7 sm:min-w-[28px]'
                 onClick={handleRotate}
                 title='Putar 90°'
               >

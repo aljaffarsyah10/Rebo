@@ -19,7 +19,10 @@ export function UserNav() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
+          <Button
+            variant='ghost'
+            className='relative h-9 min-h-[36px] w-9 min-w-[36px] touch-manipulation rounded-full sm:h-8 sm:min-h-[32px] sm:w-8 sm:min-w-[32px]'
+          >
             <UserAvatarProfile user={user} />
           </Button>
         </DropdownMenuTrigger>

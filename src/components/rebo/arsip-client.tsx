@@ -979,9 +979,20 @@ export default function ArsipClient({
       ) : (
         /* List / Table View */
         <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900'>
-          <div className='overflow-x-auto'>
+          {/* Mobile Table Scroll Helper Indicator */}
+          <div className='text-3xs flex items-center justify-between border-b border-slate-200/80 bg-slate-50/70 px-4 py-2 font-medium text-slate-500 sm:hidden dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400'>
+            <span className='flex items-center gap-1.5'>
+              <span className='inline-block size-1.5 animate-pulse rounded-full bg-blue-500' />
+              Geser tabel ke samping untuk melihat seluruh arsip dokumen
+            </span>
+            <span className='rounded bg-slate-200/60 px-1.5 py-0.5 font-mono text-[9px] dark:bg-slate-800 dark:text-slate-300'>
+              Geser ↔
+            </span>
+          </div>
+
+          <div className='table-responsive touch-pan-x overflow-x-auto'>
             <table className='w-full text-left text-xs'>
-              <thead className='border-b border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300'>
+              <thead className='border-b border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200'>
                 <tr>
                   <th className='py-3.5 pr-4 pl-6 font-semibold'>Kategori</th>
                   <th className='px-4 py-3.5 font-semibold'>Tahun</th>
@@ -1027,7 +1038,7 @@ export default function ArsipClient({
                           {doc.judul_dokumen}
                         </div>
                         {doc.keterangan && (
-                          <div className='mt-0.5 line-clamp-1 text-[11px] text-slate-500'>
+                          <div className='mt-0.5 line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400'>
                             {doc.keterangan}
                           </div>
                         )}
@@ -1047,7 +1058,7 @@ export default function ArsipClient({
                           >
                             <Button
                               size='sm'
-                              className='h-7 bg-blue-600 px-2.5 text-[11px] text-white hover:bg-blue-700'
+                              className='h-8 min-h-[34px] touch-manipulation bg-blue-600 px-3 text-xs text-white hover:bg-blue-700 sm:h-7 sm:min-h-[28px] sm:px-2.5 sm:text-[11px]'
                             >
                               <ExternalLink className='mr-1 h-3 w-3' />
                               Buka
@@ -1057,7 +1068,7 @@ export default function ArsipClient({
                             variant='outline'
                             size='sm'
                             onClick={() => handleCopyLink(doc)}
-                            className='h-7 w-7 p-0'
+                            className='h-8 min-h-[34px] w-8 min-w-[34px] touch-manipulation p-0 sm:h-7 sm:min-h-[28px] sm:w-7 sm:min-w-[28px]'
                             title='Salin Tautan'
                           >
                             {copiedId === doc.id ? (
@@ -1072,7 +1083,7 @@ export default function ArsipClient({
                                 <Button
                                   variant='outline'
                                   size='sm'
-                                  className='h-7 w-7 p-0 text-rose-600 hover:bg-rose-50'
+                                  className='h-8 min-h-[34px] w-8 min-w-[34px] touch-manipulation p-0 text-rose-600 hover:bg-rose-50 sm:h-7 sm:min-h-[28px] sm:w-7 sm:min-w-[28px] dark:text-rose-400 dark:hover:bg-rose-950/40'
                                   title='Hapus'
                                 >
                                   <Trash2 className='h-3 w-3' />

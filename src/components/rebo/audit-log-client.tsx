@@ -722,9 +722,20 @@ export default function AuditLogClient({
           </div>
         </CardHeader>
         <CardContent className='p-0'>
-          <div className='overflow-x-auto'>
+          {/* Mobile Table Scroll Helper Indicator */}
+          <div className='text-3xs flex items-center justify-between border-b border-slate-200/80 bg-slate-50/70 px-4 py-2 font-medium text-slate-500 sm:hidden dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400'>
+            <span className='flex items-center gap-1.5'>
+              <span className='inline-block size-1.5 animate-pulse rounded-full bg-blue-500' />
+              Geser tabel ke samping untuk melihat seluruh log aktivitas
+            </span>
+            <span className='rounded bg-slate-200/60 px-1.5 py-0.5 font-mono text-[9px] dark:bg-slate-800 dark:text-slate-300'>
+              Geser ↔
+            </span>
+          </div>
+
+          <div className='table-responsive touch-pan-x overflow-x-auto'>
             <table className='w-full text-left text-sm'>
-              <thead className='border-b border-slate-200 bg-slate-50/80 text-xs font-semibold text-slate-600 uppercase dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'>
+              <thead className='border-b border-slate-200 bg-slate-50/90 text-xs font-semibold text-slate-700 uppercase dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'>
                 <tr>
                   <th className='py-3 pr-2 pl-4'>Waktu</th>
                   <th className='px-3 py-3'>Pengguna</th>
@@ -871,13 +882,13 @@ export default function AuditLogClient({
                               variant='ghost'
                               size='sm'
                               onClick={() => toggleDetails(log.id)}
-                              className='h-7 w-7 p-0'
+                              className='h-8 min-h-[34px] w-8 min-w-[34px] touch-manipulation p-0 sm:h-7 sm:min-h-[28px] sm:w-7 sm:min-w-[28px]'
                               title='Lihat Detail JSON Diff'
                             >
                               {isExpanded ? (
-                                <ChevronDown className='h-4 w-4 text-purple-600' />
+                                <ChevronDown className='h-4 w-4 text-purple-600 dark:text-purple-400' />
                               ) : (
-                                <ChevronRight className='h-4 w-4 text-slate-400' />
+                                <ChevronRight className='h-4 w-4 text-slate-400 dark:text-slate-400' />
                               )}
                             </Button>
                           </td>

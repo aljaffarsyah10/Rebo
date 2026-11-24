@@ -134,9 +134,9 @@
 - [x] **Audit Trail Filter & Export CSV:**
   - [x] Fitur filter log aktivitas berdasarkan rentang tanggal, nama pengguna, jenis aktivitas (Upload, Verifikasi, Pengiriman WA), dan ekspor laporan riwayat ke CSV/Excel.
   - [x] Pencatatan IP address dan perangkat akses untuk kepatuhan tata kelola keamanan informasi (ISO 27001).
-- [ ] **Penyempurnaan Mode Gelap & Tampilan Mobile Tablet:**
-  - [ ] Penyesuaian kontras warna dan kenyamanan membaca teks panjang pada Dark Mode.
-  - [ ] Optimalisasi layout tabel dan kartu saat dibuka dari smartphone petugas di lapangan.
+- [x] **Penyempurnaan Mode Gelap & Tampilan Mobile Tablet:**
+  - [x] Penyesuaian kontras warna dan kenyamanan membaca teks panjang pada Dark Mode.
+  - [x] Optimalisasi layout tabel dan kartu saat dibuka dari smartphone petugas di lapangan.
 
 ### 7. Showcase Inovasi Pelayanan & Bukti Dampak Nyata (Game Changer TPN)
 - [ ] **Modul Showcase Inovasi Pelayanan Publik & Reform:**

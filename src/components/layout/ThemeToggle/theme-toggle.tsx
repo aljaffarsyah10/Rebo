@@ -36,7 +36,7 @@ export function ModeToggle() {
     <Button
       variant='secondary'
       size='icon'
-      className='group/toggle size-8'
+      className='group/toggle size-9 min-h-[36px] min-w-[36px] touch-manipulation sm:size-8 sm:min-h-[32px] sm:min-w-[32px]'
       onClick={handleThemeToggle}
     >
       <IconBrightness />

@@ -275,7 +275,7 @@ export default function PilarManagerClient({
                           {p.id_pilar}
                         </div>
                         <div>
-                          <CardTitle className='text-base font-semibold text-gray-900 dark:text-gray-100'>
+                          <CardTitle className='text-base font-semibold text-gray-900 dark:text-slate-100'>
                             {p.nama_pilar}
                           </CardTitle>
                           <span className='font-mono text-xs font-medium text-blue-600 dark:text-blue-400'>
@@ -285,19 +285,19 @@ export default function PilarManagerClient({
                       </div>
                       <Badge
                         variant='outline'
-                        className='border-blue-200 bg-blue-50 text-[10px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                        className='border-blue-200 bg-blue-50 text-[10px] text-blue-700 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
                       >
                         Pemenuhan
                       </Badge>
                     </div>
                   </CardHeader>
 
-                  <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-900/40'>
+                  <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60'>
                     <Button
                       variant='ghost'
                       size='sm'
                       asChild
-                      className='text-muted-foreground h-8 text-xs hover:text-blue-600'
+                      className='text-muted-foreground h-9 min-h-[36px] touch-manipulation text-xs hover:text-blue-600 sm:h-8 sm:min-h-[32px] dark:text-slate-300 dark:hover:text-blue-400'
                     >
                       <Link
                         href={`/rebo/dataRB/pilar/subpilar?pilar=${p.id_pilar}`}
@@ -313,7 +313,7 @@ export default function PilarManagerClient({
                           variant='ghost'
                           size='sm'
                           onClick={() => openEditModal(p)}
-                          className='h-8 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40'
+                          className='h-9 min-h-[36px] touch-manipulation px-2.5 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 sm:h-8 sm:min-h-[32px] dark:text-emerald-400 dark:hover:bg-emerald-950/40'
                         >
                           <Edit className='mr-1 h-3.5 w-3.5' />
                           Edit
@@ -322,7 +322,7 @@ export default function PilarManagerClient({
                           variant='ghost'
                           size='icon'
                           onClick={() => setDeleteTargetId(p.id_pilar)}
-                          className='h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40'
+                          className='h-9 min-h-[36px] w-9 min-w-[36px] touch-manipulation text-rose-500 hover:bg-rose-50 hover:text-rose-700 sm:h-8 sm:min-h-[32px] sm:w-8 sm:min-w-[32px] dark:text-rose-400 dark:hover:bg-rose-950/40'
                         >
                           <Trash2 className='h-3.5 w-3.5' />
                         </Button>
@@ -375,19 +375,19 @@ export default function PilarManagerClient({
                       </div>
                       <Badge
                         variant='outline'
-                        className='border-purple-200 bg-purple-50 text-[10px] text-purple-700 dark:bg-purple-950/40 dark:text-purple-300'
+                        className='border-purple-200 bg-purple-50 text-[10px] text-purple-700 dark:border-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
                       >
                         Reform
                       </Badge>
                     </div>
                   </CardHeader>
 
-                  <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-gray-800 dark:bg-gray-900/40'>
+                  <div className='flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60'>
                     <Button
                       variant='ghost'
                       size='sm'
                       asChild
-                      className='text-muted-foreground h-8 text-xs hover:text-purple-600'
+                      className='text-muted-foreground h-9 min-h-[36px] touch-manipulation text-xs hover:text-purple-600 sm:h-8 sm:min-h-[32px] dark:text-slate-300 dark:hover:text-purple-400'
                     >
                       <Link
                         href={`/rebo/dataRB/pilar/subpilar?pilar=${p.id_pilar}`}
@@ -403,7 +403,7 @@ export default function PilarManagerClient({
                           variant='ghost'
                           size='sm'
                           onClick={() => openEditModal(p)}
-                          className='h-8 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40'
+                          className='h-9 min-h-[36px] touch-manipulation px-2.5 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 sm:h-8 sm:min-h-[32px] dark:text-emerald-400 dark:hover:bg-emerald-950/40'
                         >
                           <Edit className='mr-1 h-3.5 w-3.5' />
                           Edit
@@ -412,7 +412,7 @@ export default function PilarManagerClient({
                           variant='ghost'
                           size='icon'
                           onClick={() => setDeleteTargetId(p.id_pilar)}
-                          className='h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40'
+                          className='h-9 min-h-[36px] w-9 min-w-[36px] touch-manipulation text-rose-500 hover:bg-rose-50 hover:text-rose-700 sm:h-8 sm:min-h-[32px] sm:w-8 sm:min-w-[32px] dark:text-rose-400 dark:hover:bg-rose-950/40'
                         >
                           <Trash2 className='h-3.5 w-3.5' />
                         </Button>

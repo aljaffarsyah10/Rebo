@@ -1037,7 +1037,7 @@ export default function BuktiForm({
                         type: doc.tipe_dokumen || undefined
                       })
                     }
-                    className='inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50/70 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/60'
+                    className='inline-flex min-h-[36px] touch-manipulation items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50/70 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 sm:min-h-[30px] dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/60'
                     title='Pratinjau Dokumen Terpadu'
                   >
                     <Eye className='h-3.5 w-3.5' />
@@ -1048,7 +1048,7 @@ export default function BuktiForm({
                     href={doc.file_url}
                     target='_blank'
                     rel='noopener noreferrer'
-                    className='inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                    className='inline-flex min-h-[36px] touch-manipulation items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:min-h-[30px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                   >
                     <ExternalLink className='h-3.5 w-3.5' />
                     <span>Buka File</span>
@@ -1061,7 +1061,7 @@ export default function BuktiForm({
                       size='icon'
                       onClick={() => handleRemoveDocument(idx)}
                       disabled={isPending}
-                      className='h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40'
+                      className='h-9 min-h-[36px] w-9 min-w-[36px] touch-manipulation text-rose-600 hover:bg-rose-50 hover:text-rose-700 sm:h-8 sm:min-h-[32px] sm:w-8 sm:min-w-[32px] dark:text-rose-400 dark:hover:bg-rose-950/40'
                       title='Hapus Berkas'
                     >
                       <Trash2 className='h-4 w-4' />

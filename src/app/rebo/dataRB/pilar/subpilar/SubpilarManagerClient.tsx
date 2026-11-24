@@ -390,7 +390,7 @@ export default function SubpilarManagerClient({
                     variant='ghost'
                     size='sm'
                     asChild
-                    className='text-muted-foreground h-8 text-xs hover:text-blue-600'
+                    className='text-muted-foreground h-9 min-h-[36px] touch-manipulation text-xs hover:text-blue-600 sm:h-8 sm:min-h-[32px] dark:text-slate-300 dark:hover:text-blue-400'
                   >
                     <Link
                       href={`/rebo/dataRB/pilar/pertanyaan?subpilar=${item.id_subpilar}`}
@@ -406,7 +406,7 @@ export default function SubpilarManagerClient({
                         variant='ghost'
                         size='sm'
                         onClick={() => openEditModal(item)}
-                        className='h-8 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40'
+                        className='h-9 min-h-[36px] touch-manipulation px-2.5 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 sm:h-8 sm:min-h-[32px] dark:text-emerald-400 dark:hover:bg-emerald-950/40'
                       >
                         <Edit className='mr-1 h-3.5 w-3.5' />
                         Edit
@@ -415,7 +415,7 @@ export default function SubpilarManagerClient({
                         variant='ghost'
                         size='icon'
                         onClick={() => setDeleteTargetId(item.id_subpilar)}
-                        className='h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40'
+                        className='h-9 min-h-[36px] w-9 min-w-[36px] touch-manipulation text-rose-500 hover:bg-rose-50 hover:text-rose-700 sm:h-8 sm:min-h-[32px] sm:w-8 sm:min-w-[32px] dark:text-rose-400 dark:hover:bg-rose-950/40'
                       >
                         <Trash2 className='h-3.5 w-3.5' />
                       </Button>

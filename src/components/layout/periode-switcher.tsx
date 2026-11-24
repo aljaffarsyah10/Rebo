@@ -92,7 +92,7 @@ export default function PeriodeSwitcher() {
         <Button
           variant='outline'
           size='sm'
-          className='h-8 gap-1.5 rounded-full border-blue-200 bg-white/80 px-2.5 text-xs font-semibold shadow-xs hover:border-blue-400 hover:bg-blue-50 dark:border-blue-900/70 dark:bg-slate-900 dark:hover:bg-blue-950/40'
+          className='h-9 min-h-[36px] touch-manipulation gap-1.5 rounded-full border-blue-200 bg-white/80 px-3 text-xs font-semibold shadow-xs hover:border-blue-400 hover:bg-blue-50 sm:h-8 sm:min-h-[32px] sm:px-2.5 dark:border-blue-900/70 dark:bg-slate-900 dark:hover:bg-blue-950/40'
         >
           <Calendar className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
           <span className='text-gray-900 dark:text-gray-100'>

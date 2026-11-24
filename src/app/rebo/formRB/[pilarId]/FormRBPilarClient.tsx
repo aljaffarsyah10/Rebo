@@ -565,11 +565,11 @@ export default function FormRBPilarClient({
       {isStickyVisible && (
         <aside
           aria-label='Bilah Ringkasan Form Melayang'
-          className='animate-in fade-in slide-in-from-bottom-4 fixed inset-x-0 bottom-4 z-40 mx-auto max-w-5xl px-4 transition-all duration-300'
+          className='animate-in fade-in slide-in-from-bottom-4 fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 mx-auto max-w-5xl px-3 transition-all duration-300 sm:px-4'
         >
-          <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-lg backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90'>
+          <div className='flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-slate-200/90 bg-white/95 p-3 shadow-xl backdrop-blur-md sm:gap-3 sm:p-3.5 dark:border-slate-700/80 dark:bg-slate-900/95'>
             {/* Left: Pilar & Score Information */}
-            <div className='flex min-w-0 items-center gap-3'>
+            <div className='flex min-w-0 items-center gap-2.5 sm:gap-3'>
               <div className='hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-black text-white shadow-xs sm:flex'>
                 P{pilarId}
               </div>
@@ -585,7 +585,7 @@ export default function FormRBPilarClient({
                     {stats.completionPercent}% Selesai
                   </Badge>
                 </div>
-                <div className='text-3xs mt-0.5 flex flex-wrap items-center gap-1.5 text-slate-500 dark:text-slate-400'>
+                <div className='text-3xs mt-0.5 flex flex-wrap items-center gap-1.5 text-slate-500 dark:text-slate-300'>
                   <span>
                     {stats.disetujui + stats.menungguReview} dari{' '}
                     {stats.totalQuestions} indikator terisi
@@ -593,7 +593,7 @@ export default function FormRBPilarClient({
                   <span>•</span>
                   <span>
                     Skor Usulan:{' '}
-                    <strong className='font-mono text-slate-700 dark:text-slate-300'>
+                    <strong className='font-mono text-slate-700 dark:text-slate-200'>
                       {stats.totalSkorMandiri.toFixed(2)}
                     </strong>{' '}
                     / {stats.totalSkorMaks.toFixed(2)}
@@ -625,7 +625,7 @@ export default function FormRBPilarClient({
                 size='sm'
                 variant='outline'
                 onClick={scrollToTop}
-                className='h-8 rounded-xl border-slate-300 bg-white/80 px-3 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700'
+                className='h-9 min-h-[36px] touch-manipulation rounded-xl border-slate-300 bg-white/90 px-3 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-100 sm:h-8 sm:min-h-[32px] dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-200 dark:hover:bg-slate-700'
                 title='Kembali ke bagian atas'
               >
                 <ArrowUp className='mr-1.5 h-3.5 w-3.5' />

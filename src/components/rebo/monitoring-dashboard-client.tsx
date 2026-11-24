@@ -749,9 +749,20 @@ export default function MonitoringDashboardClient({
           </div>
         </CardHeader>
         <CardContent className='p-0'>
-          <div className='overflow-x-auto'>
+          {/* Mobile Table Scroll Helper Indicator */}
+          <div className='text-3xs flex items-center justify-between border-b border-slate-200/80 bg-slate-50/70 px-4 py-2 font-medium text-slate-500 sm:hidden dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400'>
+            <span className='flex items-center gap-1.5'>
+              <span className='inline-block size-1.5 animate-pulse rounded-full bg-blue-500' />
+              Geser tabel ke samping untuk melihat seluruh data pilar
+            </span>
+            <span className='rounded bg-slate-200/60 px-1.5 py-0.5 font-mono text-[9px] dark:bg-slate-800 dark:text-slate-300'>
+              Geser ↔
+            </span>
+          </div>
+
+          <div className='table-responsive touch-pan-x overflow-x-auto'>
             <table className='w-full text-left text-sm'>
-              <thead className='border-b border-slate-200 bg-slate-50/80 text-xs font-semibold text-slate-600 uppercase dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'>
+              <thead className='border-b border-slate-200 bg-slate-50/90 text-xs font-semibold text-slate-700 uppercase dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'>
                 <tr>
                   <th className='py-3.5 pr-2 pl-4'>Pilar / Subpilar</th>
                   <th className='px-3 py-3.5 text-center'>Area</th>
@@ -862,7 +873,7 @@ export default function MonitoringDashboardClient({
                             <Button
                               variant='outline'
                               size='sm'
-                              className='h-7 gap-1 px-2.5 text-xs text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/50'
+                              className='h-8 min-h-[34px] touch-manipulation gap-1 px-3 text-xs text-blue-600 hover:bg-blue-50 sm:h-7 sm:min-h-[28px] sm:px-2.5 dark:text-blue-400 dark:hover:bg-blue-950/50'
                             >
                               <span>Buka Form</span>
                               <ExternalLink className='h-3 w-3' />
@@ -876,48 +887,48 @@ export default function MonitoringDashboardClient({
                         pilar.subpilars.map((sub, sIdx) => (
                           <tr
                             key={sub.id_subpilar}
-                            className='border-t border-slate-100 bg-slate-50/50 text-xs dark:border-slate-800/40 dark:bg-slate-900/40'
+                            className='border-t border-slate-100 bg-slate-50/50 text-xs dark:border-slate-800/60 dark:bg-slate-900/40'
                           >
                             <td className='py-2.5 pr-2 pl-10'>
                               <div className='flex items-center gap-1.5'>
                                 <span className='text-slate-400'>↳</span>
-                                <span className='font-medium text-slate-700 dark:text-slate-300'>
+                                <span className='font-medium text-slate-700 dark:text-slate-200'>
                                   Subpilar {sIdx + 1}: {sub.nama_subpilar}
                                 </span>
                               </div>
                             </td>
-                            <td className='px-3 py-2.5 text-center text-slate-400'>
+                            <td className='px-3 py-2.5 text-center text-slate-400 dark:text-slate-500'>
                               -
                             </td>
-                            <td className='px-3 py-2.5 text-center font-medium text-slate-600 dark:text-slate-400'>
+                            <td className='px-3 py-2.5 text-center font-medium text-slate-600 dark:text-slate-300'>
                               {sub.totalPertanyaan}
                             </td>
                             <td className='px-3 py-2.5 text-center'>
-                              <span className='text-[11px] text-slate-500'>
+                              <span className='text-[11px] text-slate-500 dark:text-slate-400'>
                                 {sub.disetujui} disetujui
                                 {sub.perluRevisi > 0 && (
-                                  <span className='ml-1 font-semibold text-rose-600'>
+                                  <span className='ml-1 font-semibold text-rose-600 dark:text-rose-400'>
                                     ({sub.perluRevisi} revisi)
                                   </span>
                                 )}
                               </span>
                             </td>
                             <td className='px-3 py-2.5 text-center'>
-                              <span className='font-semibold text-slate-700 dark:text-slate-300'>
+                              <span className='font-semibold text-slate-700 dark:text-slate-200'>
                                 {sub.persentaseSelesai}%
                               </span>
                             </td>
-                            <td className='px-3 py-2.5 text-right text-slate-600 dark:text-slate-400'>
+                            <td className='px-3 py-2.5 text-right text-slate-600 dark:text-slate-300'>
                               {sub.nilaiMandiri.toFixed(2)}
                             </td>
                             <td className='px-3 py-2.5 text-right font-semibold text-emerald-600 dark:text-emerald-400'>
                               {sub.nilaiVerifikasi.toFixed(2)}
                             </td>
-                            <td className='px-3 py-2.5 text-right text-slate-400'>
+                            <td className='px-3 py-2.5 text-right text-slate-400 dark:text-slate-400'>
                               {sub.nilaiMaksimal.toFixed(2)}
                             </td>
                             <td className='py-2.5 pr-4 pl-3 text-center'>
-                              <span className='text-[10px] text-slate-400'>
+                              <span className='text-[10px] text-slate-400 dark:text-slate-400'>
                                 Sub-komponen
                               </span>
                             </td>
