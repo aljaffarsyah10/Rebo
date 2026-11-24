@@ -152,10 +152,10 @@
 ### 8. Peningkatan Menu Informasi RB, Regulasi & Panduan Pegawai
 - [ ] **Timeline & Roadmap Interaktif Tahapan ZI BPS Sitaro:**
   - [ ] Visual progress bar tahapan evaluasi tahunan: Pencanangan ➔ Pengisian LKE Mandiri ➔ Penilaian Internal (TPI) ➔ Desk Evaluation TPN ➔ Verifikasi Lapangan.
-- [ ] **Kamus & Glosarium Digital Reformasi Birokrasi:**
-  - [ ] Glosarium istilah penting ZI/RB (PMPRB, LKE, Komponen Pengungkit, Komponen Hasil, WBK, WBBM, TPI BPS RI, TPN KemenPAN-RB) untuk mempermudah pegawai baru.
-- [ ] **Pusat Template & Format Baku Bukti Dukung (Standard Template Hub):**
-  - [ ] Unduhan langsung template standar BPS Sitaro (Format Surat Undangan, Format Notula Rapat resmi, Daftar Hadir Standar, Laporan Monev, dan Format Dokumentasi Kegiatan).
+- [x] **Kamus & Glosarium Digital Reformasi Birokrasi:**
+  - [x] Glosarium istilah penting ZI/RB (PMPRB, LKE, Komponen Pengungkit, Komponen Hasil, WBK, WBBM, TPI BPS RI, TPN KemenPAN-RB) untuk mempermudah pegawai baru.
+- [x] **Pusat Template & Format Baku Bukti Dukung (Standard Template Hub):**
+  - [x] Unduhan langsung template standar BPS Sitaro (Format Surat Undangan, Format Notula Rapat resmi, Daftar Hadir Standar, Laporan Monev, dan Format Dokumentasi Kegiatan).
 
 ### 9. Otomasi Google Drive Generator & Cloud Storage
 - [ ] **Integrasi Penuh Google Drive API (1-Click Folder Structure Generation):**

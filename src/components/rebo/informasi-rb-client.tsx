@@ -20,15 +20,32 @@ import {
   Layers,
   ChevronRight,
   FileCheck,
-  ShieldAlert
+  ShieldAlert,
+  FileDown,
+  Search,
+  Copy,
+  Check,
+  X,
+  HelpCircle,
+  Tag
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import RBStructureGraph, {
   AreaItem,
   PilarHasilItem
 } from '@/components/rebo/rb-structure-graph';
 import MatriksRisikoCard from '@/components/rebo/matriks-risiko-card';
+import TemplateHubCard from '@/components/rebo/template-hub-card';
+import {
+  GLOSARIUM_LIST,
+  GLOSARIUM_KATEGORI_LIST,
+  type GlosariumKategori,
+  type GlosariumItem
+} from '@/constants/glosarium-data';
 import type { MatriksRisikoItem } from '@/types/rebo';
 
 interface InformasiRBClientProps {
@@ -45,6 +62,45 @@ export default function InformasiRBClient({
   matriksRisikoList = []
 }: InformasiRBClientProps) {
   const [activeMainTab, setActiveMainTab] = useState('struktur');
+  const [glosariumSearch, setGlosariumSearch] = useState('');
+  const [glosariumKategori, setGlosariumKategori] = useState<
+    'Semua' | GlosariumKategori
+  >('Semua');
+  const [copiedGlosariumId, setCopiedGlosariumId] = useState<string | null>(
+    null
+  );
+
+  const filteredGlosarium = GLOSARIUM_LIST.filter((item) => {
+    const matchSearch =
+      item.istilah.toLowerCase().includes(glosariumSearch.toLowerCase()) ||
+      (item.kepanjangan &&
+        item.kepanjangan
+          .toLowerCase()
+          .includes(glosariumSearch.toLowerCase())) ||
+      item.definisi.toLowerCase().includes(glosariumSearch.toLowerCase()) ||
+      item.dasarHukum.toLowerCase().includes(glosariumSearch.toLowerCase()) ||
+      (item.highlight &&
+        item.highlight.toLowerCase().includes(glosariumSearch.toLowerCase()));
+
+    const matchKategori =
+      glosariumKategori === 'Semua' || item.kategori === glosariumKategori;
+
+    return matchSearch && matchKategori;
+  });
+
+  const handleCopyDefinition = async (item: GlosariumItem) => {
+    try {
+      const text = `${item.istilah}${item.kepanjangan ? ` (${item.kepanjangan})` : ''}\nKategori: ${item.kategori}\nDefinisi: ${item.definisi}\nDasar Hukum: ${item.dasarHukum}`;
+      await navigator.clipboard.writeText(text);
+      setCopiedGlosariumId(item.id);
+      toast.success(
+        `Definisi '${item.istilah}' berhasil disalin ke clipboard!`
+      );
+      setTimeout(() => setCopiedGlosariumId(null), 2000);
+    } catch {
+      toast.error('Gagal menyalin definisi.');
+    }
+  };
 
   // Compute metrics
   const totalSubpilar = areasData.reduce(
@@ -95,6 +151,15 @@ export default function InformasiRBClient({
 
             {/* Quick Action Buttons */}
             <div className='flex flex-wrap items-center gap-2.5 pt-1'>
+              <button
+                type='button'
+                onClick={() => setActiveMainTab('template')}
+                className='inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/80 px-3.5 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50'
+              >
+                <FileDown className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+                <span>Pusat Template Baku</span>
+              </button>
+
               <a
                 href={gdriveLink}
                 target='_blank'
@@ -233,7 +298,7 @@ export default function InformasiRBClient({
       >
         {/* Navigation Bar */}
         <div className='sticky top-16 z-30 -mx-4 border-b border-slate-200/80 bg-white/80 px-4 py-2 backdrop-blur-md transition-all dark:border-slate-800 dark:bg-slate-900/80'>
-          <TabsList className='grid h-auto w-full grid-cols-2 rounded-2xl bg-slate-100 p-1.5 md:grid-cols-3 lg:grid-cols-6 dark:bg-slate-800/80'>
+          <TabsList className='grid h-auto w-full grid-cols-2 rounded-2xl bg-slate-100 p-1.5 md:grid-cols-4 lg:grid-cols-7 dark:bg-slate-800/80'>
             <TabsTrigger
               value='struktur'
               className='flex items-center justify-center gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400'
@@ -259,11 +324,19 @@ export default function InformasiRBClient({
             </TabsTrigger>
 
             <TabsTrigger
+              value='template'
+              className='flex items-center justify-center gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400'
+            >
+              <FileDown className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+              <span>4. Pusat Template Baku</span>
+            </TabsTrigger>
+
+            <TabsTrigger
               value='roadmap'
               className='flex items-center justify-center gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400'
             >
               <Milestone className='h-4 w-4' />
-              <span>4. Alur & Roadmap Evaluasi</span>
+              <span>5. Alur & Roadmap Evaluasi</span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -271,7 +344,7 @@ export default function InformasiRBClient({
               className='flex items-center justify-center gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400'
             >
               <FolderGit2 className='h-4 w-4' />
-              <span>5. Pedoman & Repositori</span>
+              <span>6. Pedoman & Repositori</span>
             </TabsTrigger>
 
             <TabsTrigger
@@ -279,7 +352,7 @@ export default function InformasiRBClient({
               className='flex items-center justify-center gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400'
             >
               <ShieldAlert className='h-4 w-4 text-amber-600' />
-              <span>6. Matriks Risiko & SPIP</span>
+              <span>7. Matriks Risiko & SPIP</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -712,188 +785,239 @@ export default function InformasiRBClient({
         </TabsContent>
 
         {/* ============================================================================== */}
-        {/* TAB 3: GLOSARIUM & KONSEP ZONA INTEGRITAS */}
+        {/* TAB 3: GLOSARIUM & KAMUS DIGITAL ZONA INTEGRITAS TERPADU */}
         {/* ============================================================================== */}
         <TabsContent value='konsep' className='mt-6 space-y-6'>
           <div className='rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950'>
-            <div className='mb-6 border-b pb-4 dark:border-slate-800'>
-              <div className='inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'>
-                <BookOpen className='h-3.5 w-3.5' /> Istilah & Landasan Regulasi
-              </div>
-              <h2 className='mt-1 text-xl font-bold text-slate-900 dark:text-slate-100'>
-                Glosarium Definisi & Konsep Pokok Pembangunan ZI
-              </h2>
-              <p className='text-xs text-slate-500'>
-                Daftar istilah resmi dan tata kelola tim penilai sesuai
-                Peraturan MenPAN-RB dan Buku Saku ZI BPS RI.
-              </p>
-            </div>
-
-            <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-              {/* Grup 1: Predikat & Unit Kerja */}
-              <div className='space-y-4'>
-                <div className='flex items-center gap-2 border-b pb-2 text-sm font-bold text-slate-900 dark:border-slate-800 dark:text-slate-100'>
-                  <Award className='h-4 w-4 text-emerald-600' />
-                  <span>1. Predikat & Unit Kerja</span>
+            {/* Header Glosarium */}
+            <div className='mb-6 flex flex-col gap-4 border-b pb-5 md:flex-row md:items-center md:justify-between dark:border-slate-800'>
+              <div>
+                <div className='inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'>
+                  <BookOpen className='h-3.5 w-3.5' /> Istilah & Landasan
+                  Regulasi ZI
                 </div>
-
-                <div className='space-y-3'>
-                  <div className='rounded-xl border border-slate-200/90 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-900/50'>
-                    <div className='text-xs font-bold text-slate-900 dark:text-slate-100'>
-                      Zona Integritas (ZI)
-                    </div>
-                    <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                      Sebutan bagi instansi pemerintah yang pimpinan dan
-                      jajarannya berkomitmen mewujudkan WBK/WBBM melalui
-                      pencegahan korupsi dan peningkatan pelayanan.
-                    </p>
-                  </div>
-
-                  <div className='rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5 dark:border-emerald-900 dark:bg-emerald-950/20'>
-                    <div className='flex items-center justify-between'>
-                      <span className='text-xs font-bold text-emerald-900 dark:text-emerald-200'>
-                        Wilayah Bebas dari Korupsi (WBK)
-                      </span>
-                      <Badge className='bg-emerald-600 text-[10px] text-white'>
-                        Target Utama
-                      </Badge>
-                    </div>
-                    <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                      Predikat yang diberikan kepada unit kerja yang berhasil
-                      melaksanakan reformasi birokrasi dengan baik, khususnya
-                      dalam tata kelola bersih bebas KKN.
-                    </p>
-                  </div>
-
-                  <div className='rounded-xl border border-purple-200 bg-purple-50/40 p-3.5 dark:border-purple-900 dark:bg-purple-950/20'>
-                    <div className='flex items-center justify-between'>
-                      <span className='text-xs font-bold text-purple-900 dark:text-purple-200'>
-                        WBBM
-                      </span>
-                      <Badge className='bg-purple-600 text-[10px] text-white'>
-                        Tingkat Lanjut
-                      </Badge>
-                    </div>
-                    <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                      <strong>Wilayah Birokrasi Bersih dan Melayani</strong>:
-                      predikat lanjutan untuk unit kerja yang telah WBK dan
-                      konsisten meningkatkan kualitas pelayanan prima.
-                    </p>
-                  </div>
-
-                  <div className='rounded-xl border border-slate-200/90 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-900/50'>
-                    <div className='text-xs font-bold text-slate-900 dark:text-slate-100'>
-                      Satuan Kerja (Satker) & Unit Kerja
-                    </div>
-                    <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                      Unit penyelenggara pelayanan; serendah-rendahnya unit
-                      Eselon III untuk Satker dan Eselon II untuk Unit Kerja
-                      mandiri.
-                    </p>
-                  </div>
-                </div>
+                <h2 className='mt-1 text-xl font-bold text-slate-900 dark:text-slate-100'>
+                  Kamus & Glosarium Digital ZI Terpadu
+                </h2>
+                <p className='text-xs text-slate-500'>
+                  Daftar istilah resmi, instrumen evaluasi, kelembagaan penilai,
+                  dan singkatan baku sesuai PermenPAN-RB No. 90/2021 serta
+                  Juknis ZI BPS RI.
+                </p>
               </div>
 
-              {/* Grup 2: Tim Kerja & Tim Penilai */}
-              <div className='space-y-4'>
-                <div className='flex items-center gap-2 border-b pb-2 text-sm font-bold text-slate-900 dark:border-slate-800 dark:text-slate-100'>
-                  <Users className='h-4 w-4 text-blue-600' />
-                  <span>2. Tim Kerja & Penilai</span>
-                </div>
-
-                <div className='space-y-3'>
-                  <div className='rounded-xl border border-slate-200/90 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-900/50'>
-                    <div className='text-xs font-bold text-slate-900 dark:text-slate-100'>
-                      Tim Pembina & Tim PJK Evaluasi
-                    </div>
-                    <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                      Biro Perencanaan BPS RI (Tim Pembinaan) dan Inspektorat
-                      Wilayah III BPS (Tim Penanggung Jawab Kegiatan Evaluasi
-                      ZI) yang memfasilitasi pendampingan satker.
-                    </p>
-                  </div>
-
-                  <div className='rounded-xl border border-blue-200 bg-blue-50/40 p-3.5 dark:border-blue-900 dark:bg-blue-950/20'>
-                    <div className='text-xs font-bold text-blue-900 dark:text-blue-200'>
-                      Tim Penilai Internal (TPI)
-                    </div>
-                    <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                      Tim internal Inspektorat Utama BPS yang bertugas melakukan
-                      evaluasi faktual bukti dukung LKE dan merekomendasikan
-                      satker layak usul WBK/WBBM.
-                    </p>
-                  </div>
-
-                  <div className='rounded-xl border border-slate-200/90 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-900/50'>
-                    <div className='text-xs font-bold text-slate-900 dark:text-slate-100'>
-                      Tim Penilai Pendahuluan (TPP)
-                    </div>
-                    <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                      Ditetapkan pada level BPS Provinsi untuk menyeleksi dan
-                      menilai kesiapan awal BPS Kabupaten/Kota sebelum diajukan
-                      ke TPI BPS RI.
-                    </p>
-                  </div>
-
-                  <div className='rounded-xl border border-indigo-200 bg-indigo-50/40 p-3.5 dark:border-indigo-900 dark:bg-indigo-950/20'>
-                    <div className='text-xs font-bold text-indigo-900 dark:text-indigo-200'>
-                      Tim Penilai Nasional (TPN)
-                    </div>
-                    <p className='mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
-                      Tim evaluasi nasional lintas kementerian yang dipimpin
-                      KemenPAN-RB bersama KPK dan Ombudsman RI untuk menetapkan
-                      predikat resmi.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Grup 3: Dua Komponen Evaluasi */}
-              <div className='space-y-4'>
-                <div className='flex items-center gap-2 border-b pb-2 text-sm font-bold text-slate-900 dark:border-slate-800 dark:text-slate-100'>
-                  <Layers className='h-4 w-4 text-purple-600' />
-                  <span>3. Dua Komponen Evaluasi</span>
-                </div>
-
-                <div className='space-y-3'>
-                  <div className='rounded-xl border-2 border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900 dark:bg-blue-950/30'>
-                    <div className='flex items-center justify-between'>
-                      <span className='text-xs font-bold text-blue-900 dark:text-blue-200'>
-                        Komponen Pengungkit
-                      </span>
-                      <Badge className='bg-blue-600 text-white'>
-                        Bobot: 60%
-                      </Badge>
-                    </div>
-                    <p className='mt-2 text-xs leading-relaxed text-slate-700 dark:text-slate-300'>
-                      Menilai proses tata kelola internal. Terdiri dari{' '}
-                      <strong>Area Pemenuhan</strong> (kepatuhan administrasi,
-                      regulasi & SOP dasar) dan <strong>Area Reform</strong>{' '}
-                      (perubahan nyata, inovasi, dan efektivitas perbaikan
-                      berkala).
-                    </p>
-                  </div>
-
-                  <div className='rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-900 dark:bg-emerald-950/30'>
-                    <div className='flex items-center justify-between'>
-                      <span className='text-xs font-bold text-emerald-900 dark:text-emerald-200'>
-                        Komponen Hasil
-                      </span>
-                      <Badge className='bg-emerald-600 text-white'>
-                        Bobot: 40%
-                      </Badge>
-                    </div>
-                    <p className='mt-2 text-xs leading-relaxed text-slate-700 dark:text-slate-300'>
-                      Menilai dampak nyata yang dirasakan pengguna layanan dan
-                      masyarakat melalui survei eksternal persepsi anti korupsi
-                      (SPK), survei kepuasan pelayanan publik (SPKP), dan
-                      akuntabilitas kinerja.
-                    </p>
-                  </div>
-                </div>
+              <div className='flex items-center gap-2'>
+                <Badge
+                  variant='outline'
+                  className='border-emerald-300 bg-emerald-50/50 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                >
+                  {GLOSARIUM_LIST.length} Istilah Resmi Terverifikasi
+                </Badge>
               </div>
             </div>
+
+            {/* Bilah Pencarian Real-Time & Filter Kategori */}
+            <div className='space-y-4 rounded-xl border border-slate-200/90 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/50'>
+              <div className='flex flex-col gap-3 md:flex-row md:items-center md:justify-between'>
+                {/* Input Search */}
+                <div className='relative w-full max-w-lg'>
+                  <Search className='absolute top-2.5 left-3 h-4 w-4 text-slate-400' />
+                  <Input
+                    type='text'
+                    placeholder='Cari istilah (misal: ZI, WBK, PMPRB, TPI, SPIP, CAPI, PST, IKM)...'
+                    value={glosariumSearch}
+                    onChange={(e) => setGlosariumSearch(e.target.value)}
+                    className='bg-white pr-8 pl-9 text-xs dark:bg-slate-950'
+                  />
+                  {glosariumSearch && (
+                    <button
+                      type='button'
+                      onClick={() => setGlosariumSearch('')}
+                      className='absolute top-2.5 right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                    >
+                      <X className='h-4 w-4' />
+                    </button>
+                  )}
+                </div>
+
+                {/* Counter */}
+                <div className='text-xs text-slate-500'>
+                  Menampilkan <strong>{filteredGlosarium.length}</strong> dari{' '}
+                  {GLOSARIUM_LIST.length} istilah
+                </div>
+              </div>
+
+              {/* Kategori Filter Chips */}
+              <div className='flex flex-wrap items-center gap-1.5 border-t border-slate-200/80 pt-3 dark:border-slate-800'>
+                <span className='mr-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400'>
+                  Kategori:
+                </span>
+                {GLOSARIUM_KATEGORI_LIST.map((kat) => {
+                  const count =
+                    kat === 'Semua'
+                      ? GLOSARIUM_LIST.length
+                      : GLOSARIUM_LIST.filter((i) => i.kategori === kat).length;
+                  const isActive = glosariumKategori === kat;
+
+                  return (
+                    <button
+                      key={kat}
+                      type='button'
+                      onClick={() => setGlosariumKategori(kat)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
+                        isActive
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-200/70 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      <span>{kat}</span>
+                      <span
+                        className={`py-0.2 rounded-full px-1.5 text-[10px] font-bold ${
+                          isActive
+                            ? 'bg-emerald-800/80 text-white'
+                            : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Grid Kartu Istilah Glosarium */}
+            {filteredGlosarium.length === 0 ? (
+              <div className='mt-6 rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-700'>
+                <HelpCircle className='mx-auto h-10 w-10 text-slate-400' />
+                <h3 className='mt-2 text-sm font-semibold text-slate-800 dark:text-slate-200'>
+                  Istilah tidak ditemukan
+                </h3>
+                <p className='mt-1 text-xs text-slate-500'>
+                  Tidak ada istilah glosarium yang cocok dengan kata kunci
+                  &quot;
+                  {glosariumSearch}&quot; pada kategori {glosariumKategori}.
+                </p>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    setGlosariumSearch('');
+                    setGlosariumKategori('Semua');
+                  }}
+                  className='mt-4'
+                >
+                  Reset Pencarian
+                </Button>
+              </div>
+            ) : (
+              <div className='mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
+                {filteredGlosarium.map((item) => {
+                  const isCopied = copiedGlosariumId === item.id;
+
+                  const getBadgeColor = (kategori: string) => {
+                    switch (kategori) {
+                      case 'Kelembagaan':
+                        return 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300';
+                      case 'Komponen Pengungkit':
+                        return 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300';
+                      case 'Komponen Hasil':
+                        return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300';
+                      case 'Penilaian & Predikat':
+                        return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300';
+                      case 'Singkatan Resmi':
+                        return 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300';
+                      default:
+                        return 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300';
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={item.id}
+                      className='flex flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs transition hover:border-emerald-300 hover:shadow-xs dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-emerald-900'
+                    >
+                      <div className='space-y-2.5'>
+                        {/* Header Kartu: Kategori & Highlight */}
+                        <div className='flex items-center justify-between gap-2'>
+                          <Badge
+                            variant='outline'
+                            className={`text-[10px] font-bold ${getBadgeColor(
+                              item.kategori
+                            )}`}
+                          >
+                            {item.kategori}
+                          </Badge>
+
+                          {item.highlight && (
+                            <span className='rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300'>
+                              {item.highlight}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Judul & Kepanjangan */}
+                        <div>
+                          <h3 className='text-sm font-bold text-slate-900 dark:text-slate-100'>
+                            {item.istilah}
+                          </h3>
+                          {item.kepanjangan && (
+                            <div className='mt-0.5 text-[11px] font-medium text-slate-500 italic dark:text-slate-400'>
+                              {item.kepanjangan}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Definisi */}
+                        <p className='text-xs leading-relaxed text-slate-600 dark:text-slate-400'>
+                          {item.definisi}
+                        </p>
+                      </div>
+
+                      {/* Footer: Dasar Hukum & Tombol Salin */}
+                      <div className='mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] dark:border-slate-800'>
+                        <span
+                          className='truncate text-[10px] font-medium text-slate-500 dark:text-slate-400'
+                          title={item.dasarHukum}
+                        >
+                          {item.dasarHukum}
+                        </span>
+
+                        <button
+                          type='button'
+                          onClick={() => handleCopyDefinition(item)}
+                          className='inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+                          title='Salin definisi ke clipboard'
+                        >
+                          {isCopied ? (
+                            <>
+                              <Check className='h-3 w-3 text-emerald-600' />
+                              <span className='font-semibold text-emerald-600'>
+                                Tersalin
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className='h-3 w-3' />
+                              <span>Salin</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
+        </TabsContent>
+
+        {/* ============================================================================== */}
+        {/* TAB 4: PUSAT TEMPLATE BAKU BUKTI DUKUNG */}
+        {/* ============================================================================== */}
+        <TabsContent value='template' className='mt-6 space-y-6'>
+          <TemplateHubCard gdriveLink={gdriveLink} />
         </TabsContent>
 
         {/* ============================================================================== */}
