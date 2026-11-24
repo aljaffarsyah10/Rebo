@@ -7,6 +7,7 @@
 - [x] Implementasi WhatsApp Gateway Microservice (Baileys Multi-Device) & Deployment ke Render.com
 - [x] Rute Web `/qr` beresolusi tinggi dengan auto-refresh untuk kemudahan scan WhatsApp via smartphone
 - [x] UI Pengaturan Kontak WhatsApp, Manajemen PIC Pilar, dan Uji Notifikasi Interaktif (`/rebo/admin/kontak`)
+- [x] Ekstensi Chrome 'REBO Sync Assistant' (Auto-Fill ZIAPP 1-Click) & Script RPA Auto-Submit (`extensions/rebo-sync-assistant`, `scripts/rpa_ziapp_sync.js`)
 
 ---
 
@@ -57,10 +58,10 @@
 ## Goals & Roadmap Fitur Diferensiasi & Jembatan ke Web Pusat (ZIAPP)
 
 ### 1. Jembatan Sinkronisasi & Auto-Submit ke Web Pusat (ZIAPP)
-- [ ] **Riset & Pemetaan Struktur Form Web Pusat (ZIAPP):** Analisis field input, alur login, struktur indikator, dan format data yang dibutuhkan pada portal evaluasi ZIAPP.
-- [ ] **Pengembangan Fitur Auto-Fill / Auto-Submit:**
-  - [ ] **Opsi Utama (Ekstensi Chrome / Script Helper):** Buat ekstensi peramban ringan "REBO Sync Assistant" yang membaca data link REBO dan mengisikan form Web Pusat ZIAPP dengan 1 klik.
-  - [ ] **Opsi Alternatif (Headless Bot / RPA Service):** Skrip otomasi Puppeteer/Playwright untuk submit batch data terverifikasi jika tidak terhalang CAPTCHA/SSO.
+- [x] **Riset & Pemetaan Struktur Form Web Pusat (ZIAPP):** Analisis field input, alur login, struktur indikator, dan format data yang dibutuhkan pada portal evaluasi ZIAPP.
+- [x] **Pengembangan Fitur Auto-Fill / Auto-Submit:**
+  - [x] **Opsi Utama (Ekstensi Chrome / Script Helper):** Buat ekstensi peramban ringan "REBO Sync Assistant" yang membaca data link REBO dan mengisikan form Web Pusat ZIAPP dengan 1 klik.
+  - [x] **Opsi Alternatif (Headless Bot / RPA Service):** Skrip otomasi Puppeteer/Playwright untuk submit batch data terverifikasi jika tidak terhalang CAPTCHA/SSO.
 - [x] **Status & Log Pengiriman ke ZIAPP:**
   - [x] Tambahkan status badge pada tiap indikator: `Draft` ➔ `Verified Internal` ➔ `Siap Kirim ke ZIAPP` ➔ `Tersinkron ke ZIAPP`.
   - [x] Catat log pengiriman (waktu submit, PIC pengirim, tautan yang dikirimkan).

@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "REBO Sync Assistant - BPS Sitaro",
+  "version": "1.0.0",
+  "description": "Asisten Cerdas Sinkronisasi Bukti Dukung ZI REBO ke Web Portal ZIAPP Pusat (BPS RI / KemenPAN-RB)",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "REBO Sync Assistant",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*.vercel.app/*",
+    "*://*.bps.go.id/*",
+    "*://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.bps.go.id/*",
+        "*://*/*"
+      ],
+      "js": [
+        "scripts/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

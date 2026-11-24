@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REBO Sync Assistant</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-branding">
+        <div class="logo-box">
+          <span class="logo-text">R</span>
+          <span class="status-pulse" id="connection-pulse" title="Status Koneksi Server"></span>
+        </div>
+        <div class="header-titles">
+          <h1>REBO Sync Assistant</h1>
+          <p class="subtitle">Auto-Fill ZIAPP BPS Kab. Sitaro</p>
+        </div>
+      </div>
+      <div class="version-badge">v1.0.0</div>
+    </header>
+
+    <!-- Content Body -->
+    <main class="app-body">
+      <!-- Section: Konfigurasi Server REBO -->
+      <section class="card config-card">
+        <div class="card-header">
+          <span class="card-icon">⚙️</span>
+          <h2>Konfigurasi Server REBO</h2>
+        </div>
+        <div class="form-group">
+          <label for="server-url">URL Aplikasi REBO:</label>
+          <div class="input-with-button">
+            <input type="url" id="server-url" placeholder="http://localhost:3000" spellcheck="false">
+            <button id="btn-ping" class="btn btn-secondary btn-sm" title="Uji Koneksi ke Server">Ping</button>
+          </div>
+          <div class="quick-presets">
+            <span class="preset-label">Preset:</span>
+            <button type="button" class="btn-preset" data-url="http://localhost:3000">Local (3000)</button>
+            <button type="button" class="btn-preset" data-url="https://zirebo.vercel.app">Vercel (Prod)</button>
+          </div>
+        </div>
+        <div id="ping-status" class="status-message"></div>
+      </section>
+
+      <!-- Section: Kartu Statistik Ringkasan -->
+      <section class="card kpi-card">
+        <div class="card-header">
+          <span class="card-icon">📊</span>
+          <h2>Status Kesiapan Sinkronisasi</h2>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-box ready">
+            <span class="kpi-number" id="kpi-ready">-</span>
+            <span class="kpi-label">Siap ke ZIAPP</span>
+          </div>
+          <div class="kpi-box synced">
+            <span class="kpi-number" id="kpi-synced">-</span>
+            <span class="kpi-label">Tersinkron</span>
+          </div>
+          <div class="kpi-box total">
+            <span class="kpi-number" id="kpi-total">-</span>
+            <span class="kpi-label">Total Indikator</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Tombol Aksi Utama -->
+      <section class="actions-section">
+        <button id="btn-fetch" class="btn btn-primary btn-block">
+          <span class="btn-icon">📥</span>
+          <span>1. Ambil Data dari REBO</span>
+        </button>
+        <button id="btn-autofill" class="btn btn-accent btn-block" disabled>
+          <span class="btn-icon">⚡</span>
+          <span>2. Auto-Fill ke Halaman ZIAPP (1-Click)</span>
+        </button>
+
+        <!-- Options -->
+        <div class="options-group">
+          <label class="checkbox-container">
+            <input type="checkbox" id="chk-auto-confirm" checked>
+            <span class="checkmark"></span>
+            <span class="checkbox-label">Tandai otomatis status <strong>SYNCED_TO_ZIAPP</strong> di server REBO setelah sukses</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Section: Preview Data Indikator -->
+      <section class="card preview-card">
+        <div class="card-header flex-between">
+          <div class="flex-align">
+            <span class="card-icon">📋</span>
+            <h2>Daftar Bukti Siap Kirim (<span id="items-count">0</span>)</h2>
+          </div>
+          <button id="btn-toggle-preview" class="btn-link">Lihat Detail</button>
+        </div>
+        <div id="items-container" class="items-list collapsed">
+          <div class="empty-state" id="empty-state-msg">
+            Belum ada data diambil. Silakan klik tombol <strong>"Ambil Data dari REBO"</strong> di atas.
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Log Aktivitas Real-Time -->
+      <section class="card log-card">
+        <div class="card-header flex-between">
+          <div class="flex-align">
+            <span class="card-icon">🖥️</span>
+            <h2>Log Aktivitas Real-time</h2>
+          </div>
+          <button id="btn-clear-log" class="btn-link" title="Bersihkan log">Clear</button>
+        </div>
+        <div class="log-terminal" id="activity-log">
+          <div class="log-line info">
+            <span class="log-time">[Init]</span> Ekstensi REBO Sync Assistant siap digunakan.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-info">
+        <span>BPS Kabupaten Kepulauan Siau Tagulandang Biaro</span>
+        <span class="separator">•</span>
+        <a href="https://zirebo.vercel.app" target="_blank" rel="noopener">Portal REBO</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
