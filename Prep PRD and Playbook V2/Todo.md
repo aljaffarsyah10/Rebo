@@ -114,12 +114,12 @@
   - [ ] Ekspor template lembar kerja evaluasi lengkap sesuai standar format PermenPAN-RB / BPS RI dengan header resmi, kop surat, dan tandatangan digital pimpinan.
 
 ### 4. Optimalisasi Kanban Board & Kolaborasi Tim
-- [ ] **Filter Cepat "Tugas Saya" (My Tasks):**
-  - [ ] Tombol filter 1-klik di papan Kanban untuk memfilter kartu revisi yang khusus ditugaskan kepada pegawai yang sedang login.
-- [ ] **Thread Diskusi Singkat pada Kartu Revisi:**
-  - [ ] Kolom chat/komentar internal antara Verifikator dan Operator di dalam kartu Kanban untuk mengklarifikasi poin perbaikan sebelum berkas diunggah ulang.
-- [ ] **Visual SLA / Countdown Timer Batas Perbaikan:**
-  - [ ] Badge penanda batas waktu tindak lanjut (misal: *"Sisa 3 hari"* berwarna kuning, *"Mendekati Batas"* oranye, *"Terlewat"* merah).
+- [x] **Filter Cepat "Tugas Saya" (My Tasks):**
+  - [x] Tombol filter 1-klik di papan Kanban untuk memfilter kartu revisi yang khusus ditugaskan kepada pegawai yang sedang login.
+- [x] **Thread Diskusi Singkat pada Kartu Revisi:**
+  - [x] Kolom chat/komentar internal antara Verifikator dan Operator di dalam kartu Kanban untuk mengklarifikasi poin perbaikan sebelum berkas diunggah ulang.
+- [x] **Visual SLA / Countdown Timer Batas Perbaikan:**
+  - [x] Badge penanda batas waktu tindak lanjut (misal: *"Sisa 3 hari"* berwarna kuning, *"Mendekati Batas"* oranye, *"Terlewat"* merah).
 
 ### 5. Pengelolaan Arsip Digital & Knowledge Base
 - [ ] **Instant Search & Multi-Tag Filtering Arsip:**

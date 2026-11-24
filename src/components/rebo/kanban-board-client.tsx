@@ -27,25 +27,111 @@ import {
   X,
   Layers,
   ArrowUpRight,
-  Sparkles
+  Sparkles,
+  UserCheck,
+  MessageSquare,
+  Send
 } from 'lucide-react';
-import { getKanbanBoardData } from '@/actions/kanban-actions';
+import {
+  getKanbanBoardData,
+  sendKlarifikasiAction
+} from '@/actions/kanban-actions';
 import { PILAR_LIST } from '@/lib/auth/rbac';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import type {
   KanbanBoardData,
   KanbanIndicatorCard,
-  PeriodeEvaluasi
+  PeriodeEvaluasi,
+  UserProfileData
 } from '@/types/rebo';
 import { toast } from 'sonner';
+
+export interface RevisionSLAInfo {
+  daysRemaining: number;
+  hoursRemaining: number;
+  status: 'safe' | 'warning' | 'danger';
+  label: string;
+  badgeClass: string;
+  deadlineDate: Date;
+  isOverdue: boolean;
+}
+
+/**
+ * Utilitas perhitungan SLA batas waktu tindak lanjut perbaikan indikator:
+ * Standar batas tindak lanjut revisi: 7 hari kalender sejak verified_at.
+ * - Sisa waktu > 3 hari: Badge soft green / blue ("Sisa X Hari")
+ * - Sisa waktu 1-3 hari: Badge soft amber ("Sisa X Hari - Segera Perbaiki")
+ * - Sisa waktu <= 0 hari: Badge soft rose/red ("Melewati Batas SLA")
+ */
+export function calculateRevisionSLA(
+  verifiedAt?: string | null
+): RevisionSLAInfo {
+  const baseTime = verifiedAt ? new Date(verifiedAt).getTime() : Date.now();
+  const deadlineTime = baseTime + 7 * 24 * 60 * 60 * 1000;
+  const deadlineDate = new Date(deadlineTime);
+  const now = Date.now();
+  const diffMs = deadlineTime - now;
+
+  const hoursRemaining = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
+  const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMs <= 0 || daysRemaining <= 0) {
+    return {
+      daysRemaining: 0,
+      hoursRemaining: 0,
+      status: 'danger',
+      label: 'Melewati Batas SLA',
+      badgeClass:
+        'border-rose-300 bg-rose-100/90 text-rose-800 font-medium dark:border-rose-800 dark:bg-rose-950/70 dark:text-rose-200 animate-pulse',
+      deadlineDate,
+      isOverdue: true
+    };
+  }
+
+  if (daysRemaining <= 3) {
+    return {
+      daysRemaining,
+      hoursRemaining,
+      status: 'warning',
+      label: `Sisa ${daysRemaining} Hari - Segera Perbaiki`,
+      badgeClass:
+        'border-amber-200/80 bg-amber-50 text-amber-800 font-medium dark:border-amber-800/60 dark:bg-amber-950/50 dark:text-amber-300',
+      deadlineDate,
+      isOverdue: false
+    };
+  }
+
+  return {
+    daysRemaining,
+    hoursRemaining,
+    status: 'safe',
+    label: `Sisa ${daysRemaining} Hari`,
+    badgeClass:
+      'border-emerald-200/80 bg-emerald-50 text-emerald-700 font-medium dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-300',
+    deadlineDate,
+    isOverdue: false
+  };
+}
 
 interface KanbanBoardClientProps {
   initialData: KanbanBoardData;
   initialPeriodes: PeriodeEvaluasi[];
+  currentUserProfile?: UserProfileData | null;
+  currentUserId?: string | null;
 }
 
 export default function KanbanBoardClient({
   initialData,
-  initialPeriodes
+  initialPeriodes,
+  currentUserProfile,
+  currentUserId
 }: KanbanBoardClientProps) {
   const [data, setData] = useState<KanbanBoardData>(initialData);
   const [periodes] = useState<PeriodeEvaluasi[]>(initialPeriodes);
@@ -54,7 +140,47 @@ export default function KanbanBoardClient({
   );
   const [selectedPilar, setSelectedPilar] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isMyTasksOnly, setIsMyTasksOnly] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
+
+  // State untuk Dialog Catatan & Klarifikasi Cepat
+  const [selectedCardForKlarifikasi, setSelectedCardForKlarifikasi] =
+    useState<KanbanIndicatorCard | null>(null);
+  const [pesanKlarifikasi, setPesanKlarifikasi] = useState<string>('');
+  const [isSubmittingKlarifikasi, setIsSubmittingKlarifikasi] =
+    useState<boolean>(false);
+
+  // Penentuan pilar tugas dan user id aktif
+  const userPilar =
+    currentUserProfile?.pilar_tugas ??
+    currentUserProfile?.assigned_pilar_id ??
+    null;
+  const activeUserId = currentUserId || currentUserProfile?.id || null;
+
+  // Helper pemeriksa apakah kartu relevan dengan pengguna login
+  const isMyTaskCard = (card: KanbanIndicatorCard) => {
+    const matchPilar =
+      userPilar !== null &&
+      userPilar !== undefined &&
+      String(card.pilar_id) === String(userPilar);
+
+    const matchSubmitted =
+      Boolean(activeUserId) &&
+      Boolean(card.submitted_by_user_id) &&
+      card.submitted_by_user_id === activeUserId;
+
+    return Boolean(matchPilar || matchSubmitted);
+  };
+
+  // Hitung total kartu "Tugas Saya"
+  const myTasksCount = useMemo(() => {
+    const allCards = [
+      ...data.cards.perluRevisi,
+      ...data.cards.menungguReview,
+      ...data.cards.disetujui
+    ];
+    return allCards.filter(isMyTaskCard).length;
+  }, [data.cards, userPilar, activeUserId]);
 
   const handleFetch = (overridePilar?: string, overridePeriode?: string) => {
     startTransition(async () => {
@@ -79,37 +205,106 @@ export default function KanbanBoardClient({
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedPilar('ALL');
+    setIsMyTasksOnly(false);
     handleFetch('ALL');
   };
 
-  const filteredCards = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return data.cards;
+  const handleOpenKlarifikasi = (card: KanbanIndicatorCard) => {
+    setSelectedCardForKlarifikasi(card);
+    setPesanKlarifikasi('');
+  };
+
+  const handleSubmitKlarifikasi = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCardForKlarifikasi) return;
+    if (!pesanKlarifikasi.trim()) {
+      toast.error('Pesan klarifikasi tidak boleh kosong.');
+      return;
     }
+
+    setIsSubmittingKlarifikasi(true);
+    try {
+      const res = await sendKlarifikasiAction({
+        idPertanyaan: selectedCardForKlarifikasi.id_pertanyaan,
+        idPeriode: selectedPeriodeId,
+        pesanKlarifikasi: pesanKlarifikasi.trim()
+      });
+
+      if (res.success && res.updatedCatatan) {
+        toast.success(res.message || 'Klarifikasi berhasil disimpan!');
+        const updatedCatatan = res.updatedCatatan;
+        setData((prev) => {
+          const updateCards = (cards: KanbanIndicatorCard[]) =>
+            cards.map((c) =>
+              c.id_pertanyaan === selectedCardForKlarifikasi.id_pertanyaan
+                ? { ...c, catatan_operator: updatedCatatan }
+                : c
+            );
+          return {
+            ...prev,
+            cards: {
+              perluRevisi: updateCards(prev.cards.perluRevisi),
+              menungguReview: updateCards(prev.cards.menungguReview),
+              disetujui: updateCards(prev.cards.disetujui)
+            }
+          };
+        });
+
+        setSelectedCardForKlarifikasi((prev) =>
+          prev ? { ...prev, catatan_operator: updatedCatatan } : null
+        );
+        setPesanKlarifikasi('');
+      } else {
+        toast.error(res.error || 'Gagal mengirim klarifikasi.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setIsSubmittingKlarifikasi(false);
+    }
+  };
+
+  const filteredCards = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const filterFn = (card: KanbanIndicatorCard) =>
-      card.kode_indikator.toLowerCase().includes(q) ||
-      card.uraian_singkat.toLowerCase().includes(q) ||
-      card.uraian_pertanyaan.toLowerCase().includes(q) ||
-      card.pilar_nama.toLowerCase().includes(q) ||
-      card.subpilar_nama.toLowerCase().includes(q) ||
-      (card.catatan_koordinator || '').toLowerCase().includes(q) ||
-      (card.catatan_operator || '').toLowerCase().includes(q) ||
-      (card.verified_by || '').toLowerCase().includes(q);
+
+    const filterFn = (card: KanbanIndicatorCard) => {
+      // 1. Filter Tugas Saya jika aktif
+      if (isMyTasksOnly && !isMyTaskCard(card)) {
+        return false;
+      }
+
+      // 2. Filter Pencarian Teks
+      if (q) {
+        const matchSearch =
+          card.kode_indikator.toLowerCase().includes(q) ||
+          card.uraian_singkat.toLowerCase().includes(q) ||
+          card.uraian_pertanyaan.toLowerCase().includes(q) ||
+          card.pilar_nama.toLowerCase().includes(q) ||
+          card.subpilar_nama.toLowerCase().includes(q) ||
+          (card.catatan_koordinator || '').toLowerCase().includes(q) ||
+          (card.catatan_operator || '').toLowerCase().includes(q) ||
+          (card.verified_by || '').toLowerCase().includes(q) ||
+          (card.submitted_by_name || '').toLowerCase().includes(q);
+        if (!matchSearch) return false;
+      }
+
+      return true;
+    };
 
     return {
       perluRevisi: data.cards.perluRevisi.filter(filterFn),
       menungguReview: data.cards.menungguReview.filter(filterFn),
       disetujui: data.cards.disetujui.filter(filterFn)
     };
-  }, [data.cards, searchQuery]);
+  }, [data.cards, searchQuery, isMyTasksOnly, userPilar, activeUserId]);
 
   const totalFilteredCount =
     filteredCards.perluRevisi.length +
     filteredCards.menungguReview.length +
     filteredCards.disetujui.length;
 
-  const hasActiveFilters = searchQuery.trim() !== '' || selectedPilar !== 'ALL';
+  const hasActiveFilters =
+    searchQuery.trim() !== '' || selectedPilar !== 'ALL' || isMyTasksOnly;
 
   return (
     <div className='container mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8'>
@@ -283,6 +478,42 @@ export default function KanbanBoardClient({
             </select>
           </div>
 
+          {/* Filter Cepat 1-Klik: Tugas Saya */}
+          <Button
+            type='button'
+            variant={isMyTasksOnly ? 'default' : 'outline'}
+            size='sm'
+            onClick={() => setIsMyTasksOnly((prev) => !prev)}
+            className={`h-9 rounded-xl text-xs font-medium transition-all ${
+              isMyTasksOnly
+                ? 'border-indigo-600 bg-indigo-600 text-white shadow-xs hover:bg-indigo-700 dark:border-indigo-500 dark:bg-indigo-600 dark:text-white'
+                : 'border-slate-200 bg-white text-slate-700 shadow-2xs hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+            }`}
+            title={
+              userPilar
+                ? `Filter kartu pilar ${userPilar} & berkas unggahan Anda`
+                : 'Filter kartu yang diunggah oleh Anda'
+            }
+          >
+            <UserCheck
+              className={`mr-1.5 h-3.5 w-3.5 ${
+                isMyTasksOnly
+                  ? 'text-white'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            />
+            <span>Tugas Saya</span>
+            <span
+              className={`py-0.2 ml-1.5 rounded-full px-1.5 text-[10px] font-semibold ${
+                isMyTasksOnly
+                  ? 'bg-white/25 text-white'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {myTasksCount}
+            </span>
+          </Button>
+
           {/* Filter Periode */}
           {periodes.length > 1 && (
             <select
@@ -324,6 +555,11 @@ export default function KanbanBoardClient({
             {totalFilteredCount}
           </span>
           <span>kartu indikator</span>
+          {isMyTasksOnly && (
+            <span className='rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'>
+              Filter Tugas Saya Aktif
+            </span>
+          )}
         </div>
       </div>
 
@@ -386,28 +622,24 @@ export default function KanbanBoardClient({
                         >
                           {card.pilar_kode}
                         </Badge>
-                        {card.verified_at && (
-                          <Badge
-                            variant='secondary'
-                            className='inline-flex items-center gap-1 rounded-md border border-rose-200/80 bg-rose-100/70 px-2 py-0.5 text-[10px] font-medium text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300'
-                            title={`Direviu pada: ${new Date(card.verified_at).toLocaleString('id-ID')}`}
-                          >
-                            <Sparkles className='h-3 w-3 shrink-0 text-rose-500' />
-                            <span>Auto-Generated dari Catatan Reviu</span>
-                            <span className='text-[9px] text-rose-600/80 dark:text-rose-400'>
-                              •{' '}
-                              {new Date(card.verified_at).toLocaleDateString(
-                                'id-ID',
-                                {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                }
-                              )}
-                            </span>
-                          </Badge>
-                        )}
+                        {/* Visual SLA / Countdown Timer Badge */}
+                        {(() => {
+                          const sla = calculateRevisionSLA(card.verified_at);
+                          return (
+                            <Badge
+                              variant='outline'
+                              className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-medium shadow-2xs ${sla.badgeClass}`}
+                              title={
+                                card.verified_at
+                                  ? `Batas SLA (7 Hari): ${sla.deadlineDate.toLocaleString('id-ID')}`
+                                  : 'Standar SLA 7 Hari Perbaikan'
+                              }
+                            >
+                              <Clock className='h-3 w-3 shrink-0' />
+                              <span>{sla.label}</span>
+                            </Badge>
+                          );
+                        })()}
                       </div>
                       <span className='font-mono text-xs font-medium text-slate-500 dark:text-slate-400'>
                         {card.kode_indikator}
@@ -452,8 +684,33 @@ export default function KanbanBoardClient({
                       )}
                     </div>
 
-                    {/* Action Link to Form Pilar (Soft Pastel Button) */}
-                    <div className='pt-1'>
+                    {/* Action Buttons: Catatan & Riwayat dan Tindak Lanjuti di Form Pilar */}
+                    <div className='flex flex-col gap-1.5 pt-1'>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        onClick={() => handleOpenKlarifikasi(card)}
+                        className='h-8 w-full justify-between rounded-lg border-slate-200/90 bg-white text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800'
+                      >
+                        <span className='inline-flex items-center gap-1.5'>
+                          <MessageSquare className='h-3.5 w-3.5 text-slate-500 dark:text-slate-400' />
+                          <span>Catatan & Riwayat</span>
+                        </span>
+                        {card.catatan_operator ? (
+                          <Badge
+                            variant='secondary'
+                            className='h-4 bg-slate-100 px-1.5 text-[9px] font-normal text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                          >
+                            Ada Tanggapan
+                          </Badge>
+                        ) : (
+                          <span className='text-[10px] text-slate-400'>
+                            Buka Dialog &rarr;
+                          </span>
+                        )}
+                      </Button>
+
                       <Link
                         href={`/rebo/formRB/${card.pilar_id}?indikator=${card.id_pertanyaan}#indikator-${card.id_pertanyaan}`}
                         className='block w-full'
@@ -709,6 +966,195 @@ export default function KanbanBoardClient({
           </div>
         </div>
       </div>
+
+      {/* 5. Dialog Catatan & Klarifikasi Cepat */}
+      <Dialog
+        open={Boolean(selectedCardForKlarifikasi)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedCardForKlarifikasi(null);
+            setPesanKlarifikasi('');
+          }
+        }}
+      >
+        <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-xl'>
+          {selectedCardForKlarifikasi &&
+            (() => {
+              const card = selectedCardForKlarifikasi;
+              const sla = calculateRevisionSLA(card.verified_at);
+              return (
+                <div className='space-y-4'>
+                  <DialogHeader className='space-y-2'>
+                    <div className='flex flex-wrap items-center gap-2'>
+                      <Badge
+                        variant='outline'
+                        className='text-xs font-semibold'
+                      >
+                        {card.pilar_kode}
+                      </Badge>
+                      <Badge variant='secondary' className='font-mono text-xs'>
+                        {card.kode_indikator}
+                      </Badge>
+                      <Badge
+                        variant='outline'
+                        className={`inline-flex items-center gap-1 text-[11px] ${sla.badgeClass}`}
+                      >
+                        <Clock className='h-3 w-3 shrink-0' />
+                        <span>{sla.label}</span>
+                      </Badge>
+                    </div>
+                    <DialogTitle className='text-base font-bold text-slate-900 sm:text-lg dark:text-slate-100'>
+                      {card.uraian_singkat}
+                    </DialogTitle>
+                    <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
+                      Subpilar: {card.subpilar_nama} • {card.uraian_pertanyaan}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  {/* 1. Box Poin Perbaikan dari Verifikator */}
+                  <div className='rounded-xl border border-rose-200/80 bg-rose-50/60 p-3.5 text-xs dark:border-rose-900/40 dark:bg-rose-950/30'>
+                    <div className='flex items-center justify-between font-semibold text-rose-900 dark:text-rose-200'>
+                      <div className='flex items-center gap-1.5'>
+                        <AlertTriangle className='h-4 w-4 shrink-0 text-rose-500' />
+                        <span>Poin Perbaikan Verifikator</span>
+                      </div>
+                      {card.verified_by && (
+                        <span className='inline-flex items-center gap-1 font-normal text-rose-800 dark:text-rose-300'>
+                          <User className='h-3 w-3' />
+                          {card.verified_by}
+                        </span>
+                      )}
+                    </div>
+                    {card.verified_at && (
+                      <p className='mt-0.5 text-[10px] text-rose-700/80 dark:text-rose-300/80'>
+                        Waktu Verifikasi:{' '}
+                        {new Date(card.verified_at).toLocaleString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    )}
+                    <div className='mt-2 rounded-lg bg-white/90 p-2.5 text-slate-800 italic shadow-2xs dark:bg-slate-900/90 dark:text-slate-200'>
+                      {card.catatan_koordinator ? (
+                        <span>&ldquo;{card.catatan_koordinator}&rdquo;</span>
+                      ) : (
+                        <span className='text-slate-400 dark:text-slate-500'>
+                          Tidak ada rincian catatan revisi tertulis.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2. Box Batas SLA & Deadline */}
+                  <div className='rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-xs dark:border-slate-800 dark:bg-slate-900/60'>
+                    <div className='flex items-center justify-between'>
+                      <span className='font-medium text-slate-600 dark:text-slate-400'>
+                        Batas Waktu SLA Tindak Lanjut:
+                      </span>
+                      <span className='font-semibold text-slate-800 dark:text-slate-200'>
+                        {sla.deadlineDate.toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div className='mt-1 text-[11px] text-slate-500 dark:text-slate-400'>
+                      Standar SLA: Maksimal 7 hari kerja/kalender sejak catatan
+                      reviu diterbitkan.
+                    </div>
+                  </div>
+
+                  {/* 3. Box Riwayat Catatan & Klarifikasi Operator Sebelumnya */}
+                  <div className='rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 text-xs dark:border-slate-800 dark:bg-slate-900/60'>
+                    <div className='flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200'>
+                      <MessageSquare className='h-4 w-4 text-slate-500 dark:text-slate-400' />
+                      <span>Riwayat Catatan & Klarifikasi Operator</span>
+                    </div>
+                    <div className='mt-2 max-h-40 overflow-y-auto rounded-lg bg-white p-2.5 shadow-2xs dark:bg-slate-950'>
+                      {card.catatan_operator ? (
+                        <p className='text-xs leading-relaxed whitespace-pre-line text-slate-700 dark:text-slate-300'>
+                          {card.catatan_operator}
+                        </p>
+                      ) : (
+                        <p className='text-xs text-slate-400 italic dark:text-slate-500'>
+                          Belum ada riwayat catatan atau tanggapan dari
+                          operator.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 4. Form Kirim Balasan Klarifikasi Singkat */}
+                  <form
+                    onSubmit={handleSubmitKlarifikasi}
+                    className='space-y-3 pt-1'
+                  >
+                    <div className='space-y-1.5'>
+                      <label className='text-xs font-semibold text-slate-800 dark:text-slate-200'>
+                        Kirim Tanggapan / Balasan Klarifikasi Cepat
+                      </label>
+                      <Textarea
+                        rows={3}
+                        placeholder='Tulis penjelasan kendala, perbaikan berkas yang telah dipersiapkan, atau konfirmasi klarifikasi singkat...'
+                        value={pesanKlarifikasi}
+                        onChange={(e) => setPesanKlarifikasi(e.target.value)}
+                        disabled={isSubmittingKlarifikasi}
+                        className='resize-none text-xs'
+                      />
+                    </div>
+
+                    <div className='flex flex-wrap items-center justify-between gap-2 pt-1'>
+                      <Link
+                        href={`/rebo/formRB/${card.pilar_id}?indikator=${card.id_pertanyaan}#indikator-${card.id_pertanyaan}`}
+                        className='inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                      >
+                        <span>Buka Form Pilar Lengkap</span>
+                        <ArrowRight className='h-3 w-3' />
+                      </Link>
+
+                      <div className='flex items-center gap-2'>
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          onClick={() => setSelectedCardForKlarifikasi(null)}
+                          disabled={isSubmittingKlarifikasi}
+                          className='h-8 text-xs'
+                        >
+                          Tutup
+                        </Button>
+                        <Button
+                          type='submit'
+                          size='sm'
+                          disabled={
+                            isSubmittingKlarifikasi || !pesanKlarifikasi.trim()
+                          }
+                          className='h-8 bg-indigo-600 text-xs text-white hover:bg-indigo-700'
+                        >
+                          {isSubmittingKlarifikasi ? (
+                            <>
+                              <RefreshCw className='mr-1.5 h-3.5 w-3.5 animate-spin' />
+                              <span>Menyimpan...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className='mr-1.5 h-3.5 w-3.5' />
+                              <span>Kirim Klarifikasi</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              );
+            })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

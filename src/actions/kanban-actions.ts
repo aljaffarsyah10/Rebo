@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getActivePeriode, getAllPeriode } from '@/lib/api/rebo';
+import { getCurrentUserSession } from '@/lib/auth/session';
 import type {
   KanbanBoardData,
   KanbanIndicatorCard,
@@ -136,6 +138,8 @@ export async function getKanbanBoardData(params?: {
         let catatanOper: string | null = null;
         let verifiedBy: string | null = null;
         let verifiedAt: string | null = null;
+        let submittedByUserId: string | null = null;
+        let submittedByName: string | null = null;
         let gdriveUrl: string | null = null;
         let dokumenFiles: any[] = [];
 
@@ -150,6 +154,8 @@ export async function getKanbanBoardData(params?: {
           catatanOper = pp.catatan_operator || null;
           verifiedBy = pp.verified_by || null;
           verifiedAt = pp.verified_at || null;
+          submittedByUserId = pp.submitted_by_user_id || null;
+          submittedByName = pp.submitted_by_name || null;
           gdriveUrl = pp.gdrive_folder_url || null;
           dokumenFiles = (pp.dokumen_bukti || []).map((doc: any) => ({
             id: doc.id,
@@ -167,6 +173,8 @@ export async function getKanbanBoardData(params?: {
             Number(legacy.nilai_verifikasi) || Number(legacy.nilai_akhir) || 0;
           catatanKoord = legacy.catatan_koordinator || null;
           catatanOper = legacy.catatan_operator || legacy.catatan_user || null;
+          submittedByUserId = legacy.submitted_by_user_id || null;
+          submittedByName = legacy.submitted_by_name || null;
           gdriveUrl = legacy.gdrive_folder_url || legacy.link_bukti || null;
           if (legacy.link_bukti) {
             dokumenFiles = [
@@ -211,6 +219,8 @@ export async function getKanbanBoardData(params?: {
           catatan_operator: catatanOper,
           verified_by: verifiedBy,
           verified_at: verifiedAt,
+          submitted_by_user_id: submittedByUserId,
+          submitted_by_name: submittedByName,
           nilai_mandiri: Number(mandiriVal.toFixed(2)),
           nilai_verifikasi: Number(verifVal.toFixed(2)),
           nilai_maksimal: Number(maxNilai.toFixed(2)),
@@ -284,6 +294,168 @@ export async function getKanbanBoardData(params?: {
           disetujui: 0
         }
       }
+    };
+  }
+}
+
+/**
+ * Server action untuk mengirim catatan klarifikasi singkat dari operator
+ * pada kartu revisi Kanban:
+ * - Menambahkan entri baru ke catatan_operator dengan nama pengguna dan timestamp
+ * - Mengupdate tabel pertanyaan_periode dan legacy buktiDukung
+ * - Mencatat ke tabel audit_log
+ * - Melakukan revalidasi path cache
+ */
+export async function sendKlarifikasiAction(params: {
+  idPertanyaan: string;
+  idPeriode?: string;
+  pesanKlarifikasi: string;
+}): Promise<{
+  success: boolean;
+  message?: string;
+  updatedCatatan?: string;
+  error?: string;
+}> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!session.userId) {
+      return {
+        success: false,
+        error:
+          'Sesi berakhir atau pengguna belum login. Silakan masuk terlebih dahulu.'
+      };
+    }
+
+    const cleanMessage = (params.pesanKlarifikasi || '').trim();
+    if (!cleanMessage) {
+      return {
+        success: false,
+        error: 'Pesan klarifikasi tidak boleh kosong.'
+      };
+    }
+
+    const supabase = await createClient();
+
+    // 1. Dapatkan periode aktif jika idPeriode tidak disertakan
+    let targetPeriodeId = params.idPeriode;
+    if (!targetPeriodeId) {
+      const activePeriode = await getActivePeriode();
+      targetPeriodeId = activePeriode?.id || 'default-periode-2026';
+    }
+
+    // 2. Cari data pertanyaan_periode yang ada
+    const { data: existingPP } = await supabase
+      .from('pertanyaan_periode')
+      .select('*')
+      .eq('id_pertanyaan', params.idPertanyaan)
+      .eq('id_periode', targetPeriodeId)
+      .maybeSingle();
+
+    const senderName = session.fullName || session.email || 'Operator Tim';
+    const now = new Date();
+    const formattedTime = now.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const newNoteEntry = `[${senderName} • ${formattedTime}]: ${cleanMessage}`;
+
+    const existingNote = existingPP?.catatan_operator || '';
+    const updatedCatatan = existingNote
+      ? `${existingNote}\n\n${newNoteEntry}`
+      : newNoteEntry;
+
+    // 3. Update tabel pertanyaan_periode
+    let idPertanyaanPeriode = existingPP?.id;
+    if (existingPP?.id) {
+      await supabase
+        .from('pertanyaan_periode')
+        .update({
+          catatan_operator: updatedCatatan,
+          updated_at: now.toISOString()
+        })
+        .eq('id', existingPP.id);
+    } else {
+      const { data: insertedPP } = await supabase
+        .from('pertanyaan_periode')
+        .insert({
+          id_pertanyaan: params.idPertanyaan,
+          id_periode: targetPeriodeId,
+          catatan_operator: updatedCatatan,
+          submitted_by_user_id: session.userId,
+          submitted_by_name: senderName,
+          status_kelengkapan: 3,
+          updated_at: now.toISOString()
+        })
+        .select('id')
+        .maybeSingle();
+      idPertanyaanPeriode = insertedPP?.id;
+    }
+
+    // 4. Update tabel legacy buktiDukung untuk fallback
+    try {
+      const { data: legacyRow } = await supabase
+        .from('buktiDukung')
+        .select('id_bukti')
+        .eq('id_pertanyaan', params.idPertanyaan)
+        .maybeSingle();
+
+      if (legacyRow?.id_bukti) {
+        await supabase
+          .from('buktiDukung')
+          .update({
+            catatan_user: updatedCatatan,
+            updated_at: now.toISOString()
+          })
+          .eq('id_pertanyaan', params.idPertanyaan);
+      }
+    } catch (legacyErr: any) {
+      console.warn(
+        '[KANBAN-ACTIONS] Warning updating legacy buktiDukung:',
+        legacyErr?.message
+      );
+    }
+
+    // 5. Catat audit trail
+    try {
+      await supabase.from('audit_log').insert({
+        id_pertanyaan_periode: idPertanyaanPeriode || null,
+        action: 'KLARIFIKASI_REVISI',
+        user_id: session.userId,
+        user_name: senderName,
+        role: session.role || 'operator',
+        old_state: {
+          catatan_operator: existingNote || null
+        },
+        new_state: {
+          catatan_operator: updatedCatatan,
+          pesan_klarifikasi: cleanMessage
+        },
+        created_at: now.toISOString()
+      });
+    } catch (auditErr: any) {
+      console.warn(
+        '[KANBAN-ACTIONS] Warning inserting audit_log:',
+        auditErr?.message
+      );
+    }
+
+    revalidatePath('/rebo/kanban');
+    revalidatePath('/rebo/formRB');
+
+    return {
+      success: true,
+      message:
+        'Balasan klarifikasi berhasil disimpan dan dicatat dalam riwayat!',
+      updatedCatatan
+    };
+  } catch (err: any) {
+    console.error('[KANBAN-ACTIONS] sendKlarifikasiAction error:', err);
+    return {
+      success: false,
+      error: err?.message || 'Gagal mengirim klarifikasi.'
     };
   }
 }

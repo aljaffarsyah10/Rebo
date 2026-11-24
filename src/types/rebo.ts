@@ -373,6 +373,8 @@ export interface KanbanIndicatorCard {
   catatan_operator?: string | null;
   verified_by?: string | null;
   verified_at?: string | null;
+  submitted_by_user_id?: string | null;
+  submitted_by_name?: string | null;
   nilai_mandiri: number;
   nilai_verifikasi: number;
   nilai_maksimal: number;
@@ -576,6 +578,8 @@ export interface ZIAPPSyncItem {
   ziapp_synced_by?: string | null;
   verified_by?: string | null;
   verified_at?: string | null;
+  submitted_by_user_id?: string | null;
+  submitted_by_name?: string | null;
 }
 
 export interface ZIAPPSyncPayload {
