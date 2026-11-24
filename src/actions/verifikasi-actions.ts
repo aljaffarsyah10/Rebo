@@ -15,7 +15,8 @@ import {
   sendWhatsAppMessage,
   formatBuktiRevisionNotification,
   formatBuktiApprovedNotification,
-  createWhatsAppDeepLink
+  createWhatsAppDeepLink,
+  formatPhoneNumber
 } from '@/lib/notifications/whatsapp';
 import {
   getPilarContact,
@@ -378,17 +379,87 @@ export async function submitVerifikasiAction(
         'Status diubah menjadi Perlu Revisi. Catatan perbaikan telah dicatat.';
     }
 
-    // 12. Notifikasi WhatsApp (Mode Otomatis & Deep Link)
+    // 12. Notifikasi WhatsApp (Worker-Tracking & PIC Pilar)
     let waDeepLink: string | undefined = undefined;
     try {
       const qDesc = targetPertanyaanDeskripsi;
       const pName = targetPilarNama;
       const pilarNumber = targetPilarId ? parseInt(targetPilarId, 10) : 0;
       const picContact = await getPilarContact(pilarNumber);
-      const recipientPhone =
+      const generalRecipientPhone =
         picContact?.noWa ||
         process.env.WA_DEFAULT_RECEIVER ||
         getDefaultNotificationReceiver();
+
+      // 12.1 Worker-Tracking: Identifikasi pegawai yang mengunggah berkas bukti dukung
+      let workerUserId: string | null =
+        existingPP?.submitted_by_user_id || null;
+      let workerName: string | null = existingPP?.submitted_by_name || null;
+      let workerPhone: string | null = existingPP?.submitted_by_phone || null;
+
+      // Cari dari berkas dokumen_bukti terbaru jika pada pertanyaan_periode belum tercatat
+      if (!workerPhone && idPertanyaanPeriode) {
+        try {
+          const { data: latestDoc } = await supabase
+            .from('dokumen_bukti')
+            .select(
+              'submitted_by_user_id, submitted_by_name, submitted_by_phone'
+            )
+            .eq('id_pertanyaan_periode', idPertanyaanPeriode)
+            .not('submitted_by_phone', 'is', null)
+            .order('uploaded_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (latestDoc) {
+            workerUserId = latestDoc.submitted_by_user_id || workerUserId;
+            workerName = latestDoc.submitted_by_name || workerName;
+            workerPhone = latestDoc.submitted_by_phone || workerPhone;
+          }
+        } catch (docErr: any) {
+          console.warn(
+            '[VERIFIKASI-ACTIONS] Error checking latestDoc worker:',
+            docErr?.message
+          );
+        }
+      }
+
+      // Periksa preferensi notifikasi worker dari tabel users
+      let workerNotifEnabled = true;
+      if (workerUserId) {
+        try {
+          const { data: workerUser } = await supabase
+            .from('users')
+            .select(
+              'no_wa, telepon, full_name, notif_wa_approval, notif_wa_revision'
+            )
+            .eq('id', workerUserId)
+            .maybeSingle();
+
+          if (workerUser) {
+            if (workerUser.no_wa || workerUser.telepon) {
+              workerPhone = workerUser.no_wa || workerUser.telepon;
+            }
+            if (workerUser.full_name) {
+              workerName = workerUser.full_name;
+            }
+            if (
+              validated.status_kelengkapan === STATUS_KELENGKAPAN.PERLU_REVISI
+            ) {
+              workerNotifEnabled = workerUser.notif_wa_revision !== false;
+            } else if (
+              validated.status_kelengkapan === STATUS_KELENGKAPAN.DISETUJUI
+            ) {
+              workerNotifEnabled = workerUser.notif_wa_approval !== false;
+            }
+          }
+        } catch (uErr: any) {
+          console.warn(
+            '[VERIFIKASI-ACTIONS] Error checking worker notification pref:',
+            uErr?.message
+          );
+        }
+      }
 
       if (
         validated.status_kelengkapan === STATUS_KELENGKAPAN.PERLU_REVISI &&
@@ -405,41 +476,92 @@ export async function submitVerifikasiAction(
           namaVerifikator: verifierName
         });
 
-        if (recipientPhone) {
-          waDeepLink = createWhatsAppDeepLink(recipientPhone, msg);
+        // 1. Prioritaskan notifikasi langsung ke pengunggah bukti (Worker-Tracking)
+        let workerNotified = false;
+        if (workerPhone && workerNotifEnabled) {
+          const formattedWorkerPhone = formatPhoneNumber(workerPhone);
+          waDeepLink = createWhatsAppDeepLink(formattedWorkerPhone, msg);
+
+          const sendWorkerResult = await sendWhatsAppMessage({
+            phone: formattedWorkerPhone,
+            message: msg
+          });
+
+          workerNotified = true;
+
+          // Catat ke audit_log untuk notifikasi langsung ke worker
+          try {
+            await supabase.from('audit_log').insert({
+              id_pertanyaan_periode: idPertanyaanPeriode || null,
+              action: 'NOTIF_WA_REVISION_WORKER',
+              old_state: null,
+              new_state: {
+                recipient: formattedWorkerPhone,
+                worker_user_id: workerUserId,
+                worker_name: workerName,
+                pilar_id: targetPilarId,
+                pilar_nama: pName,
+                indikator: validated.id_pertanyaan,
+                catatan_revisi: cleanCatatan,
+                success: sendWorkerResult.success,
+                error: sendWorkerResult.error || null
+              },
+              user_id: session.userId,
+              user_name: verifierName,
+              role: session.role || 'koordinator',
+              created_at: new Date().toISOString()
+            });
+          } catch (auditErr: any) {
+            console.warn(
+              '[VERIFIKASI-ACTIONS] Notice recording audit log for NOTIF_WA_REVISION_WORKER:',
+              auditErr?.message
+            );
+          }
         }
 
-        const sendResult = await sendWhatsAppMessage({
-          phone: recipientPhone,
-          message: msg
-        });
+        // 2. Kirim juga ke kontak umum Koordinator Pilar jika nomor berbeda dari worker
+        if (
+          generalRecipientPhone &&
+          (!workerNotified ||
+            formatPhoneNumber(generalRecipientPhone) !==
+              formatPhoneNumber(workerPhone || ''))
+        ) {
+          if (!waDeepLink) {
+            waDeepLink = createWhatsAppDeepLink(generalRecipientPhone, msg);
+          }
 
-        // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_REVISION)
-        try {
-          await supabase.from('audit_log').insert({
-            id_pertanyaan_periode: idPertanyaanPeriode || null,
-            action: 'NOTIF_WA_REVISION',
-            old_state: null,
-            new_state: {
-              recipient: recipientPhone,
-              pic_name: picContact?.namaPic || null,
-              pilar_id: targetPilarId,
-              pilar_nama: pName,
-              indikator: validated.id_pertanyaan,
-              catatan_revisi: cleanCatatan,
-              success: sendResult.success,
-              error: sendResult.error || null
-            },
-            user_id: session.userId,
-            user_name: verifierName,
-            role: session.role || 'koordinator',
-            created_at: new Date().toISOString()
+          const sendResult = await sendWhatsAppMessage({
+            phone: generalRecipientPhone,
+            message: msg
           });
-        } catch (auditErr: any) {
-          console.warn(
-            '[VERIFIKASI-ACTIONS] Notice recording audit log for NOTIF_WA_REVISION:',
-            auditErr?.message
-          );
+
+          // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_REVISION)
+          try {
+            await supabase.from('audit_log').insert({
+              id_pertanyaan_periode: idPertanyaanPeriode || null,
+              action: 'NOTIF_WA_REVISION',
+              old_state: null,
+              new_state: {
+                recipient: generalRecipientPhone,
+                pic_name: picContact?.namaPic || null,
+                pilar_id: targetPilarId,
+                pilar_nama: pName,
+                indikator: validated.id_pertanyaan,
+                catatan_revisi: cleanCatatan,
+                success: sendResult.success,
+                error: sendResult.error || null
+              },
+              user_id: session.userId,
+              user_name: verifierName,
+              role: session.role || 'koordinator',
+              created_at: new Date().toISOString()
+            });
+          } catch (auditErr: any) {
+            console.warn(
+              '[VERIFIKASI-ACTIONS] Notice recording audit log for NOTIF_WA_REVISION:',
+              auditErr?.message
+            );
+          }
         }
       } else if (
         validated.status_kelengkapan === STATUS_KELENGKAPAN.DISETUJUI
@@ -453,41 +575,92 @@ export async function submitVerifikasiAction(
           namaVerifikator: verifierName
         });
 
-        if (recipientPhone) {
-          waDeepLink = createWhatsAppDeepLink(recipientPhone, msg);
+        // 1. Prioritaskan notifikasi langsung ke pengunggah bukti (Worker-Tracking)
+        let workerNotified = false;
+        if (workerPhone && workerNotifEnabled) {
+          const formattedWorkerPhone = formatPhoneNumber(workerPhone);
+          waDeepLink = createWhatsAppDeepLink(formattedWorkerPhone, msg);
+
+          const sendWorkerResult = await sendWhatsAppMessage({
+            phone: formattedWorkerPhone,
+            message: msg
+          });
+
+          workerNotified = true;
+
+          // Catat ke audit_log untuk notifikasi langsung ke worker
+          try {
+            await supabase.from('audit_log').insert({
+              id_pertanyaan_periode: idPertanyaanPeriode || null,
+              action: 'NOTIF_WA_APPROVED_WORKER',
+              old_state: null,
+              new_state: {
+                recipient: formattedWorkerPhone,
+                worker_user_id: workerUserId,
+                worker_name: workerName,
+                pilar_id: targetPilarId,
+                pilar_nama: pName,
+                indikator: validated.id_pertanyaan,
+                skor: validated.nilai_verifikasi,
+                success: sendWorkerResult.success,
+                error: sendWorkerResult.error || null
+              },
+              user_id: session.userId,
+              user_name: verifierName,
+              role: session.role || 'koordinator',
+              created_at: new Date().toISOString()
+            });
+          } catch (auditErr: any) {
+            console.warn(
+              '[VERIFIKASI-ACTIONS] Notice recording audit log for NOTIF_WA_APPROVED_WORKER:',
+              auditErr?.message
+            );
+          }
         }
 
-        const sendResult = await sendWhatsAppMessage({
-          phone: recipientPhone,
-          message: msg
-        });
+        // 2. Kirim juga ke kontak umum Koordinator Pilar jika nomor berbeda dari worker
+        if (
+          generalRecipientPhone &&
+          (!workerNotified ||
+            formatPhoneNumber(generalRecipientPhone) !==
+              formatPhoneNumber(workerPhone || ''))
+        ) {
+          if (!waDeepLink) {
+            waDeepLink = createWhatsAppDeepLink(generalRecipientPhone, msg);
+          }
 
-        // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_APPROVED)
-        try {
-          await supabase.from('audit_log').insert({
-            id_pertanyaan_periode: idPertanyaanPeriode || null,
-            action: 'NOTIF_WA_APPROVED',
-            old_state: null,
-            new_state: {
-              recipient: recipientPhone,
-              pic_name: picContact?.namaPic || null,
-              pilar_id: targetPilarId,
-              pilar_nama: pName,
-              indikator: validated.id_pertanyaan,
-              skor: validated.nilai_verifikasi,
-              success: sendResult.success,
-              error: sendResult.error || null
-            },
-            user_id: session.userId,
-            user_name: verifierName,
-            role: session.role || 'koordinator',
-            created_at: new Date().toISOString()
+          const sendResult = await sendWhatsAppMessage({
+            phone: generalRecipientPhone,
+            message: msg
           });
-        } catch (auditErr: any) {
-          console.warn(
-            '[VERIFIKASI-ACTIONS] Notice recording audit log for NOTIF_WA_APPROVED:',
-            auditErr?.message
-          );
+
+          // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_APPROVED)
+          try {
+            await supabase.from('audit_log').insert({
+              id_pertanyaan_periode: idPertanyaanPeriode || null,
+              action: 'NOTIF_WA_APPROVED',
+              old_state: null,
+              new_state: {
+                recipient: generalRecipientPhone,
+                pic_name: picContact?.namaPic || null,
+                pilar_id: targetPilarId,
+                pilar_nama: pName,
+                indikator: validated.id_pertanyaan,
+                skor: validated.nilai_verifikasi,
+                success: sendResult.success,
+                error: sendResult.error || null
+              },
+              user_id: session.userId,
+              user_name: verifierName,
+              role: session.role || 'koordinator',
+              created_at: new Date().toISOString()
+            });
+          } catch (auditErr: any) {
+            console.warn(
+              '[VERIFIKASI-ACTIONS] Notice recording audit log for NOTIF_WA_APPROVED:',
+              auditErr?.message
+            );
+          }
         }
       }
     } catch (waErr: any) {

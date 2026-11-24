@@ -8,6 +8,7 @@
 - [x] Rute Web `/qr` beresolusi tinggi dengan auto-refresh untuk kemudahan scan WhatsApp via smartphone
 - [x] UI Pengaturan Kontak WhatsApp, Manajemen PIC Pilar, dan Uji Notifikasi Interaktif (`/rebo/admin/kontak`)
 - [x] Ekstensi Chrome 'REBO Sync Assistant' (Auto-Fill ZIAPP 1-Click) & Script RPA Auto-Submit (`extensions/rebo-sync-assistant`, `scripts/rpa_ziapp_sync.js`)
+- [x] Profil Pengguna Mandiri, Preferensi Notifikasi WA & Worker-Tracking (`/rebo/profile`)
 
 ---
 
@@ -85,13 +86,13 @@
 ## 🚀 Usulan Pembaruan, Perbaikan & Fitur Baru untuk REBO Lebih Baik
 
 ### 1. Profil Pengguna Mandiri & Notifikasi Personal (Self-Managed User Profile)
-- [ ] **Halaman / Modal Profil Pengguna (`/rebo/profile`):**
-  - [ ] Sediakan form bagi setiap pegawai untuk mengisi & memperbarui nomor WhatsApp pribadinya (validasi otomatis format `628xxx`).
-  - [ ] Pemilihan pilar penugasan utama (Pilar 1 s.d. Pilar 6) dan peran kerja (Operator Pilar, Koordinator, Verifikator, Pimpinan).
-  - [ ] Pengaturan preferensi notifikasi (toggle on/off notifikasi WA: saat bukti disetujui, saat perlu revisi, pengingat deadline).
-- [ ] **Worker-Tracking (Notifikasi Langsung ke Pengunggah Bukti):**
-  - [ ] Simpan `submitted_by_user_id`, `submitted_by_name`, dan `submitted_by_phone` pada tiap pengunggahan bukti dukung.
-  - [ ] Arahkan notifikasi hasil verifikasi (Disetujui / Perlu Revisi) **langsung ke nomor WhatsApp pegawai yang mengunggah berkas tersebut**, bukan hanya nomor umum koordinator pilar.
+- [x] **Halaman / Modal Profil Pengguna (`/rebo/profile`):**
+  - [x] Sediakan form bagi setiap pegawai untuk mengisi & memperbarui nomor WhatsApp pribadinya (validasi otomatis format `628xxx`).
+  - [x] Pemilihan pilar penugasan utama (Pilar 1 s.d. Pilar 6) dan peran kerja (Operator Pilar, Koordinator, Verifikator, Pimpinan).
+  - [x] Pengaturan preferensi notifikasi (toggle on/off notifikasi WA: saat bukti disetujui, saat perlu revisi, pengingat deadline).
+- [x] **Worker-Tracking (Notifikasi Langsung ke Pengunggah Bukti):**
+  - [x] Simpan `submitted_by_user_id`, `submitted_by_name`, dan `submitted_by_phone` pada tiap pengunggahan bukti dukung.
+  - [x] Arahkan notifikasi hasil verifikasi (Disetujui / Perlu Revisi) **langsung ke nomor WhatsApp pegawai yang mengunggah berkas tersebut**, bukan hanya nomor umum koordinator pilar.
 
 ### 2. Peningkatan Pengalaman Pengguna Form Bukti Dukung (Form RB & Input)
 - [ ] **Inline Document Preview (Modal Pratinjau Terpadu):**

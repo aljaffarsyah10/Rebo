@@ -41,8 +41,8 @@ export function UserNav() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
-              Profile
+            <DropdownMenuItem onClick={() => router.push('/rebo/profile')}>
+              Profil & Notifikasi WA
             </DropdownMenuItem>
             <DropdownMenuItem>Billing</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>

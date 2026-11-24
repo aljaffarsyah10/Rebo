@@ -207,6 +207,33 @@ export async function submitBuktiAction(
 
     let idPertanyaanPeriode: string | undefined = existingPP?.id;
 
+    // 8.1 Dapatkan data profil operator pengunggah untuk Worker-Tracking
+    let operatorName =
+      session.fullName || session.email || session.userId || 'Operator Tim';
+    let operatorPhone: string | null = null;
+
+    if (session.userId) {
+      try {
+        const { data: userProfile } = await supabase
+          .from('users')
+          .select('full_name, no_wa, telepon')
+          .eq('id', session.userId)
+          .maybeSingle();
+
+        if (userProfile) {
+          if (userProfile.full_name) {
+            operatorName = userProfile.full_name;
+          }
+          operatorPhone = userProfile.no_wa || userProfile.telepon || null;
+        }
+      } catch (userErr: any) {
+        console.warn(
+          '[BUKTI-ACTIONS] Notice fetching user profile for worker-tracking:',
+          userErr?.message
+        );
+      }
+    }
+
     // 9. Simpan / Perbarui tabel pertanyaan_periode
     if (targetPeriodeId) {
       const now = new Date().toISOString();
@@ -217,6 +244,9 @@ export async function submitBuktiAction(
         nilai_mandiri: nilaiMandiri,
         catatan_operator: validated.catatan_operator || null,
         status_kelengkapan: newStatus,
+        submitted_by_user_id: session.userId,
+        submitted_by_name: operatorName,
+        submitted_by_phone: operatorPhone,
         updated_at: now
       };
 
@@ -256,7 +286,7 @@ export async function submitBuktiAction(
       }
     }
 
-    // 10. Kelola Dokumen Bukti (Multi-Evidence)
+    // 10. Kelola Dokumen Bukti (Multi-Evidence) dengan Worker-Tracking
     if (
       idPertanyaanPeriode &&
       validated.dokumen_list &&
@@ -274,7 +304,10 @@ export async function submitBuktiAction(
             .update({
               nama_dokumen: item.nama_dokumen,
               file_url: item.file_url,
-              tipe_dokumen: item.tipe_dokumen || null
+              tipe_dokumen: item.tipe_dokumen || null,
+              submitted_by_user_id: session.userId,
+              submitted_by_name: operatorName,
+              submitted_by_phone: operatorPhone
             })
             .eq('id', item.id);
         } else {
@@ -284,8 +317,10 @@ export async function submitBuktiAction(
             nama_dokumen: item.nama_dokumen,
             file_url: item.file_url,
             tipe_dokumen: item.tipe_dokumen || null,
-            uploaded_by:
-              session.fullName || session.email || session.userId || 'Operator',
+            uploaded_by: operatorName,
+            submitted_by_user_id: session.userId,
+            submitted_by_name: operatorName,
+            submitted_by_phone: operatorPhone,
             uploaded_at: new Date().toISOString()
           });
         }
@@ -302,6 +337,9 @@ export async function submitBuktiAction(
         nilai_akhir: nilaiMandiri,
         catatan_user: validated.catatan_operator || null,
         status_kelengkapan: newStatus,
+        submitted_by_user_id: session.userId,
+        submitted_by_name: operatorName,
+        submitted_by_phone: operatorPhone,
         status:
           newStatus === 1
             ? 'Menunggu Review'

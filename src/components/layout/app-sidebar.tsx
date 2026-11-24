@@ -210,10 +210,10 @@ export default function AppSidebar() {
 
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    onClick={() => router.push('/dashboard/profile')}
+                    onClick={() => router.push('/rebo/profile')}
                   >
                     <IconUserCircle className='mr-2 h-4 w-4' />
-                    Profile
+                    Profil & Notifikasi WA
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <IconCreditCard className='mr-2 h-4 w-4' />

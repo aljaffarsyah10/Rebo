@@ -166,6 +166,9 @@ export interface DokumenBukti {
   file_url: string;
   tipe_dokumen?: string | null;
   uploaded_by: string;
+  submitted_by_user_id?: string | null;
+  submitted_by_name?: string | null;
+  submitted_by_phone?: string | null;
   uploaded_at?: string;
   created_at?: string;
 }
@@ -187,6 +190,9 @@ export interface PertanyaanPeriode {
   ziapp_status?: ZIAPPSyncStatus | string;
   ziapp_synced_at?: string | null;
   ziapp_synced_by?: string | null;
+  submitted_by_user_id?: string | null;
+  submitted_by_name?: string | null;
+  submitted_by_phone?: string | null;
   created_at?: string;
   updated_at?: string;
 
@@ -195,6 +201,22 @@ export interface PertanyaanPeriode {
   pertanyaan?: Pertanyaan | null;
   kategoriPenilaian?: KategoriPenilaian | null;
   dokumen_bukti?: DokumenBukti[];
+}
+
+export interface UserProfileData {
+  id: string;
+  email?: string | null;
+  full_name?: string | null;
+  no_wa?: string | null;
+  telepon?: string | null;
+  role?: string | null;
+  pilar_tugas?: number | null;
+  assigned_pilar_id?: number | null;
+  notif_wa_approval: boolean;
+  notif_wa_revision: boolean;
+  notif_wa_deadline: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AuditLog {

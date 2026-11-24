@@ -132,8 +132,8 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Account',
-    url: '/dashboard/profile',
+    title: 'Profil Pengguna',
+    url: '/rebo/profile',
     icon: 'userPen',
     shortcut: ['c', 'c'],
     isActive: false,
