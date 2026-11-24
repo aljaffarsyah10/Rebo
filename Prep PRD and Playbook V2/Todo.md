@@ -79,3 +79,57 @@
 - [x] **Auto-Card Kanban dari Catatan Revisi:**
   - [x] Setiap catatan penolakan/revisi dari verifikator internal otomatis terbuat sebagai kartu tugas di Kanban Board tindak lanjut dengan sinkronisasi `revalidatePath('/rebo/kanban')`, deep-link navigasi langsung `/rebo/formRB/[pilarId]?indikator=[id]#indikator-[id]`, serta badge penanda "Auto-Generated dari Catatan Reviu" beserta timestamp.
 
+---
+
+## 🚀 Usulan Pembaruan, Perbaikan & Fitur Baru untuk REBO Lebih Baik
+
+### 1. Profil Pengguna Mandiri & Notifikasi Personal (Self-Managed User Profile)
+- [ ] **Halaman / Modal Profil Pengguna (`/rebo/profile`):**
+  - [ ] Sediakan form bagi setiap pegawai untuk mengisi & memperbarui nomor WhatsApp pribadinya (validasi otomatis format `628xxx`).
+  - [ ] Pemilihan pilar penugasan utama (Pilar 1 s.d. Pilar 6) dan peran kerja (Operator Pilar, Koordinator, Verifikator, Pimpinan).
+  - [ ] Pengaturan preferensi notifikasi (toggle on/off notifikasi WA: saat bukti disetujui, saat perlu revisi, pengingat deadline).
+- [ ] **Worker-Tracking (Notifikasi Langsung ke Pengunggah Bukti):**
+  - [ ] Simpan `submitted_by_user_id`, `submitted_by_name`, dan `submitted_by_phone` pada tiap pengunggahan bukti dukung.
+  - [ ] Arahkan notifikasi hasil verifikasi (Disetujui / Perlu Revisi) **langsung ke nomor WhatsApp pegawai yang mengunggah berkas tersebut**, bukan hanya nomor umum koordinator pilar.
+
+### 2. Peningkatan Pengalaman Pengguna Form Bukti Dukung (Form RB & Input)
+- [ ] **Inline Document Preview (Modal Pratinjau Terpadu):**
+  - [ ] Pratinjau langsung file PDF, gambar, dan dokumen Google Drive di dalam aplikasi REBO tanpa harus membuka tab baru browser.
+- [ ] **Batch Upload & Drag-and-Drop Bukti Dukung:**
+  - [ ] Pengunggahan multi-berkas sekaligus dengan progress bar status upload dan auto-tagging kategori dokumen (Undangan, Notula, Daftar Hadir, Laporan, Dokumentasi Foto).
+- [ ] **Sticky Summary & Auto-Save Indikator:**
+  - [ ] Header ringkasan skor dan progres yang tetap terlihat saat pengguna menggulir (scroll) halaman form yang panjang.
+  - [ ] Penyimpanan draf otomatis (auto-save draft) agar isian catatan atau link tidak hilang saat koneksi internet terputus.
+
+### 3. Visualisasi Eksekutif & Simulasi Predikat WBK/WBBM (Monitoring)
+- [ ] **Grafik Radar / Spider Web Capaian 6 Pilar:**
+  - [ ] Tambahkan visualisasi grafik radar pada dashboard Overview & Monitoring untuk membandingkan capaian nilai riil vs target bobot maksimal di 6 pilar.
+- [ ] **Simulasi & Gap Analysis Predikat WBK/WBBM:**
+  - [ ] Panel kalkulator predikat WBK: menghitung proyeksi total nilai dan menampilkan indikator-indikator prioritas berbobot tinggi yang belum optimal.
+  - [ ] Notifikasi status kelayakan: Memberikan sinyal apakah satker sudah memenuhi syarat minimal WBK (Nilai total $\ge 75.00$ dan tidak ada pilar di bawah batas ambang).
+- [ ] **Export LKE Terformat Resmi (Excel & PDF Eksekutif):**
+  - [ ] Ekspor template lembar kerja evaluasi lengkap sesuai standar format PermenPAN-RB / BPS RI dengan header resmi, kop surat, dan tandatangan digital pimpinan.
+
+### 4. Optimalisasi Kanban Board & Kolaborasi Tim
+- [ ] **Filter Cepat "Tugas Saya" (My Tasks):**
+  - [ ] Tombol filter 1-klik di papan Kanban untuk memfilter kartu revisi yang khusus ditugaskan kepada pegawai yang sedang login.
+- [ ] **Thread Diskusi Singkat pada Kartu Revisi:**
+  - [ ] Kolom chat/komentar internal antara Verifikator dan Operator di dalam kartu Kanban untuk mengklarifikasi poin perbaikan sebelum berkas diunggah ulang.
+- [ ] **Visual SLA / Countdown Timer Batas Perbaikan:**
+  - [ ] Badge penanda batas waktu tindak lanjut (misal: *"Sisa 3 hari"* berwarna kuning, *"Mendekati Batas"* oranye, *"Terlewat"* merah).
+
+### 5. Pengelolaan Arsip Digital & Knowledge Base
+- [ ] **Instant Search & Multi-Tag Filtering Arsip:**
+  - [ ] Pencarian cepat real-time berdasarkan judul dokumen, kategori arsip (SK, SOP, Laporan, Paparan, Inovasi), dan tahun periode.
+- [ ] **Download All Bundle (Export Arsip Tahunan ZIP):**
+  - [ ] Fitur unduh seluruh berkas arsip resmi dalam satu arsip ZIP terkompresi untuk kemudahan penyerahan ke Tim Penilai Internal (TPI) Pusat.
+
+### 6. Keamanan, Audit Log & Antarmuka Responsif
+- [ ] **Audit Trail Filter & Export CSV:**
+  - [ ] Fitur filter log aktivitas berdasarkan rentang tanggal, nama pengguna, jenis aktivitas (Upload, Verifikasi, Pengiriman WA), dan ekspor laporan riwayat ke CSV/Excel.
+  - [ ] Pencatatan IP address dan perangkat akses untuk kepatuhan tata kelola keamanan informasi (ISO 27001).
+- [ ] **Penyempurnaan Mode Gelap & Tampilan Mobile Tablet:**
+  - [ ] Penyesuaian kontras warna dan kenyamanan membaca teks panjang pada Dark Mode.
+  - [ ] Optimalisasi layout tabel dan kartu saat dibuka dari smartphone petugas di lapangan.
+
+
