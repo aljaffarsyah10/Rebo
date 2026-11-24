@@ -354,6 +354,7 @@ export async function submitVerifikasiAction(
     }
     revalidatePath('/rebo/monitoring');
     revalidatePath('/rebo/overview');
+    revalidatePath('/rebo/kanban');
 
     // 11. Ambil data terbaru untuk feedback langsung
     let freshData: any = null;

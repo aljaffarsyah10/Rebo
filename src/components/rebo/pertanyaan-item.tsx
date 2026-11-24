@@ -166,7 +166,10 @@ export default function PertanyaanItem({
   };
 
   return (
-    <div className='relative rounded-2xl border border-gray-200 bg-white p-6 shadow-xs transition-all duration-200 hover:shadow-md dark:border-gray-700/80 dark:bg-gray-900'>
+    <div
+      id={`indikator-${pertanyaan.id_pertanyaan}`}
+      className='relative scroll-mt-20 rounded-2xl border border-gray-200 bg-white p-6 shadow-xs transition-all duration-200 hover:shadow-md dark:border-gray-700/80 dark:bg-gray-900'
+    >
       {/* 1. HEADER INDIKATOR & DUAL-SCORING SUMMARY */}
       <div className='mb-4 flex flex-col justify-between gap-4 lg:flex-row lg:items-start'>
         <div className='flex flex-1 items-start gap-3'>

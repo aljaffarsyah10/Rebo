@@ -76,6 +76,6 @@
 ### 3. Otomasi Pengingat & Tindak Lanjut
 - [x] **Early Warning Deadline System:**
   - [x] Notifikasi pengingat otomatis (jadwal H-30, H-14, H-7, H-3, H-1 jelang batas pengumpulan pusat) untuk PIC pilar yang indikatornya belum lengkap.
-- [ ] **Auto-Card Kanban dari Catatan Revisi:**
-  - [ ] Setiap catatan penolakan/revisi dari verifikator internal otomatis terbuat sebagai kartu tugas di Kanban Board tindak lanjut.
+- [x] **Auto-Card Kanban dari Catatan Revisi:**
+  - [x] Setiap catatan penolakan/revisi dari verifikator internal otomatis terbuat sebagai kartu tugas di Kanban Board tindak lanjut dengan sinkronisasi `revalidatePath('/rebo/kanban')`, deep-link navigasi langsung `/rebo/formRB/[pilarId]?indikator=[id]#indikator-[id]`, serta badge penanda "Auto-Generated dari Catatan Reviu" beserta timestamp.
 

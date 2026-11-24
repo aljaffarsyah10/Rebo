@@ -26,7 +26,8 @@ import {
   Kanban as KanbanIcon,
   X,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  Sparkles
 } from 'lucide-react';
 import { getKanbanBoardData } from '@/actions/kanban-actions';
 import { PILAR_LIST } from '@/lib/auth/rbac';
@@ -378,12 +379,36 @@ export default function KanbanBoardClient({
                 >
                   <CardHeader className='p-4 pb-2'>
                     <div className='flex items-center justify-between gap-2'>
-                      <Badge
-                        variant='outline'
-                        className='border-rose-200/70 bg-rose-50/70 text-[11px] font-medium text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300'
-                      >
-                        {card.pilar_kode}
-                      </Badge>
+                      <div className='flex flex-wrap items-center gap-1.5'>
+                        <Badge
+                          variant='outline'
+                          className='border-rose-200/70 bg-rose-50/70 text-[11px] font-medium text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300'
+                        >
+                          {card.pilar_kode}
+                        </Badge>
+                        {card.verified_at && (
+                          <Badge
+                            variant='secondary'
+                            className='inline-flex items-center gap-1 rounded-md border border-rose-200/80 bg-rose-100/70 px-2 py-0.5 text-[10px] font-medium text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300'
+                            title={`Direviu pada: ${new Date(card.verified_at).toLocaleString('id-ID')}`}
+                          >
+                            <Sparkles className='h-3 w-3 shrink-0 text-rose-500' />
+                            <span>Auto-Generated dari Catatan Reviu</span>
+                            <span className='text-[9px] text-rose-600/80 dark:text-rose-400'>
+                              •{' '}
+                              {new Date(card.verified_at).toLocaleDateString(
+                                'id-ID',
+                                {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                }
+                              )}
+                            </span>
+                          </Badge>
+                        )}
+                      </div>
                       <span className='font-mono text-xs font-medium text-slate-500 dark:text-slate-400'>
                         {card.kode_indikator}
                       </span>
@@ -430,7 +455,7 @@ export default function KanbanBoardClient({
                     {/* Action Link to Form Pilar (Soft Pastel Button) */}
                     <div className='pt-1'>
                       <Link
-                        href={`/rebo/formRB/${card.pilar_id}`}
+                        href={`/rebo/formRB/${card.pilar_id}?indikator=${card.id_pertanyaan}#indikator-${card.id_pertanyaan}`}
                         className='block w-full'
                       >
                         <Button
@@ -546,7 +571,7 @@ export default function KanbanBoardClient({
                     {/* Action Link to Form Pilar (Warm Soft Amber Button) */}
                     <div className='pt-1'>
                       <Link
-                        href={`/rebo/formRB/${card.pilar_id}`}
+                        href={`/rebo/formRB/${card.pilar_id}?indikator=${card.id_pertanyaan}#indikator-${card.id_pertanyaan}`}
                         className='block w-full'
                       >
                         <Button
@@ -664,7 +689,7 @@ export default function KanbanBoardClient({
                     {/* Action Link to Form Pilar (Sage / Soft Emerald Button) */}
                     <div className='pt-1'>
                       <Link
-                        href={`/rebo/formRB/${card.pilar_id}`}
+                        href={`/rebo/formRB/${card.pilar_id}?indikator=${card.id_pertanyaan}#indikator-${card.id_pertanyaan}`}
                         className='block w-full'
                       >
                         <Button

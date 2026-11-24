@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -62,6 +62,48 @@ export default function FormRBPilarClient({
     }
     return '1';
   });
+
+  // Auto-switch subpilar tab & auto-scroll if `indikator` query param or hash exists
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    let targetIndikator = params.get('indikator');
+    if (!targetIndikator && window.location.hash.startsWith('#indikator-')) {
+      targetIndikator = window.location.hash.replace('#indikator-', '');
+    }
+
+    if (targetIndikator && subpilarList.length > 0) {
+      // Find which subpilar contains this indicator
+      const parentSubpilar = subpilarList.find((sub) =>
+        (sub.pertanyaan || []).some(
+          (q: any) => String(q.id_pertanyaan) === String(targetIndikator)
+        )
+      );
+
+      if (parentSubpilar) {
+        setActiveTab(String(parentSubpilar.id_subpilar));
+      }
+
+      const timeoutId = setTimeout(() => {
+        const el = document.getElementById(`indikator-${targetIndikator}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.classList.add(
+            'ring-2',
+            'ring-rose-500',
+            'ring-offset-2',
+            'transition-all'
+          );
+          setTimeout(() => {
+            el.classList.remove('ring-2', 'ring-rose-500', 'ring-offset-2');
+          }, 3500);
+        }
+      }, 350);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [subpilarList]);
 
   // Calculate Pilar Statistics & Dual-Scoring Metrics
   const stats = useMemo(() => {

@@ -323,7 +323,10 @@ export default function BuktiForm({
   }
 
   return (
-    <div className='mt-4 space-y-6'>
+    <div
+      id={`bukti-form-${pertanyaan.id_pertanyaan}`}
+      className='mt-4 scroll-mt-20 space-y-6'
+    >
       {/* RBAC Read-Only Banner */}
       {!canEdit && (
         <div className='flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'>
