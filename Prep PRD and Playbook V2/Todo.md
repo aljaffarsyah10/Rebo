@@ -125,10 +125,10 @@
   - [x] Badge penanda batas waktu tindak lanjut (misal: *"Sisa 3 hari"* berwarna kuning, *"Mendekati Batas"* oranye, *"Terlewat"* merah).
 
 ### 5. Pengelolaan Arsip Digital & Knowledge Base
-- [ ] **Instant Search & Multi-Tag Filtering Arsip:**
-  - [ ] Pencarian cepat real-time berdasarkan judul dokumen, kategori arsip (SK, SOP, Laporan, Paparan, Inovasi), dan tahun periode.
-- [ ] **Download All Bundle (Export Arsip Tahunan ZIP):**
-  - [ ] Fitur unduh seluruh berkas arsip resmi dalam satu arsip ZIP terkompresi untuk kemudahan penyerahan ke Tim Penilai Internal (TPI) Pusat.
+- [x] **Instant Search & Multi-Tag Filtering Arsip:**
+  - [x] Pencarian cepat real-time berdasarkan judul dokumen, kategori arsip (SK, SOP, Laporan, Paparan, Inovasi), dan tahun periode.
+- [x] **Download All Bundle (Export Arsip Tahunan ZIP):**
+  - [x] Fitur unduh seluruh berkas arsip resmi dalam satu arsip ZIP terkompresi untuk kemudahan penyerahan ke Tim Penilai Internal (TPI) Pusat.
 
 ### 6. Keamanan, Audit Log & Antarmuka Responsif
 - [ ] **Audit Trail Filter & Export CSV:**

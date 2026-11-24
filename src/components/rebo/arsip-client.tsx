@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -51,7 +51,12 @@ import {
   LayoutGrid,
   List as ListIcon,
   RefreshCw,
-  FolderOpen
+  FolderOpen,
+  Download,
+  RotateCcw,
+  X,
+  FileArchive,
+  Layers
 } from 'lucide-react';
 import {
   createArsipDokumen,
@@ -69,6 +74,71 @@ interface ArsipClientProps {
   isAdmin: boolean;
 }
 
+// Konfigurasi Tab Kategori Resmi
+interface CategoryTabConfig {
+  key: 'ALL' | KategoriArsip;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badgeBg: string;
+  activeColor: string;
+}
+
+const CATEGORY_TABS: CategoryTabConfig[] = [
+  {
+    key: 'ALL',
+    label: 'Semua Kategori',
+    icon: Archive,
+    badgeBg:
+      'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200',
+    activeColor:
+      'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm'
+  },
+  {
+    key: 'SK_TIM',
+    label: 'SK Tim Kerja',
+    icon: ShieldCheck,
+    badgeBg:
+      'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300',
+    activeColor:
+      'bg-purple-600 text-white dark:bg-purple-600 dark:text-white shadow-sm ring-1 ring-purple-400'
+  },
+  {
+    key: 'RENCANA_AKSI',
+    label: 'Rencana Aksi',
+    icon: Target,
+    badgeBg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300',
+    activeColor:
+      'bg-blue-600 text-white dark:bg-blue-600 dark:text-white shadow-sm ring-1 ring-blue-400'
+  },
+  {
+    key: 'SOP_INOVASI',
+    label: 'SOP Inovasi',
+    icon: Sparkles,
+    badgeBg:
+      'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300',
+    activeColor:
+      'bg-emerald-600 text-white dark:bg-emerald-600 dark:text-white shadow-sm ring-1 ring-emerald-400'
+  },
+  {
+    key: 'LKE_RESMI',
+    label: 'LKE Resmi',
+    icon: FileSpreadsheet,
+    badgeBg:
+      'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300',
+    activeColor:
+      'bg-amber-600 text-white dark:bg-amber-600 dark:text-white shadow-sm ring-1 ring-amber-400'
+  },
+  {
+    key: 'PEDOMAN',
+    label: 'Pedoman & Regulasi',
+    icon: BookOpen,
+    badgeBg:
+      'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-300',
+    activeColor:
+      'bg-indigo-600 text-white dark:bg-indigo-600 dark:text-white shadow-sm ring-1 ring-indigo-400'
+  }
+];
+
 export default function ArsipClient({
   initialData,
   availableYears,
@@ -81,7 +151,10 @@ export default function ArsipClient({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Modal State
+  // ZIP Bundle Export State
+  const [isExportingZip, setIsExportingZip] = useState(false);
+
+  // Modal & Transition State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -94,31 +167,138 @@ export default function ArsipClient({
   const [formUrl, setFormUrl] = useState('');
   const [formKeterangan, setFormKeterangan] = useState('');
 
-  // Handle Refresh
-  const handleFilterChange = (targetYear?: string, targetKategori?: string) => {
-    const y = targetYear !== undefined ? targetYear : selectedYear;
-    const k = targetKategori !== undefined ? targetKategori : selectedKategori;
+  // Hitung jumlah berkas per kategori secara real-time
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      ALL: 0,
+      SK_TIM: 0,
+      RENCANA_AKSI: 0,
+      SOP_INOVASI: 0,
+      LKE_RESMI: 0,
+      PEDOMAN: 0
+    };
 
+    items.forEach((doc) => {
+      const matchYear =
+        selectedYear === 'ALL' || doc.tahun === Number(selectedYear);
+      if (matchYear) {
+        counts.ALL++;
+        if (counts[doc.kategori] !== undefined) {
+          counts[doc.kategori]++;
+        }
+      }
+    });
+
+    return counts;
+  }, [items, selectedYear]);
+
+  // Instant Search & Multi-Tag Filtering Responsif tanpa roundtrip server
+  const displayedItems = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+
+    return items.filter((doc) => {
+      // 1. Filter Tahun
+      const matchesYear =
+        selectedYear === 'ALL' || doc.tahun === Number(selectedYear);
+      if (!matchesYear) return false;
+
+      // 2. Filter Kategori
+      const matchesKategori =
+        selectedKategori === 'ALL' || doc.kategori === selectedKategori;
+      if (!matchesKategori) return false;
+
+      // 3. Instant Search Query
+      if (!q) return true;
+
+      const kategoriLabel =
+        KATEGORI_ARSIP_MAP[doc.kategori]?.label?.toLowerCase() || '';
+      return (
+        doc.judul_dokumen.toLowerCase().includes(q) ||
+        (doc.nomor_surat && doc.nomor_surat.toLowerCase().includes(q)) ||
+        (doc.keterangan && doc.keterangan.toLowerCase().includes(q)) ||
+        doc.kategori.toLowerCase().includes(q) ||
+        kategoriLabel.includes(q) ||
+        (doc.uploaded_by && doc.uploaded_by.toLowerCase().includes(q))
+      );
+    });
+  }, [items, selectedYear, selectedKategori, searchQuery]);
+
+  // Reset Filter Cepat
+  const handleResetFilter = () => {
+    setSelectedYear('ALL');
+    setSelectedKategori('ALL');
+    setSearchQuery('');
+  };
+
+  const isFilterActive =
+    selectedYear !== 'ALL' ||
+    selectedKategori !== 'ALL' ||
+    searchQuery.trim() !== '';
+
+  // Segarkan Data dari Server
+  const handleRefreshData = () => {
     startTransition(async () => {
-      const filterPayload: {
-        tahun?: number;
-        kategori?: string;
-        search?: string;
-      } = {};
-      if (y !== 'ALL') filterPayload.tahun = Number(y);
-      if (k !== 'ALL') filterPayload.kategori = k;
-      if (searchQuery.trim()) filterPayload.search = searchQuery.trim();
-
-      const res = await getArsipList(filterPayload);
+      const res = await getArsipList();
       if (res.success && res.data) {
         setItems(res.data);
         if (res.availableYears && res.availableYears.length > 0) {
           setYears(res.availableYears);
         }
+        toast.success('Daftar arsip resmi berhasil disegarkan.');
       } else {
-        toast.error(res.error || 'Gagal memuat arsip.');
+        toast.error(res.error || 'Gagal menyegarkan arsip.');
       }
     });
+  };
+
+  // Unduh Bundle Arsip (.zip)
+  const handleDownloadZipBundle = async () => {
+    try {
+      setIsExportingZip(true);
+      const tahunDisplay =
+        selectedYear === 'ALL' ? 'Semua Periode' : `Tahun ${selectedYear}`;
+
+      toast.loading(`Mempersiapkan bundle arsip digital (${tahunDisplay})...`, {
+        id: 'bundle-download'
+      });
+
+      const response = await fetch(
+        `/api/export/arsip-bundle?tahun=${encodeURIComponent(selectedYear)}`
+      );
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
+        throw new Error(
+          errJson?.error ||
+            `Gagal membuat bundle arsip (Kode respons: ${response.status})`
+        );
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      const fileTahunTag =
+        selectedYear === 'ALL' ? 'SEMUA_TAHUN' : selectedYear;
+      a.download = `ARSIP_RESMI_ZI_BPS_SITARO_${fileTahunTag}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+
+      toast.success(
+        `Bundle arsip ZI (${tahunDisplay}) berhasil diunduh dalam format .zip!`,
+        { id: 'bundle-download' }
+      );
+    } catch (err: any) {
+      // eslint-disable-next-line no-console
+      console.error('[ARSIP-CLIENT] Download bundle error:', err);
+      toast.error(err?.message || 'Gagal mengunduh bundle arsip tahunan ZIP.', {
+        id: 'bundle-download'
+      });
+    } finally {
+      setIsExportingZip(false);
+    }
   };
 
   // Copy Link Handler
@@ -152,16 +332,21 @@ export default function ArsipClient({
       };
 
       const res = await createArsipDokumen(payload);
-      if (res.success) {
+      if (res.success && res.data) {
         toast.success('Dokumen arsip resmi berhasil ditambahkan!');
         setIsModalOpen(false);
+        // Tambahkan ke in-memory list
+        setItems((prev) => [res.data!, ...prev]);
+        if (!years.includes(Number(formTahun))) {
+          setYears((prev) =>
+            [Number(formTahun), ...prev].sort((a, b) => b - a)
+          );
+        }
         // Reset form
         setFormJudul('');
         setFormNomor('');
         setFormUrl('');
         setFormKeterangan('');
-        // Refresh list
-        handleFilterChange();
       } else {
         toast.error(res.error || 'Gagal menambahkan dokumen arsip.');
       }
@@ -206,24 +391,8 @@ export default function ArsipClient({
     }
   };
 
-  // Filtered in-memory items (untuk responsivitas pencarian cepat)
-  const displayedItems = items.filter((doc) => {
-    const matchesYear =
-      selectedYear === 'ALL' || doc.tahun === Number(selectedYear);
-    const matchesKategori =
-      selectedKategori === 'ALL' || doc.kategori === selectedKategori;
-    const q = searchQuery.toLowerCase().trim();
-    const matchesQuery =
-      !q ||
-      doc.judul_dokumen.toLowerCase().includes(q) ||
-      (doc.nomor_surat && doc.nomor_surat.toLowerCase().includes(q)) ||
-      (doc.keterangan && doc.keterangan.toLowerCase().includes(q));
-
-    return matchesYear && matchesKategori && matchesQuery;
-  });
-
   return (
-    <div className='container mx-auto max-w-7xl space-y-8 p-6'>
+    <div className='container mx-auto max-w-7xl space-y-6 p-4 sm:p-6'>
       {/* 1. Hero Header Section */}
       <div className='relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50/80 to-purple-50/60 p-6 sm:p-8 dark:from-slate-900 dark:via-slate-800/90 dark:to-slate-700/80'>
         <div className='absolute inset-0 bg-gradient-to-br from-blue-100/30 via-indigo-100/20 to-purple-100/10 dark:from-slate-900/50 dark:via-slate-800/40 dark:to-slate-700/30' />
@@ -256,12 +425,30 @@ export default function ArsipClient({
             </p>
           </div>
 
-          {/* Action Button: Tambah Dokumen (Super Admin Only) */}
+          {/* Action Buttons: Bundle Download, Refresh & Tambah Dokumen */}
           <div className='flex flex-wrap items-center gap-2.5'>
+            {/* Tombol Unduh Bundle Arsip ZIP */}
+            <Button
+              variant='default'
+              size='sm'
+              onClick={handleDownloadZipBundle}
+              disabled={isExportingZip}
+              className='h-9 bg-emerald-600 text-white shadow-xs hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500'
+              title='Unduh seluruh dokumen arsip resmi dalam satu file bundle ZIP'
+            >
+              {isExportingZip ? (
+                <RefreshCw className='mr-1.5 h-4 w-4 animate-spin' />
+              ) : (
+                <Download className='mr-1.5 h-4 w-4' />
+              )}
+              Unduh Bundle Arsip (.zip)
+            </Button>
+
+            {/* Tombol Segarkan Data */}
             <Button
               variant='outline'
               size='sm'
-              onClick={() => handleFilterChange()}
+              onClick={handleRefreshData}
               disabled={isPending}
               className='h-9 border-slate-300 bg-white/80 shadow-xs hover:bg-white dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800'
             >
@@ -271,6 +458,7 @@ export default function ArsipClient({
               Segarkan
             </Button>
 
+            {/* Tombol Tambah Dokumen (Admin Only) */}
             {isAdmin && (
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
@@ -421,18 +609,68 @@ export default function ArsipClient({
         </div>
       </div>
 
-      {/* 2. Filter & Search Toolbar */}
-      <div className='flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-xs backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900/80'>
+      {/* 2. Interactive Multi-Tag Category Filter (Pills / Badge Filter) */}
+      <div className='space-y-2'>
+        <div className='flex items-center justify-between'>
+          <span className='flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400'>
+            <Layers className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+            Kategori Dokumen Arsip
+          </span>
+          {selectedKategori !== 'ALL' && (
+            <button
+              onClick={() => setSelectedKategori('ALL')}
+              className='text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400'
+            >
+              Lihat Semua
+            </button>
+          )}
+        </div>
+
+        <div className='scrollbar-none flex items-center gap-2 overflow-x-auto pb-1'>
+          {CATEGORY_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isSelected = selectedKategori === tab.key;
+            const count = categoryCounts[tab.key] || 0;
+
+            return (
+              <button
+                key={tab.key}
+                type='button'
+                onClick={() => setSelectedKategori(tab.key)}
+                className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-150 ${
+                  isSelected
+                    ? `${tab.activeColor} border-transparent`
+                    : 'border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80'
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 ${isSelected ? 'text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
+                />
+                <span>{tab.label}</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    isSelected
+                      ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
+                      : tab.badgeBg
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. Filter & Instant Search Toolbar */}
+      <div className='flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-xs backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900/80'>
         <div className='flex flex-wrap items-center gap-2.5'>
           {/* Filter Tahun */}
           <div className='flex items-center gap-1.5'>
             <Calendar className='h-4 w-4 text-slate-500' />
             <select
               value={selectedYear}
-              onChange={(e) => {
-                setSelectedYear(e.target.value);
-                handleFilterChange(e.target.value, undefined);
-              }}
+              onChange={(e) => setSelectedYear(e.target.value)}
               className='h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
             >
               <option value='ALL'>Semua Tahun</option>
@@ -444,15 +682,12 @@ export default function ArsipClient({
             </select>
           </div>
 
-          {/* Filter Kategori */}
+          {/* Filter Kategori Dropdown (Secondary / Sync) */}
           <div className='flex items-center gap-1.5'>
             <Filter className='h-4 w-4 text-slate-500' />
             <select
               value={selectedKategori}
-              onChange={(e) => {
-                setSelectedKategori(e.target.value);
-                handleFilterChange(undefined, e.target.value);
-              }}
+              onChange={(e) => setSelectedKategori(e.target.value)}
               className='h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
             >
               <option value='ALL'>Semua Kategori</option>
@@ -463,18 +698,42 @@ export default function ArsipClient({
               <option value='PEDOMAN'>Pedoman & Juknis</option>
             </select>
           </div>
+
+          {/* Quick Reset Filter Button */}
+          {isFilterActive && (
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={handleResetFilter}
+              className='h-9 px-2.5 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/40'
+              title='Reset seluruh filter pencarian'
+            >
+              <RotateCcw className='mr-1.5 h-3.5 w-3.5' />
+              Reset Filter
+            </Button>
+          )}
         </div>
 
-        {/* Search Bar & View Mode Toggle */}
+        {/* Instant Search Bar & View Mode Toggle */}
         <div className='flex items-center gap-2.5'>
-          <div className='relative w-full sm:w-64'>
+          <div className='relative w-full sm:w-72'>
             <Search className='absolute top-2.5 left-2.5 h-4 w-4 text-slate-400' />
             <Input
-              placeholder='Cari nomor SK / judul...'
+              placeholder='Cari nomor SK, judul, atau ringkasan...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className='h-9 pl-8 text-xs'
+              className='h-9 pr-8 pl-8 text-xs'
             />
+            {searchQuery && (
+              <button
+                type='button'
+                onClick={() => setSearchQuery('')}
+                className='absolute top-2.5 right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                title='Hapus pencarian'
+              >
+                <X className='h-4 w-4' />
+              </button>
+            )}
           </div>
 
           <div className='flex items-center rounded-lg border border-slate-200 p-0.5 dark:border-slate-700'>
@@ -500,38 +759,58 @@ export default function ArsipClient({
         </div>
       </div>
 
-      {/* 3. Document Count & Filter Pill Summary */}
+      {/* 4. Document Count & Summary Bar */}
       <div className='flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400'>
-        <div>
-          Menampilkan{' '}
-          <span className='font-bold text-slate-800 dark:text-slate-200'>
-            {displayedItems.length}
-          </span>{' '}
-          dokumen arsip
-          {selectedYear !== 'ALL' && ` pada periode Tahun ${selectedYear}`}
-          {selectedKategori !== 'ALL' &&
-            ` kategori ${KATEGORI_ARSIP_MAP[selectedKategori as KategoriArsip]?.label || selectedKategori}`}
+        <div className='flex flex-wrap items-center gap-2'>
+          <span>
+            Menampilkan{' '}
+            <strong className='font-bold text-slate-800 dark:text-slate-100'>
+              {displayedItems.length}
+            </strong>{' '}
+            dari {items.length} dokumen arsip resmi
+          </span>
+          {selectedYear !== 'ALL' && (
+            <Badge
+              variant='outline'
+              className='bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+            >
+              Periode {selectedYear}
+            </Badge>
+          )}
+          {selectedKategori !== 'ALL' && (
+            <Badge
+              variant='outline'
+              className='bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300'
+            >
+              {KATEGORI_ARSIP_MAP[selectedKategori as KategoriArsip]?.label ||
+                selectedKategori}
+            </Badge>
+          )}
+          {searchQuery && (
+            <Badge
+              variant='outline'
+              className='bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+            >
+              Kata kunci: &ldquo;{searchQuery}&rdquo;
+            </Badge>
+          )}
         </div>
-        {(selectedYear !== 'ALL' ||
-          selectedKategori !== 'ALL' ||
-          searchQuery) && (
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => {
-              setSelectedYear('ALL');
-              setSelectedKategori('ALL');
-              setSearchQuery('');
-              handleFilterChange('ALL', 'ALL');
-            }}
-            className='h-6 text-[11px] text-blue-600 hover:text-blue-700 dark:text-blue-400'
-          >
-            Reset Filter
-          </Button>
-        )}
+
+        {/* Quick ZIP Bundle shortcut indicator */}
+        <div className='flex items-center gap-1.5 text-[11px] text-slate-500'>
+          <FileArchive className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+          <span>
+            Paket bundle:{' '}
+            <span className='font-semibold text-slate-700 dark:text-slate-300'>
+              {selectedYear === 'ALL'
+                ? 'Seluruh Tahun'
+                : `Tahun ${selectedYear}`}
+            </span>
+          </span>
+        </div>
       </div>
 
-      {/* 4. Document Grid / List Content */}
+      {/* 5. Document Grid / List Content */}
       {displayedItems.length === 0 ? (
         <Card className='rounded-2xl border-dashed py-12 text-center'>
           <CardContent className='flex flex-col items-center justify-center space-y-3'>
@@ -547,6 +826,17 @@ export default function ArsipClient({
                 kategori.
               </p>
             </div>
+            {isFilterActive && (
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleResetFilter}
+                className='mt-2'
+              >
+                <RotateCcw className='mr-1.5 h-3.5 w-3.5' />
+                Kembalikan Semua Dokumen
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : viewMode === 'grid' ? (
