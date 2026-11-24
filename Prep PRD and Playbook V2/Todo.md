@@ -139,10 +139,10 @@
   - [x] Optimalisasi layout tabel dan kartu saat dibuka dari smartphone petugas di lapangan.
 
 ### 7. Showcase Inovasi Pelayanan & Bukti Dampak Nyata (Game Changer TPN)
-- [ ] **Modul Showcase Inovasi Pelayanan Publik & Reform:**
-  - [ ] Halaman khusus dokumentasi inovasi unggulan BPS Kabupaten Kepulauan Sitaro (misal: inovasi PST, layanan data statistik daerah, dsb.).
-  - [ ] Analisis dampak sebelum vs sesudah (*Before vs After Impact Assessment*), grafik utilisasi pengguna layanan, dan testimoni pengguna.
-  - [ ] Ekspor infografis / one-pager profil inovasi untuk paparan di hadapan Tim Penilai Nasional (TPN KemenPAN-RB).
+- [x] **Modul Showcase Inovasi Pelayanan Publik & Reform:**
+  - [x] Halaman khusus dokumentasi inovasi unggulan BPS Kabupaten Kepulauan Sitaro (misal: inovasi PST, layanan data statistik daerah, dsb.).
+  - [x] Analisis dampak sebelum vs sesudah (*Before vs After Impact Assessment*), grafik utilisasi pengguna layanan, dan testimoni pengguna.
+  - [x] Ekspor infografis / one-pager profil inovasi untuk paparan di hadapan Tim Penilai Nasional (TPN KemenPAN-RB).
 - [ ] **Integrasi Indeks Kepuasan Masyarakat (IKM) & Survei Persepsi Anti Korupsi (IPAK):**
   - [ ] Input data dan visualisasi tren berkala hasil survei pelayanan publik (Pilar 6) dan persepsi integritas (Pilar 5).
   - [ ] Perhitungan otomatis skor ketercapaian target minimal IKM/IPAK untuk pemenuhan syarat mutlak WBK/WBBM.

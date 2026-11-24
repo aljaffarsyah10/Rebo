@@ -615,3 +615,40 @@ export interface ZIAPPSyncSummary {
   readyItems: ZIAPPSyncItem[];
   syncedItems: ZIAPPSyncItem[];
 }
+
+// ==============================================================================
+// REBO V2: Showcase Inovasi Pelayanan Publik & Reformasi Birokrasi (Task 17)
+// ==============================================================================
+
+export type StatusInovasi = 'AKTIF' | 'RINTISAN' | 'PENGEMBANGAN';
+
+export interface TestimoniInovasi {
+  nama: string;
+  instansi: string;
+  kutipan: string;
+  rating: number; // Skala 1 - 5 bintang
+  jabatan?: string;
+  avatar_url?: string;
+  tanggal?: string;
+}
+
+export interface InovasiLayanan {
+  id: string;
+  nama_inovasi: string;
+  ringkasan: string;
+  pilar_terkait: string; // e.g. "Pilar 6 - Peningkatan Kualitas Pelayanan Publik"
+  latar_belakang: string;
+  solusi_inovasi: string;
+  kondisi_sebelum: string;
+  kondisi_sesudah: string;
+  persentase_efisiensi: string | number; // e.g. "85%" atau 85
+  jumlah_pengguna: number;
+  testimoni: TestimoniInovasi[];
+  link_dokumentasi: string;
+  link_video?: string;
+  status: StatusInovasi;
+  created_at?: string;
+  tagline?: string;
+  kategori_manfaat?: string;
+  penanggung_jawab?: string;
+}

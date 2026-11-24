@@ -124,6 +124,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Inovasi Layanan',
+    url: '/rebo/inovasi',
+    icon: 'sparkles',
+    isActive: false,
+    shortcut: ['i', 'v'],
+    items: []
+  },
+  {
     title: 'Arsip',
     url: '/rebo/arsip',
     icon: 'page',

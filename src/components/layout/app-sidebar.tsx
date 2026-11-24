@@ -162,6 +162,12 @@ export default function AppSidebar() {
                             <span className='relative inline-flex h-2 w-2 rounded-full bg-emerald-500'></span>
                           </span>
                         )}
+                        {item.title === 'Inovasi Layanan' && (
+                          <span className='relative mr-1 flex h-2 w-2'>
+                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75'></span>
+                            <span className='relative inline-flex h-2 w-2 rounded-full bg-purple-500'></span>
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
