@@ -63,7 +63,7 @@ const KategoriPenilaianSchema = z.object({
   nilai: z.coerce
     .number()
     .min(0, 'Nilai bobot minimal 0')
-    .max(10, 'Nilai bobot maksimal 10')
+    .max(100, 'Nilai bobot maksimal 100')
 });
 
 export type PilarInput = z.infer<typeof PilarSchema>;

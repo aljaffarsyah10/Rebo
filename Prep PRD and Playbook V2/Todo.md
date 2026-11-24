@@ -165,11 +165,11 @@
   - [x] Pengecekan kuota Google Drive instansi dan validasi berkala jika ada tautan Google Drive yang terhapus atau dipindahkan (*broken links detector*).
 
 ### 10. Manajemen Siklus Tahunan & Fleksibilitas Master Data LKE
-- [ ] **Wizard Setup Periode Baru (1-Click Period Setup / Clone):**
-  - [ ] Fitur duplikasi seluruh indikator dan struktur LKE dari tahun sebelumnya ke tahun baru dengan 1 klik, sehingga admin tidak perlu input manual dari awal.
-  - [ ] Pengaturan jadwal cutoff dan auto-lock periode (kunci otomatis edit saat masa penilaian mandiri telah berakhir).
-- [ ] **Editor Bobot & Rumus Dinamis:**
-  - [ ] Fleksibilitas penyesuaian bobot pilar/indikator jika KemenPAN-RB atau BPS RI memperbarui peraturan/juknis LKE PMPRB terbaru.
+- [x] **Wizard Setup Periode Baru (1-Click Period Setup / Clone):**
+  - [x] Fitur duplikasi seluruh indikator dan struktur LKE dari tahun sebelumnya ke tahun baru dengan 1 klik, sehingga admin tidak perlu input manual dari awal.
+  - [x] Pengaturan jadwal cutoff dan auto-lock periode (kunci otomatis edit saat masa penilaian mandiri telah berakhir).
+- [x] **Editor Bobot & Rumus Dinamis:**
+  - [x] Fleksibilitas penyesuaian bobot pilar/indikator jika KemenPAN-RB atau BPS RI memperbarui peraturan/juknis LKE PMPRB terbaru.
 
 
 

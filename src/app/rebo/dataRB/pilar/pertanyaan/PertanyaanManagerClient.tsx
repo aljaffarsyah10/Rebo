@@ -13,7 +13,8 @@ import {
   ShieldAlert,
   FolderTree,
   Sliders,
-  Layers
+  Layers,
+  Info
 } from 'lucide-react';
 import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -366,8 +367,8 @@ export default function PertanyaanManagerClient({
       return;
     }
     const parsedNilai = parseFloat(newKatNilai);
-    if (isNaN(parsedNilai) || parsedNilai < 0 || parsedNilai > 10) {
-      toast.error('Nilai bobot harus antara 0 sampai 10.');
+    if (isNaN(parsedNilai) || parsedNilai < 0 || parsedNilai > 100) {
+      toast.error('Nilai bobot harus antara 0 sampai 100.');
       return;
     }
 
@@ -883,10 +884,24 @@ export default function PertanyaanManagerClient({
         <Dialog open={kategoriDialogOpen} onOpenChange={setKategoriDialogOpen}>
           <DialogContent className='sm:max-w-xl'>
             <DialogHeader>
-              <DialogTitle className='flex items-center gap-2 text-purple-700 dark:text-purple-300'>
-                <Sliders className='h-5 w-5' />
-                Opsi Pilihan Jawaban &amp; Bobot Nilai
-              </DialogTitle>
+              <div className='flex items-center justify-between pr-4'>
+                <DialogTitle className='flex items-center gap-2 text-purple-700 dark:text-purple-300'>
+                  <Sliders className='h-5 w-5' />
+                  Editor Bobot Dinamis &amp; Opsi Jawaban LKE
+                </DialogTitle>
+                <Badge className='bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600'>
+                  Skor Maks:{' '}
+                  {(kategoriTargetPertanyaan?.kategoriPenilaian || []).length >
+                  0
+                    ? Math.max(
+                        ...(
+                          kategoriTargetPertanyaan?.kategoriPenilaian || []
+                        ).map((k) => Number(k.nilai) || 0)
+                      )
+                    : 0}{' '}
+                  Poin
+                </Badge>
+              </div>
               <DialogDescription>
                 Indikator #{kategoriTargetPertanyaan?.id_pertanyaan}:{' '}
                 {kategoriTargetPertanyaan?.deskripsi_pertanyaan}
@@ -894,6 +909,16 @@ export default function PertanyaanManagerClient({
             </DialogHeader>
 
             <div className='space-y-4 py-3'>
+              {/* Info Juknis Banner */}
+              <div className='flex items-start gap-2 rounded-lg border border-purple-200 bg-purple-50/70 p-2.5 text-xs text-purple-900 dark:border-purple-800 dark:bg-purple-950/30 dark:text-purple-200'>
+                <Info className='mt-0.5 h-4 w-4 shrink-0 text-purple-600' />
+                <p>
+                  <strong>Editor Bobot Dinamis:</strong> Anda dapat menyesuaikan
+                  bobot (skor poin) per opsi jawaban secara fleksibel sesuai
+                  dengan perubahan Petunjuk Teknis (Juknis) LKE KemenPAN-RB /
+                  BPS RI terbaru.
+                </p>
+              </div>
               {/* List Opsi Saat ini */}
               <div className='space-y-2'>
                 <Label className='text-muted-foreground text-xs font-semibold uppercase'>
@@ -1020,13 +1045,34 @@ export default function PertanyaanManagerClient({
                         type='number'
                         step='0.000001'
                         min={0}
-                        max={10}
+                        max={100}
                         value={newKatNilai}
                         onChange={(e) => setNewKatNilai(e.target.value)}
                         className='h-8 text-xs'
                         required
                       />
                     </div>
+                  </div>
+
+                  {/* Preset Bobot Buttons */}
+                  <div className='flex items-center gap-1.5 pt-0.5'>
+                    <span className='text-muted-foreground text-[10px]'>
+                      Preset Bobot:
+                    </span>
+                    {[0, 0.25, 0.5, 0.75, 1.0, 2.0, 5.0].map((preset) => (
+                      <button
+                        key={preset}
+                        type='button'
+                        onClick={() => setNewKatNilai(String(preset))}
+                        className={`rounded border px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
+                          newKatNilai === String(preset)
+                            ? 'border-purple-600 bg-purple-600 font-bold text-white'
+                            : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+                        }`}
+                      >
+                        {preset}
+                      </button>
+                    ))}
                   </div>
 
                   <Button
