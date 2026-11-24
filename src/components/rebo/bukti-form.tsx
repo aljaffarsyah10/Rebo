@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useRef, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   FileText,
@@ -18,7 +18,10 @@ import {
   ShieldCheck,
   AlertCircle,
   Loader2,
-  UploadCloud
+  UploadCloud,
+  Check,
+  RotateCcw,
+  Cloud
 } from 'lucide-react';
 import { submitBuktiAction, deleteDokumenBukti } from '@/actions/bukti-actions';
 import { checkBatchGDriveHealthAction } from '@/actions/gdrive-actions';
@@ -110,6 +113,156 @@ export default function BuktiForm({
     Record<string, GDriveHealthCheckResult>
   >({});
   const [isCheckingAll, setIsCheckingAll] = useState(false);
+
+  // Auto-save draft states (Local Storage)
+  const draftStorageKey = `rebo_draft_p${pertanyaan.id_pertanyaan}`;
+  const [autoSaveStatus, setAutoSaveStatus] = useState<
+    'idle' | 'saving' | 'saved'
+  >('idle');
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+  const [hasDraftNotice, setHasDraftNotice] = useState(false);
+  const [savedDraftData, setSavedDraftData] = useState<any | null>(null);
+
+  const isMountedRef = useRef(false);
+  const isRestoringRef = useRef(false);
+
+  // Check and load draft on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(draftStorageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const serverKategori = currentBukti?.id_kategori
+          ? String(currentBukti.id_kategori)
+          : '';
+        const serverCatatan = (
+          currentBukti?.catatan_operator ??
+          currentBukti?.catatan_user ??
+          ''
+        ).trim();
+
+        const draftKategori = parsed.selectedKategori
+          ? String(parsed.selectedKategori)
+          : '';
+        const draftCatatan = (parsed.catatanOperator || '').trim();
+
+        // Check if local draft contains different unsubmitted data
+        const isDifferent =
+          (Boolean(draftKategori) && draftKategori !== serverKategori) ||
+          (Boolean(draftCatatan) && draftCatatan !== serverCatatan) ||
+          (Array.isArray(parsed.dokumenList) &&
+            parsed.dokumenList.some((d: any) => d.id?.startsWith('temp-')));
+
+        if (isDifferent) {
+          setHasDraftNotice(true);
+          setSavedDraftData(parsed);
+        } else if (parsed.savedAt) {
+          setLastSavedTime(parsed.savedAt);
+          setAutoSaveStatus('saved');
+        }
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Gagal membaca draf lokal:', err);
+    } finally {
+      const timer = setTimeout(() => {
+        isMountedRef.current = true;
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [draftStorageKey, currentBukti]);
+
+  // Debounced Auto-Save (800ms)
+  useEffect(() => {
+    if (!isMountedRef.current || !canEdit || typeof window === 'undefined')
+      return;
+    if (isRestoringRef.current) {
+      isRestoringRef.current = false;
+      return;
+    }
+
+    // Only auto-save if user entered or changed something
+    const hasContent =
+      Boolean(selectedKategori) ||
+      catatanOperator.trim().length > 0 ||
+      dokumenList.some((d) => d.id?.startsWith('temp-'));
+
+    if (!hasContent) return;
+
+    setAutoSaveStatus('saving');
+
+    const timer = setTimeout(() => {
+      try {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        const dataToSave = {
+          selectedKategori,
+          catatanOperator,
+          dokumenList,
+          savedAt: timeStr,
+          timestamp: now.toISOString()
+        };
+
+        localStorage.setItem(draftStorageKey, JSON.stringify(dataToSave));
+        setLastSavedTime(timeStr);
+        setAutoSaveStatus('saved');
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Gagal auto-save draf:', err);
+        setAutoSaveStatus('idle');
+      }
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [
+    selectedKategori,
+    catatanOperator,
+    dokumenList,
+    canEdit,
+    draftStorageKey
+  ]);
+
+  // Actions for restoring or clearing local draft
+  const handleRestoreDraft = () => {
+    if (!savedDraftData) return;
+    isRestoringRef.current = true;
+
+    if (savedDraftData.selectedKategori) {
+      setSelectedKategori(String(savedDraftData.selectedKategori));
+    }
+    if (savedDraftData.catatanOperator !== undefined) {
+      setCatatanOperator(savedDraftData.catatanOperator);
+    }
+    if (
+      Array.isArray(savedDraftData.dokumenList) &&
+      savedDraftData.dokumenList.length > 0
+    ) {
+      setDokumenList(savedDraftData.dokumenList);
+    }
+    if (savedDraftData.savedAt) {
+      setLastSavedTime(savedDraftData.savedAt);
+    }
+    setAutoSaveStatus('saved');
+    setHasDraftNotice(false);
+    toast.success('Draf lokal berhasil dipulihkan.');
+  };
+
+  const handleDiscardDraft = () => {
+    try {
+      localStorage.removeItem(draftStorageKey);
+    } catch {}
+    setHasDraftNotice(false);
+    setSavedDraftData(null);
+    setAutoSaveStatus('idle');
+    setLastSavedTime(null);
+    toast.info('Draf lokal berhasil dibersihkan.');
+  };
 
   // Document preview modal state
   const [previewDoc, setPreviewDoc] = useState<{
@@ -398,6 +551,15 @@ export default function BuktiForm({
         const res = await submitBuktiAction(payload);
 
         if (res.success) {
+          // Hapus draf lokal otomatis ketika user berhasil simpan / ajukan bukti
+          try {
+            localStorage.removeItem(draftStorageKey);
+          } catch {}
+          setHasDraftNotice(false);
+          setSavedDraftData(null);
+          setAutoSaveStatus('idle');
+          setLastSavedTime(null);
+
           toast.success(res.message || 'Data berhasil disimpan.');
 
           // Update parent state if setBuktiDukungMap is present
@@ -462,6 +624,71 @@ export default function BuktiForm({
       id={`bukti-form-${pertanyaan.id_pertanyaan}`}
       className='mt-4 scroll-mt-20 space-y-6'
     >
+      {/* 0. DRAFT RECOVERY NOTIFICATION BANNER */}
+      {hasDraftNotice && (
+        <div className='flex flex-col justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50/90 p-3.5 text-xs text-sky-900 shadow-xs sm:flex-row sm:items-center dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200'>
+          <div className='flex items-center gap-2.5'>
+            <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300'>
+              <Cloud className='h-4 w-4' />
+            </div>
+            <div>
+              <div className='font-semibold text-sky-950 dark:text-sky-100'>
+                Ditemukan Draf Lokal Belum Disimpan
+              </div>
+              <p className='text-2xs mt-0.5 text-sky-800/80 dark:text-sky-300/80'>
+                {savedDraftData?.savedAt
+                  ? `Draf tersimpan dari sesi sebelumnya (pukul ${savedDraftData.savedAt}). Ingin memulihkan data tersebut?`
+                  : 'Terdapat perubahan isian lokal yang belum dikirim ke server.'}
+              </p>
+            </div>
+          </div>
+          <div className='flex shrink-0 items-center gap-2 self-end sm:self-center'>
+            <Button
+              type='button'
+              size='sm'
+              variant='outline'
+              onClick={handleDiscardDraft}
+              className='text-2xs h-7 border-sky-300 px-2.5 text-sky-800 hover:bg-sky-100 dark:border-sky-800 dark:text-sky-300'
+            >
+              <Trash2 className='mr-1 h-3 w-3 text-rose-500' />
+              Bersihkan Draf
+            </Button>
+            <Button
+              type='button'
+              size='sm'
+              onClick={handleRestoreDraft}
+              className='text-2xs h-7 bg-sky-600 px-3 font-semibold text-white shadow-xs hover:bg-sky-700'
+            >
+              <RotateCcw className='mr-1 h-3 w-3' />
+              Pulihkan Draf
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* AUTO-SAVE STATUS HEADER BADGE */}
+      {canEdit && (
+        <div className='flex items-center justify-between border-b border-gray-100 pb-2 dark:border-gray-800'>
+          <div className='text-2xs flex items-center gap-1.5 text-gray-500 dark:text-gray-400'>
+            <Cloud className='h-3.5 w-3.5 text-blue-500' />
+            <span>Auto-Save Draf Lokal Aktif</span>
+          </div>
+          <div>
+            {autoSaveStatus === 'saving' && (
+              <span className='text-2xs inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'>
+                <Loader2 className='h-3 w-3 animate-spin text-amber-500' />
+                <span>Menyimpan draf...</span>
+              </span>
+            )}
+            {autoSaveStatus === 'saved' && lastSavedTime && (
+              <span className='text-2xs inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
+                <Check className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
+                <span>Draf Tersimpan Otomatis ({lastSavedTime})</span>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
       {/* RBAC Read-Only Banner */}
       {!canEdit && (
         <div className='flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'>

@@ -11,6 +11,7 @@
 - [x] Profil Pengguna Mandiri, Preferensi Notifikasi WA & Worker-Tracking (`/rebo/profile`)
 - [x] Grafik Radar / Spider Web Capaian 6 Pilar (Visualisasi Eksekutif Monitoring)
 - [x] Batch Upload & Drag-and-Drop Bukti Dukung dengan Auto-Tagging Kategori Dokumen
+- [x] Sticky Summary & Auto-Save Draft Indikator pada Form LKE (Penyimpanan lokal otomatis & Bilah Ringkasan Melayang)
 
 ---
 
@@ -101,9 +102,9 @@
   - [x] Pratinjau langsung file PDF, gambar, dan dokumen Google Drive di dalam aplikasi REBO tanpa harus membuka tab baru browser.
 - [x] **Batch Upload & Drag-and-Drop Bukti Dukung:**
   - [x] Pengunggahan multi-berkas sekaligus dengan progress bar status upload dan auto-tagging kategori dokumen (Undangan, Notula, Daftar Hadir, Laporan, Dokumentasi Foto).
-- [ ] **Sticky Summary & Auto-Save Indikator:**
-  - [ ] Header ringkasan skor dan progres yang tetap terlihat saat pengguna menggulir (scroll) halaman form yang panjang.
-  - [ ] Penyimpanan draf otomatis (auto-save draft) agar isian catatan atau link tidak hilang saat koneksi internet terputus.
+- [x] **Sticky Summary & Auto-Save Indikator:**
+  - [x] Header ringkasan skor dan progres yang tetap terlihat saat pengguna menggulir (scroll) halaman form yang panjang.
+  - [x] Penyimpanan draf otomatis (auto-save draft) agar isian catatan atau link tidak hilang saat koneksi internet terputus.
 
 ### 3. Visualisasi Eksekutif & Simulasi Predikat WBK/WBBM (Monitoring)
 - [x] **Grafik Radar / Spider Web Capaian 6 Pilar:**

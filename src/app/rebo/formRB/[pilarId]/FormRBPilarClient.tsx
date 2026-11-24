@@ -15,7 +15,9 @@ import {
   TrendingUp,
   TrendingDown,
   Equal,
-  Sparkles
+  Sparkles,
+  ArrowUp,
+  Cloud
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -104,6 +106,26 @@ export default function FormRBPilarClient({
       return () => clearTimeout(timeoutId);
     }
   }, [subpilarList]);
+
+  // Sticky Floating Summary Bar state & scroll listener
+  const [isStickyVisible, setIsStickyVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 280) {
+        setIsStickyVisible(true);
+      } else {
+        setIsStickyVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Calculate Pilar Statistics & Dual-Scoring Metrics
   const stats = useMemo(() => {
@@ -538,6 +560,80 @@ export default function FormRBPilarClient({
             Data subpilar untuk Pilar {pilarId} belum tersedia.
           </p>
         </div>
+      )}
+      {/* 6. STICKY SUMMARY FLOATING BAR */}
+      {isStickyVisible && (
+        <aside
+          aria-label='Bilah Ringkasan Form Melayang'
+          className='animate-in fade-in slide-in-from-bottom-4 fixed inset-x-0 bottom-4 z-40 mx-auto max-w-5xl px-4 transition-all duration-300'
+        >
+          <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-lg backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90'>
+            {/* Left: Pilar & Score Information */}
+            <div className='flex min-w-0 items-center gap-3'>
+              <div className='hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-xs font-black text-white shadow-xs sm:flex'>
+                P{pilarId}
+              </div>
+              <div className='min-w-0'>
+                <div className='flex items-center gap-2'>
+                  <span className='truncate text-xs font-bold text-slate-800 dark:text-slate-100'>
+                    {pilarName}
+                  </span>
+                  <Badge
+                    variant='outline'
+                    className='text-3xs bg-blue-50/70 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                  >
+                    {stats.completionPercent}% Selesai
+                  </Badge>
+                </div>
+                <div className='text-3xs mt-0.5 flex flex-wrap items-center gap-1.5 text-slate-500 dark:text-slate-400'>
+                  <span>
+                    {stats.disetujui + stats.menungguReview} dari{' '}
+                    {stats.totalQuestions} indikator terisi
+                  </span>
+                  <span>•</span>
+                  <span>
+                    Skor Usulan:{' '}
+                    <strong className='font-mono text-slate-700 dark:text-slate-300'>
+                      {stats.totalSkorMandiri.toFixed(2)}
+                    </strong>{' '}
+                    / {stats.totalSkorMaks.toFixed(2)}
+                  </span>
+                  {stats.totalSkorVerifikasi > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>
+                        Verifikasi:{' '}
+                        <strong className='font-mono text-emerald-600 dark:text-emerald-400'>
+                          {stats.totalSkorVerifikasi.toFixed(2)}
+                        </strong>
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Auto-Save Active Indicator & Scroll To Top */}
+            <div className='flex shrink-0 items-center gap-2'>
+              <div className='text-3xs hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-2.5 py-1 font-medium text-emerald-700 md:inline-flex dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
+                <Cloud className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
+                <span>Auto-Save Aktif</span>
+              </div>
+
+              <Button
+                type='button'
+                size='sm'
+                variant='outline'
+                onClick={scrollToTop}
+                className='h-8 rounded-xl border-slate-300 bg-white/80 px-3 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700'
+                title='Kembali ke bagian atas'
+              >
+                <ArrowUp className='mr-1.5 h-3.5 w-3.5' />
+                <span>Scroll ke Atas</span>
+              </Button>
+            </div>
+          </div>
+        </aside>
       )}
     </div>
   );
