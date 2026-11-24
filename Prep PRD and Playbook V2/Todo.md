@@ -70,8 +70,8 @@
   - [x] Validasi otomatis apakah link GDrive aktif dan memiliki status izin akses publik/dapat dibaca oleh penilai (*Anyone with link can view*), bukan terkunci (*Restricted*).
 - [x] **Checklist Dokumen Wajib per Indikator (QA Checklist):**
   - [x] Buat daftar periksa dokumen minimal (Undangan, Daftar Hadir, Notula, Laporan, Dokumentasi) sebelum indikator diizinkan berstatus siap kirim ke pusat.
-- [ ] **Simulasi Nilai & Gap Analysis (Predikat WBK/WBBM):**
-  - [ ] Hitung estimasi skor akhir berdasarkan bukti yang sudah valid serta tandai indikator berbobot tinggi yang belum optimal.
+- [x] **Simulasi Nilai & Gap Analysis (Predikat WBK/WBBM):**
+  - [x] Hitung estimasi skor akhir berdasarkan bukti yang sudah valid serta tandai indikator berbobot tinggi yang belum optimal.
 
 ### 3. Otomasi Pengingat & Tindak Lanjut
 - [x] **Early Warning Deadline System:**
@@ -104,9 +104,9 @@
 ### 3. Visualisasi Eksekutif & Simulasi Predikat WBK/WBBM (Monitoring)
 - [ ] **Grafik Radar / Spider Web Capaian 6 Pilar:**
   - [ ] Tambahkan visualisasi grafik radar pada dashboard Overview & Monitoring untuk membandingkan capaian nilai riil vs target bobot maksimal di 6 pilar.
-- [ ] **Simulasi & Gap Analysis Predikat WBK/WBBM:**
-  - [ ] Panel kalkulator predikat WBK: menghitung proyeksi total nilai dan menampilkan indikator-indikator prioritas berbobot tinggi yang belum optimal.
-  - [ ] Notifikasi status kelayakan: Memberikan sinyal apakah satker sudah memenuhi syarat minimal WBK (Nilai total $\ge 75.00$ dan tidak ada pilar di bawah batas ambang).
+- [x] **Simulasi & Gap Analysis Predikat WBK/WBBM:**
+  - [x] Panel kalkulator predikat WBK: menghitung proyeksi total nilai dan menampilkan indikator-indikator prioritas berbobot tinggi yang belum optimal.
+  - [x] Notifikasi status kelayakan: Memberikan sinyal apakah satker sudah memenuhi syarat minimal WBK (Nilai total $\ge 75.00$ dan tidak ada pilar di bawah batas ambang).
 - [ ] **Export LKE Terformat Resmi (Excel & PDF Eksekutif):**
   - [ ] Ekspor template lembar kerja evaluasi lengkap sesuai standar format PermenPAN-RB / BPS RI dengan header resmi, kop surat, dan tandatangan digital pimpinan.
 

@@ -3,6 +3,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { getActivePeriode, getAllPeriode } from '@/lib/api/rebo';
+import { calculateWBKSimulation } from '@/lib/simulation/wbk-gap-analysis';
 import type {
   MonitoringDashboardData,
   MonitoringKPIData,
@@ -125,6 +126,7 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
     let globalNilaiMaksimal = 0;
 
     const pilarProgressList: PilarProgressItem[] = [];
+    const allQuestionItems: any[] = [];
 
     (pilarsData || []).forEach((pilar: any) => {
       const pilarIdStr = String(pilar.id_pilar);
@@ -216,6 +218,24 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
 
           subNilaiMandiri += mandiriVal;
           subNilaiVerifikasi += verifVal;
+
+          allQuestionItems.push({
+            id_pertanyaan: qIdStr,
+            id_pilar: pilarIdStr,
+            kode_pilar: kodePilar,
+            nama_pilar: pilarNama,
+            id_subpilar: subIdStr,
+            nama_subpilar: subNama,
+            deskripsi_pertanyaan:
+              q.deskripsi_pertanyaan ||
+              q.uraian_pertanyaan ||
+              q.uraian_buktidukung ||
+              'Indikator LKE',
+            status_kelengkapan: status,
+            nilai_mandiri: mandiriVal,
+            nilai_verifikasi: verifVal,
+            nilai_maks: maxNilai
+          });
         });
 
         const subPersenSelesai =
@@ -351,6 +371,12 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
       }
     ];
 
+    // 10. Hitung simulasi capaian predikat WBK/WBBM & Quick-Wins
+    const simulation = calculateWBKSimulation(
+      allQuestionItems,
+      totalSkorPilarHasil
+    );
+
     return {
       success: true,
       periodes: allPeriodes,
@@ -359,7 +385,8 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
         kpi,
         pilars: pilarProgressList,
         statusDistribution,
-        barChartData
+        barChartData,
+        simulation
       }
     };
   } catch (error: any) {
@@ -390,7 +417,8 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
         },
         pilars: [],
         statusDistribution: [],
-        barChartData: []
+        barChartData: [],
+        simulation: calculateWBKSimulation([], 0)
       }
     };
   }

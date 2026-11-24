@@ -39,6 +39,8 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
+import SimulasiWBKCard from '@/components/rebo/simulasi-wbk-card';
+import { calculateWBKSimulation } from '@/lib/simulation/wbk-gap-analysis';
 import type { MonitoringDashboardData, PeriodeEvaluasi } from '@/types/rebo';
 import { toast } from 'sonner';
 
@@ -87,7 +89,11 @@ export default function MonitoringDashboardClient({
     });
   };
 
-  const { kpi, pilars, barChartData, statusDistribution, periode } = data;
+  const { kpi, pilars, barChartData, statusDistribution, periode, simulation } =
+    data;
+
+  const resolvedSimulation =
+    simulation || calculateWBKSimulation(pilars, kpi.totalSkorPilarHasil);
 
   return (
     <div className='container mx-auto max-w-7xl space-y-8 p-6'>
@@ -309,6 +315,11 @@ export default function MonitoringDashboardClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* 2.5 Simulasi Predikat WBK/WBBM & Gap Analysis Card */}
+      {resolvedSimulation && (
+        <SimulasiWBKCard simulation={resolvedSimulation} />
+      )}
 
       {/* 3. Visualizations Section (Recharts Bar Chart & Donut Chart) */}
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>

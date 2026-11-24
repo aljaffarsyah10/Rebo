@@ -216,6 +216,50 @@ export interface MonitoringDashboardData {
   pilars: PilarProgressItem[];
   statusDistribution: StatusDistributionItem[];
   barChartData: PilarBarChartItem[];
+  simulation?: WBKSimulationResult;
+}
+
+// ==============================================================================
+// REBO V2: Simulasi Nilai & Gap Analysis (Predikat WBK/WBBM)
+// ==============================================================================
+
+export type WBKStatusPredikat =
+  | 'MEMENUHI_WBBM'
+  | 'MEMENUHI_WBK'
+  | 'POTENSI_WBK_BUTUH_VERIFIKASI'
+  | 'BELUM_MEMENUHI_WBK';
+
+export interface QuickWinIndicator {
+  id_pertanyaan: string;
+  id_pilar: string;
+  kode_pilar: string;
+  nama_pilar: string;
+  id_subpilar?: string;
+  nama_subpilar?: string;
+  deskripsi_pertanyaan: string;
+  status_kelengkapan: number;
+  status_label: string;
+  nilai_mandiri: number;
+  nilai_verifikasi: number;
+  nilai_maks: number;
+  potensi_tambahan_skor: number;
+  link_form: string;
+}
+
+export interface WBKSimulationResult {
+  totalSkorMandiri: number;
+  totalSkorVerifikasi: number;
+  totalNilaiMaks: number;
+  persentaseMandiri: number;
+  persentaseVerifikasi: number;
+  gapToWBK: number;
+  gapToWBBM: number;
+  gapMandiriToWBK: number;
+  status: WBKStatusPredikat;
+  statusLabel: string;
+  statusDescription: string;
+  quickWins: QuickWinIndicator[];
+  totalSkorPilarHasil?: number;
 }
 
 export interface KanbanIndicatorCard {
