@@ -17,7 +17,8 @@ import {
   FolderOpen,
   ShieldCheck,
   AlertCircle,
-  Loader2
+  Loader2,
+  UploadCloud
 } from 'lucide-react';
 import { submitBuktiAction, deleteDokumenBukti } from '@/actions/bukti-actions';
 import { checkBatchGDriveHealthAction } from '@/actions/gdrive-actions';
@@ -28,6 +29,7 @@ import {
 import type { GDriveHealthCheckResult } from '@/lib/gdrive/health-checker';
 import { QAChecklistCard } from '@/components/rebo/qa-checklist-card';
 import { DocumentPreviewModal } from '@/components/rebo/document-preview-modal';
+import { BatchUploadDropzone } from '@/components/rebo/batch-upload-dropzone';
 import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -90,11 +92,13 @@ export default function BuktiForm({
     }>
   >([]);
 
-  // 3. Inline new document input state
+  // 3. Document input state & mode
   const [newDocNama, setNewDocNama] = useState('');
   const [newDocUrl, setNewDocUrl] = useState('');
   const [newDocTipe, setNewDocTipe] = useState('Undangan');
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [addDocMode, setAddDocMode] = useState<'none' | 'single' | 'batch'>(
+    'none'
+  );
 
   const [isPending, startTransition] = useTransition();
   const [submittingType, setSubmittingType] = useState<
@@ -240,7 +244,7 @@ export default function BuktiForm({
     currentBukti?.nilai_akhir ??
     0;
 
-  // Add document to temporary list
+  // Add single document to temporary list
   function handleAddDocument(e: React.FormEvent) {
     e.preventDefault();
     if (!newDocNama.trim()) {
@@ -276,8 +280,34 @@ export default function BuktiForm({
     setDokumenList((prev) => [...prev, newDoc]);
     setNewDocNama('');
     setNewDocUrl('');
-    setShowAddForm(false);
+    setAddDocMode('none');
     toast.success(`Berkas "${newDoc.nama_dokumen}" ditambahkan ke draf.`);
+  }
+
+  // Add multiple documents from batch upload / drag-and-drop
+  function handleBatchAddDocuments(
+    newDocs: Array<{
+      nama_dokumen: string;
+      file_url: string;
+      tipe_dokumen: string;
+    }>
+  ) {
+    if (!newDocs || newDocs.length === 0) return;
+
+    const formattedDocs = newDocs.map((doc, idx) => ({
+      id: `temp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+      nama_dokumen: doc.nama_dokumen,
+      file_url: doc.file_url,
+      tipe_dokumen: doc.tipe_dokumen,
+      uploaded_by: 'Operator (Belum Disimpan)',
+      uploaded_at: new Date().toISOString()
+    }));
+
+    setDokumenList((prev) => [...prev, ...formattedDocs]);
+    setAddDocMode('none');
+    toast.success(
+      `${newDocs.length} berkas berhasil ditambahkan ke draf bukti dukung.`
+    );
   }
 
   // Remove document
@@ -630,18 +660,32 @@ export default function BuktiForm({
               </Button>
             )}
 
-            {canEdit && !showAddForm && (
-              <Button
-                type='button'
-                size='sm'
-                variant='outline'
-                onClick={() => setShowAddForm(true)}
-                disabled={isPending}
-                className='h-8 text-xs font-semibold'
-              >
-                <Plus className='mr-1.5 h-3.5 w-3.5' />
-                Tambah Berkas
-              </Button>
+            {canEdit && addDocMode === 'none' && (
+              <div className='flex flex-wrap items-center gap-1.5'>
+                <Button
+                  type='button'
+                  size='sm'
+                  variant='outline'
+                  onClick={() => setAddDocMode('single')}
+                  disabled={isPending}
+                  className='h-8 text-xs font-semibold'
+                >
+                  <Plus className='mr-1.5 h-3.5 w-3.5' />
+                  Tambah Dokumen Tunggal
+                </Button>
+                <Button
+                  type='button'
+                  size='sm'
+                  variant='outline'
+                  onClick={() => setAddDocMode('batch')}
+                  disabled={isPending}
+                  className='h-8 border-indigo-200 bg-indigo-50/70 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-900/60'
+                  title='Unggah banyak berkas sekaligus via Drag & Drop atau tempel tautan'
+                >
+                  <UploadCloud className='mr-1.5 h-3.5 w-3.5' />
+                  Unggah Massal / Drag-and-Drop
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -658,23 +702,34 @@ export default function BuktiForm({
         </div>
 
         {/* Existing / Uploaded Documents List */}
-        {dokumenList.length === 0 && !showAddForm ? (
+        {dokumenList.length === 0 && addDocMode === 'none' ? (
           <div className='rounded-lg border border-dashed border-gray-300 bg-gray-50/50 p-6 text-center dark:border-gray-700 dark:bg-gray-900/30'>
             <FileText className='mx-auto h-8 w-8 text-gray-400 dark:text-gray-500' />
             <p className='mt-2 text-xs font-medium text-gray-600 dark:text-gray-400'>
               Belum ada berkas bukti dukung yang ditambahkan.
             </p>
             {canEdit && (
-              <Button
-                type='button'
-                size='sm'
-                variant='outline'
-                onClick={() => setShowAddForm(true)}
-                className='mt-3 text-xs'
-              >
-                <Plus className='mr-1 h-3.5 w-3.5' />
-                Tambah Berkas Sekarang
-              </Button>
+              <div className='mt-3 flex flex-wrap items-center justify-center gap-2'>
+                <Button
+                  type='button'
+                  size='sm'
+                  variant='outline'
+                  onClick={() => setAddDocMode('single')}
+                  className='text-xs'
+                >
+                  <Plus className='mr-1 h-3.5 w-3.5' />
+                  Tambah Dokumen Tunggal
+                </Button>
+                <Button
+                  type='button'
+                  size='sm'
+                  onClick={() => setAddDocMode('batch')}
+                  className='bg-indigo-600 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700'
+                >
+                  <UploadCloud className='mr-1 h-3.5 w-3.5' />
+                  Unggah Massal / Drag-and-Drop
+                </Button>
+              </div>
             )}
           </div>
         ) : (
@@ -791,15 +846,52 @@ export default function BuktiForm({
           </div>
         )}
 
-        {/* Inline Add Document Form */}
-        {showAddForm && canEdit && (
+        {/* Batch Upload & Drag-and-Drop Dropzone Component */}
+        {addDocMode === 'batch' && canEdit && (
+          <div className='mt-4'>
+            <div className='mb-2 flex items-center justify-between'>
+              <span className='text-xs font-bold text-indigo-900 dark:text-indigo-200'>
+                Mode: Unggah Massal & Drag-and-Drop Bukti Dukung
+              </span>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                onClick={() => setAddDocMode('single')}
+                className='text-2xs h-7 text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-300'
+              >
+                Ganti ke Tambah Dokumen Tunggal
+              </Button>
+            </div>
+            <BatchUploadDropzone
+              onBatchAdd={handleBatchAddDocuments}
+              onCancel={() => setAddDocMode('none')}
+              defaultFolderUrl={indicatorFolderUrl}
+            />
+          </div>
+        )}
+
+        {/* Inline Add Document Form (Single) */}
+        {addDocMode === 'single' && canEdit && (
           <form
             onSubmit={handleAddDocument}
             className='mt-4 rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-800 dark:bg-blue-950/20'
           >
-            <h5 className='mb-3 text-xs font-bold tracking-wider text-blue-900 uppercase dark:text-blue-200'>
-              Tambah Dokumen Bukti Baru
-            </h5>
+            <div className='mb-3 flex items-center justify-between'>
+              <h5 className='text-xs font-bold tracking-wider text-blue-900 uppercase dark:text-blue-200'>
+                Tambah Dokumen Bukti Tunggal
+              </h5>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                onClick={() => setAddDocMode('batch')}
+                className='text-2xs h-6 font-semibold text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40'
+              >
+                <UploadCloud className='mr-1 h-3 w-3' />
+                Beralih ke Unggah Massal / Drag-and-Drop
+              </Button>
+            </div>
 
             <div className='mb-3 grid grid-cols-1 gap-3 md:grid-cols-2'>
               <div>
@@ -873,7 +965,7 @@ export default function BuktiForm({
                 type='button'
                 variant='ghost'
                 size='sm'
-                onClick={() => setShowAddForm(false)}
+                onClick={() => setAddDocMode('none')}
                 className='h-8 text-xs'
               >
                 Batal

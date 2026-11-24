@@ -10,6 +10,7 @@
 - [x] Ekstensi Chrome 'REBO Sync Assistant' (Auto-Fill ZIAPP 1-Click) & Script RPA Auto-Submit (`extensions/rebo-sync-assistant`, `scripts/rpa_ziapp_sync.js`)
 - [x] Profil Pengguna Mandiri, Preferensi Notifikasi WA & Worker-Tracking (`/rebo/profile`)
 - [x] Grafik Radar / Spider Web Capaian 6 Pilar (Visualisasi Eksekutif Monitoring)
+- [x] Batch Upload & Drag-and-Drop Bukti Dukung dengan Auto-Tagging Kategori Dokumen
 
 ---
 
@@ -98,8 +99,8 @@
 ### 2. Peningkatan Pengalaman Pengguna Form Bukti Dukung (Form RB & Input)
 - [x] **Inline Document Preview (Modal Pratinjau Terpadu):**
   - [x] Pratinjau langsung file PDF, gambar, dan dokumen Google Drive di dalam aplikasi REBO tanpa harus membuka tab baru browser.
-- [ ] **Batch Upload & Drag-and-Drop Bukti Dukung:**
-  - [ ] Pengunggahan multi-berkas sekaligus dengan progress bar status upload dan auto-tagging kategori dokumen (Undangan, Notula, Daftar Hadir, Laporan, Dokumentasi Foto).
+- [x] **Batch Upload & Drag-and-Drop Bukti Dukung:**
+  - [x] Pengunggahan multi-berkas sekaligus dengan progress bar status upload dan auto-tagging kategori dokumen (Undangan, Notula, Daftar Hadir, Laporan, Dokumentasi Foto).
 - [ ] **Sticky Summary & Auto-Save Indikator:**
   - [ ] Header ringkasan skor dan progres yang tetap terlihat saat pengguna menggulir (scroll) halaman form yang panjang.
   - [ ] Penyimpanan draf otomatis (auto-save draft) agar isian catatan atau link tidak hilang saat koneksi internet terputus.
