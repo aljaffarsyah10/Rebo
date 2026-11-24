@@ -26,7 +26,12 @@ import {
   Folder,
   ChevronDown,
   ChevronRight,
-  MessageSquare
+  MessageSquare,
+  Download,
+  FileSpreadsheet,
+  RotateCcw,
+  Calendar,
+  Filter
 } from 'lucide-react';
 import { getAuditLogsAction } from '@/actions/audit-actions';
 import {
@@ -91,6 +96,7 @@ function getActionBadge(action: string) {
         icon: AlertOctagon
       };
     case 'SUBMIT_EVIDENCE':
+    case 'UPLOAD_BUKTI':
       return {
         label: 'Unggah Bukti',
         className:
@@ -111,6 +117,15 @@ function getActionBadge(action: string) {
         className:
           'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300',
         icon: History
+      };
+    case 'SYNC_ZIAPP':
+    case 'SYNC_ZIAPP_UPLOAD':
+    case 'SYNC_ZIAPP_BATCH':
+      return {
+        label: 'Sinkronisasi ZIAPP',
+        className:
+          'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-300',
+        icon: FolderSync
       };
     case 'NOTIF_WA_SUBMIT':
       return {
@@ -133,6 +148,23 @@ function getActionBadge(action: string) {
           'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300 border-orange-300',
         icon: MessageSquare
       };
+    case 'NOTIF_WA_DEADLINE':
+    case 'NOTIFIKASI_WA':
+      return {
+        label: 'Notifikasi WA',
+        className:
+          'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300',
+        icon: MessageSquare
+      };
+    case 'UPDATE_USER_PROFILE':
+    case 'UPDATE_USER_PHONE':
+    case 'UPDATE_USER_NOTIFICATION_SETTINGS':
+      return {
+        label: 'Profil Pengguna',
+        className:
+          'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300 border-violet-300',
+        icon: Users
+      };
     default:
       return {
         label: action,
@@ -141,6 +173,57 @@ function getActionBadge(action: string) {
         icon: History
       };
   }
+}
+
+/**
+ * Konversi status kelengkapan ke label bahasa Indonesia
+ */
+function getStatusKelengkapanLabel(val?: number | string | null): string {
+  if (val === undefined || val === null) return '-';
+  const num = Number(val);
+  switch (num) {
+    case 0:
+      return 'Belum Diisi';
+    case 1:
+      return 'Menunggu Reviu';
+    case 2:
+      return 'Disetujui';
+    case 3:
+      return 'Perlu Revisi';
+    default:
+      return String(val);
+  }
+}
+
+/**
+ * Pemformatan transisi status 'Status Lama -> Status Baru'
+ */
+function formatStatusTransition(log: AuditLog): string {
+  const oldState = log.old_state;
+  const newState = log.new_state;
+
+  if (
+    oldState?.status_kelengkapan !== undefined ||
+    newState?.status_kelengkapan !== undefined
+  ) {
+    const fromLabel = getStatusKelengkapanLabel(oldState?.status_kelengkapan);
+    const toLabel = getStatusKelengkapanLabel(newState?.status_kelengkapan);
+    return `${fromLabel} -> ${toLabel}`;
+  }
+
+  if (oldState?.status_sinkronisasi || newState?.status_sinkronisasi) {
+    return `${oldState?.status_sinkronisasi || '-'} -> ${newState?.status_sinkronisasi || '-'}`;
+  }
+
+  if (oldState?.status || newState?.status) {
+    return `${oldState?.status || '-'} -> ${newState?.status || '-'}`;
+  }
+
+  if (newState?.action) {
+    return `- -> ${newState.action}`;
+  }
+
+  return '-';
 }
 
 export default function AuditLogClient({
@@ -156,29 +239,197 @@ export default function AuditLogClient({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedAction, setSelectedAction] = useState<string>('ALL');
   const [selectedRole, setSelectedRole] = useState<string>('ALL');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const handleFilter = (actionVal?: string, roleVal?: string) => {
+  const handleFilter = (customParams?: {
+    action?: string;
+    role?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  }) => {
     startTransition(async () => {
-      const act = actionVal !== undefined ? actionVal : selectedAction;
-      const rol = roleVal !== undefined ? roleVal : selectedRole;
+      const act =
+        customParams?.action !== undefined
+          ? customParams.action
+          : selectedAction;
+      const rol =
+        customParams?.role !== undefined ? customParams.role : selectedRole;
+      const sDate =
+        customParams?.startDate !== undefined
+          ? customParams.startDate
+          : startDate;
+      const eDate =
+        customParams?.endDate !== undefined ? customParams.endDate : endDate;
+      const sq =
+        customParams?.search !== undefined ? customParams.search : searchQuery;
+
       const res = await getAuditLogsAction({
-        search: searchQuery,
+        search: sq,
         action: act,
-        role: rol
+        actionType: act,
+        role: rol,
+        startDate: sDate || undefined,
+        endDate: eDate || undefined,
+        limit: 500
       });
+
       if (res.success) {
         setLogs(res.logs);
         setTotalCount(res.totalCount);
         setActionStats(res.actionStats);
-        if (actionVal !== undefined) setSelectedAction(actionVal);
-        if (roleVal !== undefined) setSelectedRole(roleVal);
-        toast.success('Log audit berhasil diperbarui!');
+        if (customParams?.action !== undefined)
+          setSelectedAction(customParams.action);
+        if (customParams?.role !== undefined)
+          setSelectedRole(customParams.role);
+        if (customParams?.startDate !== undefined)
+          setStartDate(customParams.startDate);
+        if (customParams?.endDate !== undefined)
+          setEndDate(customParams.endDate);
+        if (customParams?.search !== undefined)
+          setSearchQuery(customParams.search);
+        toast.success(`Log audit berhasil dimuat (${res.totalCount} catatan).`);
       } else {
         toast.error(res.error || 'Gagal memuat log audit.');
       }
     });
+  };
+
+  const handleResetFilter = () => {
+    setSearchQuery('');
+    setSelectedAction('ALL');
+    setSelectedRole('ALL');
+    setStartDate('');
+    setEndDate('');
+    startTransition(async () => {
+      const res = await getAuditLogsAction({ limit: 500 });
+      if (res.success) {
+        setLogs(res.logs);
+        setTotalCount(res.totalCount);
+        setActionStats(res.actionStats);
+        toast.info('Filter audit trail telah direset ke kondisi default.');
+      } else {
+        toast.error(res.error || 'Gagal mereset log audit.');
+      }
+    });
+  };
+
+  const handleExportCSV = () => {
+    if (logs.length === 0) {
+      toast.warning('Tidak ada data audit log untuk diekspor.');
+      return;
+    }
+
+    try {
+      const headers = [
+        'No',
+        'Timestamp (WIB)',
+        'Nama Pengguna',
+        'Role',
+        'Jenis Aksi',
+        'Status Lama -> Status Baru',
+        'Catatan Reviu / Penjelasan',
+        'Indikator ID'
+      ];
+
+      const csvRows = logs.map((log, idx) => {
+        const dt = formatIndonesianDateTime(log.created_at);
+        const timestampStr = `${dt.date} ${dt.time}`.trim();
+        const roleKey = (log.role || 'operator') as UserRole;
+        const roleLabel = ROLE_LABELS[roleKey] || log.role || 'Operator';
+        const actionLabel = getActionBadge(log.action).label;
+        const statusTransition = formatStatusTransition(log);
+
+        let explanation = '-';
+        if (log.action === 'APPROVE') {
+          explanation =
+            log.new_state?.catatan_koordinator ||
+            `Disetujui dengan skor verifikasi: ${log.new_state?.nilai_verifikasi ?? 1}`;
+        } else if (log.action === 'REVISE') {
+          explanation =
+            log.new_state?.catatan_koordinator ||
+            'Diminta perbaikan berkas bukti dukung.';
+        } else if (
+          log.action === 'SUBMIT_EVIDENCE' ||
+          log.action === 'UPLOAD_BUKTI'
+        ) {
+          explanation =
+            log.new_state?.catatan_operator ||
+            `Telah diunggah ${log.new_state?.dokumen_count || 1} dokumen bukti dukung.`;
+        } else if (
+          log.action?.startsWith('NOTIF_WA') ||
+          log.action === 'NOTIFIKASI_WA'
+        ) {
+          explanation =
+            log.new_state?.catatan_revisi ||
+            log.new_state?.message ||
+            `Notifikasi WA (${log.new_state?.recipient || 'PIC'}). Status: ${log.new_state?.status || 'SENT'}`;
+        } else if (log.action?.startsWith('SYNC_ZIAPP')) {
+          explanation =
+            log.new_state?.keterangan ||
+            log.new_state?.action ||
+            'Sinkronisasi portal ZIAPP KemenPAN-RB.';
+        } else if (log.action === 'UPDATE_USER_PROFILE') {
+          explanation =
+            log.new_state?.keterangan ||
+            'Pembaruan nomor WhatsApp dan pengaturan preferensi notifikasi.';
+        } else if (log.new_state?.catatan_koordinator) {
+          explanation = String(log.new_state.catatan_koordinator);
+        } else if (log.new_state?.action) {
+          explanation = String(log.new_state.action);
+        }
+
+        const indikatorId = log.pertanyaan_info
+          ? `${log.pertanyaan_info.kode_indikator || ''} - ${log.pertanyaan_info.uraian_singkat || ''}`.trim()
+          : log.id_pertanyaan_periode || 'Sistem / Umum';
+
+        const rowValues = [
+          idx + 1,
+          timestampStr,
+          log.user_name || 'Pengguna REBO',
+          roleLabel,
+          actionLabel,
+          statusTransition,
+          explanation,
+          indikatorId
+        ];
+
+        return rowValues
+          .map(
+            (val) =>
+              `"${String(val ?? '')
+                .replace(/"/g, '""')
+                .replace(/\r?\n/g, ' ')}"`
+          )
+          .join(',');
+      });
+
+      // Sisipkan UTF-8 BOM (\uFEFF) agar terbaca sempurna di Microsoft Excel
+      const csvContent =
+        '\uFEFF' + [headers.join(','), ...csvRows].join('\r\n');
+      const blob = new Blob([csvContent], {
+        type: 'text/csv;charset=utf-8;'
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const todayIso = new Date().toISOString().split('T')[0];
+      link.href = url;
+      link.setAttribute('download', `AUDIT_LOG_REBO_${todayIso}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success(
+        `Ekspor CSV Audit Log (${logs.length} catatan) berhasil diunduh!`
+      );
+    } catch (err: any) {
+      console.error('Gagal mengekspor CSV:', err);
+      toast.error('Gagal mengekspor data audit log ke format CSV.');
+    }
   };
 
   const toggleDetails = (id: string) => {
@@ -303,14 +554,15 @@ export default function AuditLogClient({
       </div>
 
       {/* 3. Filter & Search Toolbar */}
-      <div className='flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900'>
-        <div className='flex flex-1 flex-col gap-3 sm:flex-row sm:items-center'>
+      <div className='flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900'>
+        {/* Row 1: Search & Filter Inputs */}
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4'>
           {/* Search Input */}
-          <div className='relative w-full sm:max-w-xs'>
+          <div className='relative'>
             <Search className='absolute top-2.5 left-3 h-4 w-4 text-slate-400' />
             <Input
               type='text'
-              placeholder='Cari nama, indikator, atau kata kunci...'
+              placeholder='Cari nama, indikator, catatan...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -320,57 +572,138 @@ export default function AuditLogClient({
             />
           </div>
 
-          {/* Filter Aksi */}
-          <select
-            value={selectedAction}
-            onChange={(e) => {
-              const val = e.target.value;
-              setSelectedAction(val);
-              handleFilter(val, undefined);
-            }}
-            disabled={isPending}
-            className='h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
-          >
-            <option value='ALL'>Semua Tipe Aksi</option>
-            <option value='APPROVE'>Persetujuan (Approve)</option>
-            <option value='REVISE'>Minta Revisi (Revise)</option>
-            <option value='SUBMIT_EVIDENCE'>Unggah Bukti</option>
-            <option value='GENERATE_GDRIVE_LINKS'>Otomasi GDrive</option>
-            <option value='UPDATE_VERIFIKASI'>Update Verifikasi</option>
-          </select>
+          {/* Filter Tanggal Mulai */}
+          <div className='flex items-center gap-2'>
+            <span className='flex items-center gap-1 text-xs font-semibold whitespace-nowrap text-slate-600 dark:text-slate-300'>
+              <Calendar className='h-3.5 w-3.5 text-purple-600' />
+              Dari:
+            </span>
+            <Input
+              type='date'
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className='h-9 text-xs'
+              title='Rentang Tanggal Awal'
+            />
+          </div>
 
-          {/* Filter Role */}
-          <select
-            value={selectedRole}
-            onChange={(e) => {
-              const val = e.target.value;
-              setSelectedRole(val);
-              handleFilter(undefined, val);
-            }}
-            disabled={isPending}
-            className='h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
-          >
-            <option value='ALL'>Semua Role</option>
-            <option value='admin'>Super Admin</option>
-            <option value='koordinator'>Koordinator Pilar</option>
-            <option value='operator'>Operator Tim</option>
-            <option value='tpi'>Tim Penilai Internal (TPI)</option>
-          </select>
+          {/* Filter Tanggal Selesai */}
+          <div className='flex items-center gap-2'>
+            <span className='flex items-center gap-1 text-xs font-semibold whitespace-nowrap text-slate-600 dark:text-slate-300'>
+              <Calendar className='h-3.5 w-3.5 text-purple-600' />
+              Sampai:
+            </span>
+            <Input
+              type='date'
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className='h-9 text-xs'
+              title='Rentang Tanggal Akhir'
+            />
+          </div>
+
+          {/* Filter Jenis Aksi */}
+          <div>
+            <select
+              value={selectedAction}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedAction(val);
+              }}
+              disabled={isPending}
+              className='h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+            >
+              <option value='ALL'>Semua Jenis Aksi</option>
+              <option value='APPROVE'>Persetujuan (Approve)</option>
+              <option value='REVISE'>Minta Revisi (Revise)</option>
+              <option value='SUBMIT_EVIDENCE'>Unggah Bukti (Submit)</option>
+              <option value='UPLOAD_BUKTI'>Unggah Bukti (Alternative)</option>
+              <option value='SYNC_ZIAPP'>Sinkronisasi ZIAPP</option>
+              <option value='NOTIFIKASI_WA'>Semua Notifikasi WA</option>
+              <option value='NOTIF_WA_SUBMIT'>Notif WA Pengajuan</option>
+              <option value='NOTIF_WA_APPROVED'>Notif WA Disetujui</option>
+              <option value='NOTIF_WA_REVISION'>Notif WA Revisi</option>
+              <option value='NOTIF_WA_DEADLINE'>Notif WA Deadline</option>
+              <option value='GENERATE_GDRIVE_LINKS'>Otomasi GDrive</option>
+              <option value='UPDATE_VERIFIKASI'>Update Verifikasi</option>
+              <option value='UPDATE_USER_PROFILE'>
+                Pembaruan Profil Pegawai
+              </option>
+            </select>
+          </div>
         </div>
 
-        <div className='flex items-center gap-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => handleFilter()}
-            disabled={isPending}
-            className='h-9 gap-1.5 text-xs shadow-xs'
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${isPending ? 'animate-spin' : ''}`}
-            />
-            <span>Refresh</span>
-          </Button>
+        {/* Row 2: Peran Pengguna & Action Buttons */}
+        <div className='flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-800/80'>
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='text-xs font-semibold text-slate-600 dark:text-slate-300'>
+              Peran:
+            </span>
+            <select
+              value={selectedRole}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedRole(val);
+              }}
+              disabled={isPending}
+              className='h-8.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+            >
+              <option value='ALL'>Semua Role</option>
+              <option value='admin'>Super Admin</option>
+              <option value='koordinator'>Koordinator Pilar</option>
+              <option value='operator'>Operator Tim</option>
+              <option value='tpi'>Tim Penilai Internal (TPI)</option>
+            </select>
+
+            <Button
+              variant='default'
+              size='sm'
+              onClick={() => handleFilter()}
+              disabled={isPending}
+              className='h-8.5 gap-1.5 bg-purple-600 px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-purple-700'
+            >
+              <Filter className='h-3.5 w-3.5' />
+              <span>Terapkan Filter</span>
+            </Button>
+
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleResetFilter}
+              disabled={isPending}
+              className='h-8.5 gap-1.5 border-slate-200 px-3 text-xs font-medium text-slate-700 shadow-xs hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
+            >
+              <RotateCcw className='h-3.5 w-3.5 text-slate-500' />
+              <span>Reset Filter</span>
+            </Button>
+          </div>
+
+          <div className='flex items-center gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => handleFilter()}
+              disabled={isPending}
+              className='h-8.5 gap-1.5 text-xs font-medium text-slate-700 shadow-xs dark:text-slate-200'
+              title='Muat ulang data'
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isPending ? 'animate-spin' : ''}`}
+              />
+              <span className='hidden sm:inline'>Refresh</span>
+            </Button>
+
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleExportCSV}
+              disabled={logs.length === 0}
+              className='h-8.5 gap-1.5 border-emerald-300 bg-emerald-50/60 text-xs font-bold text-emerald-800 shadow-xs hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70'
+            >
+              <FileSpreadsheet className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+              <span>Ekspor Audit Log (.csv)</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -433,7 +766,10 @@ export default function AuditLogClient({
                       changeSummary =
                         log.new_state?.catatan_koordinator ||
                         'Diminta perbaikan berkas bukti dukung.';
-                    } else if (log.action === 'SUBMIT_EVIDENCE') {
+                    } else if (
+                      log.action === 'SUBMIT_EVIDENCE' ||
+                      log.action === 'UPLOAD_BUKTI'
+                    ) {
                       changeSummary =
                         log.new_state?.catatan_operator ||
                         `Telah diunggah ${log.new_state?.dokumen_count || 1} dokumen bukti dukung.`;
@@ -443,6 +779,17 @@ export default function AuditLogClient({
                       changeSummary = `Notifikasi persetujuan WA terkirim ke PIC (${log.new_state?.recipient || 'PIC'}).`;
                     } else if (log.action === 'NOTIF_WA_REVISION') {
                       changeSummary = `Notifikasi revisi WA terkirim ke PIC (${log.new_state?.recipient || 'PIC'}). Catatan: ${log.new_state?.catatan_revisi || '-'}`;
+                    } else if (
+                      log.action?.startsWith('NOTIF_WA') ||
+                      log.action === 'NOTIFIKASI_WA'
+                    ) {
+                      changeSummary = `Notifikasi WA (${log.new_state?.recipient || 'PIC'}): ${log.new_state?.message || log.new_state?.status || 'Terkirim'}`;
+                    } else if (log.action?.startsWith('SYNC_ZIAPP')) {
+                      changeSummary = `Sinkronisasi ZIAPP: ${log.new_state?.keterangan || log.new_state?.action || 'Selesai'}`;
+                    } else if (log.action === 'UPDATE_USER_PROFILE') {
+                      changeSummary = `Pembaruan profil: ${log.new_state?.keterangan || 'Nomor WA / Preferensi notifikasi diperbarui'}`;
+                    } else if (log.new_state?.catatan_koordinator) {
+                      changeSummary = String(log.new_state.catatan_koordinator);
                     } else if (log.new_state?.action) {
                       changeSummary = String(log.new_state.action);
                     }

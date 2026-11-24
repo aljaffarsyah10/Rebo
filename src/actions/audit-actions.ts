@@ -9,7 +9,10 @@ import type { AuditLog } from '@/types/rebo';
 export interface AuditLogFilterParams {
   search?: string;
   action?: string;
+  actionType?: string;
   role?: string;
+  startDate?: string;
+  endDate?: string;
   limit?: number;
   offset?: number;
 }
@@ -149,6 +152,68 @@ const DEMO_AUDIT_LOGS: AuditLog[] = [
       uraian_singkat: 'Laporan Akuntabilitas Kinerja (LAKIP/LKjIP)',
       pilar_nama: 'Pilar 4: Penguatan Akuntabilitas'
     }
+  },
+  {
+    id: 'audit-demo-6',
+    action: 'SYNC_ZIAPP',
+    user_id: 'user_admin_demo',
+    user_name: 'Administrator IT BPS Sitaro',
+    role: 'admin',
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(), // 1.5 hari lalu
+    old_state: {
+      status_sinkronisasi: 'PENDING'
+    },
+    new_state: {
+      action: 'Sinkronisasi Batch ZIAPP KemenPAN-RB',
+      status_sinkronisasi: 'SUCCESS',
+      keterangan:
+        'Sinkronisasi 56 indikator ke portal ZIAPP berhasil dilakukan.',
+      total_synced: 56
+    },
+    pertanyaan_info: {
+      uraian_singkat: 'Sinkronisasi Nilai & Berkas ke Portal ZIAPP Nasional',
+      pilar_nama: 'Semua Pilar (1 s.d. 6)'
+    }
+  },
+  {
+    id: 'audit-demo-7',
+    action: 'NOTIF_WA_APPROVED',
+    user_id: 'system_wa',
+    user_name: 'Sistem Notifikasi WhatsApp REBO',
+    role: 'admin',
+    created_at: new Date(Date.now() - 1000 * 60 * 40).toISOString(), // 40 menit lalu
+    old_state: null,
+    new_state: {
+      recipient: '081234567890 (PIC Pilar 1)',
+      status: 'SENT',
+      message:
+        'Bukti dukung IND-1.1.1 SK Tim Kerja ZI telah disetujui oleh TPI.'
+    },
+    pertanyaan_info: {
+      id_pertanyaan: '1',
+      kode_indikator: 'IND-1.1.1',
+      uraian_singkat: 'SK Pembentukan Tim Kerja Pembangunan ZI',
+      pilar_nama: 'Pilar 1: Manajemen Perubahan'
+    }
+  },
+  {
+    id: 'audit-demo-8',
+    action: 'UPDATE_USER_PROFILE',
+    user_id: 'user_koord_demo',
+    user_name: 'Koordinator Pilar 2',
+    role: 'koordinator',
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 hari lalu
+    old_state: {
+      no_wa: '081200000000',
+      notif_wa_approval: false
+    },
+    new_state: {
+      no_wa: '081298765432',
+      notif_wa_approval: true,
+      keterangan:
+        'Pembaruan nomor WhatsApp aktif dan aktivasi notifikasi persetujuan verifikasi.'
+    },
+    pertanyaan_info: null
   }
 ];
 
@@ -199,16 +264,43 @@ export async function getAuditLogsAction(
       )
       .order('created_at', { ascending: false });
 
-    if (params?.action && params.action !== 'ALL') {
-      query = query.eq('action', params.action);
+    const actionFilter = params?.actionType || params?.action;
+    if (actionFilter && actionFilter !== 'ALL') {
+      if (actionFilter === 'NOTIFIKASI_WA') {
+        query = query.or('action.eq.NOTIFIKASI_WA,action.ilike.NOTIF_WA_%');
+      } else if (actionFilter === 'SYNC_ZIAPP') {
+        query = query.or('action.eq.SYNC_ZIAPP,action.ilike.SYNC_ZIAPP_%');
+      } else if (actionFilter === 'UPLOAD_BUKTI') {
+        query = query.or('action.eq.UPLOAD_BUKTI,action.eq.SUBMIT_EVIDENCE');
+      } else {
+        query = query.eq('action', actionFilter);
+      }
     }
 
     if (params?.role && params.role !== 'ALL') {
       query = query.eq('role', params.role);
     }
 
-    const limit = params?.limit || 100;
+    if (params?.startDate) {
+      const startIso = params.startDate.includes('T')
+        ? params.startDate
+        : `${params.startDate}T00:00:00.000Z`;
+      query = query.gte('created_at', startIso);
+    }
+
+    if (params?.endDate) {
+      const endIso = params.endDate.includes('T')
+        ? params.endDate
+        : `${params.endDate}T23:59:59.999Z`;
+      query = query.lte('created_at', endIso);
+    }
+
+    const limit = params?.limit || 200;
     query = query.limit(limit);
+
+    if (params?.offset !== undefined && params.offset > 0) {
+      query = query.range(params.offset, params.offset + limit - 1);
+    }
 
     const { data: dbLogs, error: dbError } = await query;
 
@@ -256,12 +348,55 @@ export async function getAuditLogsAction(
         };
       });
     } else {
-      // Jika tabel audit_log masih kosong di remote, gunakan demo audit logs
+      // Jika tabel audit_log masih kosong di remote atau query error, gunakan demo audit logs
       logs = [...DEMO_AUDIT_LOGS];
       isFallback = true;
     }
 
-    // Filter search jika ada di sisi server
+    // Jika menggunakan fallback data, terapkan filter aksi, role, dan tanggal di memori
+    if (isFallback) {
+      if (actionFilter && actionFilter !== 'ALL') {
+        logs = logs.filter((log) => {
+          if (actionFilter === 'NOTIFIKASI_WA') {
+            return (
+              log.action?.startsWith('NOTIF_WA') ||
+              log.action === 'NOTIFIKASI_WA'
+            );
+          }
+          if (actionFilter === 'SYNC_ZIAPP') {
+            return log.action?.startsWith('SYNC_ZIAPP');
+          }
+          if (actionFilter === 'UPLOAD_BUKTI') {
+            return (
+              log.action === 'UPLOAD_BUKTI' || log.action === 'SUBMIT_EVIDENCE'
+            );
+          }
+          return log.action === actionFilter;
+        });
+      }
+
+      if (params?.role && params.role !== 'ALL') {
+        logs = logs.filter((log) => log.role === params.role);
+      }
+
+      if (params?.startDate) {
+        const startTs = new Date(params.startDate).getTime();
+        logs = logs.filter((log) =>
+          log.created_at ? new Date(log.created_at).getTime() >= startTs : true
+        );
+      }
+
+      if (params?.endDate) {
+        const endD = new Date(params.endDate);
+        endD.setHours(23, 59, 59, 999);
+        const endTs = endD.getTime();
+        logs = logs.filter((log) =>
+          log.created_at ? new Date(log.created_at).getTime() <= endTs : true
+        );
+      }
+    }
+
+    // Filter search jika ada di sisi server (baik untuk data real maupun demo)
     if (params?.search && params.search.trim()) {
       const q = params.search.trim().toLowerCase();
       logs = logs.filter((log) => {

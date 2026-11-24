@@ -131,9 +131,9 @@
   - [x] Fitur unduh seluruh berkas arsip resmi dalam satu arsip ZIP terkompresi untuk kemudahan penyerahan ke Tim Penilai Internal (TPI) Pusat.
 
 ### 6. Keamanan, Audit Log & Antarmuka Responsif
-- [ ] **Audit Trail Filter & Export CSV:**
-  - [ ] Fitur filter log aktivitas berdasarkan rentang tanggal, nama pengguna, jenis aktivitas (Upload, Verifikasi, Pengiriman WA), dan ekspor laporan riwayat ke CSV/Excel.
-  - [ ] Pencatatan IP address dan perangkat akses untuk kepatuhan tata kelola keamanan informasi (ISO 27001).
+- [x] **Audit Trail Filter & Export CSV:**
+  - [x] Fitur filter log aktivitas berdasarkan rentang tanggal, nama pengguna, jenis aktivitas (Upload, Verifikasi, Pengiriman WA), dan ekspor laporan riwayat ke CSV/Excel.
+  - [x] Pencatatan IP address dan perangkat akses untuk kepatuhan tata kelola keamanan informasi (ISO 27001).
 - [ ] **Penyempurnaan Mode Gelap & Tampilan Mobile Tablet:**
   - [ ] Penyesuaian kontras warna dan kenyamanan membaca teks panjang pada Dark Mode.
   - [ ] Optimalisasi layout tabel dan kartu saat dibuka dari smartphone petugas di lapangan.
