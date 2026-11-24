@@ -4,6 +4,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getActivePeriode, getAllPeriode } from '@/lib/api/rebo';
 import { calculateWBKSimulation } from '@/lib/simulation/wbk-gap-analysis';
+import { getSurveiSummaryAction } from '@/actions/survei-actions';
 import type {
   MonitoringDashboardData,
   MonitoringKPIData,
@@ -377,6 +378,9 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
       totalSkorPilarHasil
     );
 
+    // 11. Ambil ringkasan survei kepuasan (IKM & IPAK)
+    const surveiRes = await getSurveiSummaryAction();
+
     return {
       success: true,
       periodes: allPeriodes,
@@ -386,7 +390,8 @@ export async function getMonitoringDashboardData(periodeId?: string): Promise<{
         pilars: pilarProgressList,
         statusDistribution,
         barChartData,
-        simulation
+        simulation,
+        surveiSummary: surveiRes.data
       }
     };
   } catch (error: any) {

@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils';
 import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
 import SimulasiWBKCard from '@/components/rebo/simulasi-wbk-card';
 import RadarCapaianPilar from '@/components/rebo/radar-capaian-pilar';
+import SurveiIkmIpakCard from '@/components/rebo/survei-ikm-ipak-card';
 import { calculateWBKSimulation } from '@/lib/simulation/wbk-gap-analysis';
 import type { MonitoringDashboardData, PeriodeEvaluasi } from '@/types/rebo';
 import { toast } from 'sonner';
@@ -341,6 +342,9 @@ export default function MonitoringDashboardClient({
       {resolvedSimulation && (
         <SimulasiWBKCard simulation={resolvedSimulation} />
       )}
+
+      {/* 2.6 Pemenuhan Syarat Mutlak Nasional: Survei Kepuasan (IKM & IPAK) */}
+      <SurveiIkmIpakCard initialData={data.surveiSummary} />
 
       {/* 3. Visualizations Section (Spider Web Radar, Bar Chart & Donut Chart) */}
       <div className='space-y-4'>

@@ -312,6 +312,7 @@ export interface MonitoringDashboardData {
   statusDistribution: StatusDistributionItem[];
   barChartData: PilarBarChartItem[];
   simulation?: WBKSimulationResult;
+  surveiSummary?: SurveiSummaryData;
 }
 
 // ==============================================================================
@@ -651,4 +652,68 @@ export interface InovasiLayanan {
   tagline?: string;
   kategori_manfaat?: string;
   penanggung_jawab?: string;
+}
+
+// ==============================================================================
+// REBO V2: Survei IKM (Kepuasan Masyarakat) & IPAK (Persepsi Anti Korupsi) (Task 18)
+// ==============================================================================
+
+export interface UnsurIKMItem {
+  unsur: string;
+  skor: number; // Skala 1 - 4
+  keterangan?: string;
+  skor_konversi?: number; // Skala 100
+}
+
+export interface HasilSurveiPelayanan {
+  id: string;
+  periode_label: string; // e.g. "Semester I 2025", "Semester II 2025", "Semester I 2026"
+  tahun?: number;
+  semester?: 1 | 2;
+  nilai_ikm: number; // Skala 4 (e.g. 3.84)
+  nilai_ikm_konversi: number; // Konversi skala 100 (e.g. 96.00)
+  mutu_ikm?: string; // e.g. "A (Sangat Baik)"
+  nilai_ipak: number; // Skala 4 (e.g. 3.92)
+  nilai_ipak_konversi: number; // Konversi skala 100 (e.g. 98.00)
+  mutu_ipak?: string; // e.g. "Sangat Bersih"
+  jumlah_responden: number;
+  status_wbk: boolean;
+  status_wbbm: boolean;
+  unsur_ikm: { unsur: string; skor: number; keterangan?: string }[];
+  catatan?: string;
+  created_at?: string;
+}
+
+export interface SurveiSummaryData {
+  surveiList: HasilSurveiPelayanan[];
+  surveiTerbaru: HasilSurveiPelayanan;
+  syaratWBK: {
+    ikmMinimal: number; // 3.25
+    ikmMinimalKonversi: number; // 81.25
+    ipakMinimal: number; // 3.60
+    ipakMinimalKonversi: number; // 90.00
+    isIkmLolos: boolean;
+    isIpakLolos: boolean;
+    isLolosSemua: boolean;
+  };
+  syaratWBBM: {
+    ikmMinimal: number; // 3.60
+    ikmMinimalKonversi: number; // 90.00
+    ipakMinimal: number; // 3.75
+    ipakMinimalKonversi: number; // 93.75
+    isIkmLolos: boolean;
+    isIpakLolos: boolean;
+    isLolosSemua: boolean;
+  };
+  trenPerkembangan: {
+    periode: string;
+    ikm: number;
+    ipak: number;
+    ikmKonversi: number;
+    ipakKonversi: number;
+    targetIkmWBK: number;
+    targetIpakWBK: number;
+    targetIkmWBBM: number;
+    targetIpakWBBM: number;
+  }[];
 }

@@ -143,9 +143,9 @@
   - [x] Halaman khusus dokumentasi inovasi unggulan BPS Kabupaten Kepulauan Sitaro (misal: inovasi PST, layanan data statistik daerah, dsb.).
   - [x] Analisis dampak sebelum vs sesudah (*Before vs After Impact Assessment*), grafik utilisasi pengguna layanan, dan testimoni pengguna.
   - [x] Ekspor infografis / one-pager profil inovasi untuk paparan di hadapan Tim Penilai Nasional (TPN KemenPAN-RB).
-- [ ] **Integrasi Indeks Kepuasan Masyarakat (IKM) & Survei Persepsi Anti Korupsi (IPAK):**
-  - [ ] Input data dan visualisasi tren berkala hasil survei pelayanan publik (Pilar 6) dan persepsi integritas (Pilar 5).
-  - [ ] Perhitungan otomatis skor ketercapaian target minimal IKM/IPAK untuk pemenuhan syarat mutlak WBK/WBBM.
+- [x] **Integrasi Indeks Kepuasan Masyarakat (IKM) & Survei Persepsi Anti Korupsi (IPAK):**
+  - [x] Input data dan visualisasi tren berkala hasil survei pelayanan publik (Pilar 6) dan persepsi integritas (Pilar 5).
+  - [x] Perhitungan otomatis skor ketercapaian target minimal IKM/IPAK untuk pemenuhan syarat mutlak WBK/WBBM.
 - [ ] **Matriks Mitigasi Risiko & SPIP (Pilar 5 Pengawasan):**
   - [ ] Tabel interaktif pemetaan titik rawan gratifikasi/fraud dan rencana aksi pengendalian intern.
 
