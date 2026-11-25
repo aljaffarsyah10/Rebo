@@ -27,6 +27,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Paparan Slide TPN (PPTX)',
+    url: '/rebo/presentation',
+    icon: 'laptop',
+    isActive: false,
+    shortcut: ['p', 't'],
+    items: []
+  },
+  {
     title: 'Leaderboard & Apresiasi',
     url: '/rebo/leaderboard',
     icon: 'trophy',

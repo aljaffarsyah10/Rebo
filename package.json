@@ -87,6 +87,7 @@
     "nuqs": "^2.4.1",
     "pnpm": "^10.14.0",
     "postcss": "8.4.49",
+    "pptxgenjs": "^4.0.1",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
     "react-day-picker": "^8.10.1",

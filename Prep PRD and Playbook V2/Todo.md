@@ -242,8 +242,8 @@
 ### 19. Executive Command Center & Generator Slide Paparan TPN (Pimpinan)
 - [x] **Executive Command Center (Mode Layar TV / Big Screen Display):**
   - [x] Tampilan dasbor visual layar penuh (*kiosk mode*) untuk monitor TV lobi kantor / ruang kerja Kepala BPS yang memutar rotasi realtime: progres 6 pilar, skor IKM/IPAK, hitung mundur batas waktu, dan capaian inovasi.
-- [ ] **One-Click Presentation Deck Generator (Ekspor Slide PPTX):**
-  - [ ] Pembuatan berkas presentasi PowerPoint (.pptx) paparan ZI BPS Sitaro secara otomatis dari data dan grafik riil sistem REBO untuk dipaparkan di hadapan Tim Penilai Nasional (TPN).
+- [x] **One-Click Presentation Deck Generator (Ekspor Slide PPTX):**
+  - [x] Pembuatan berkas presentasi PowerPoint (.pptx) paparan ZI BPS Sitaro secara otomatis dari data dan grafik riil sistem REBO untuk dipaparkan di hadapan Tim Penilai Nasional (TPN).
 - [ ] **Analisis Tren Kinerja Antar-Tahun (Multi-Year Trend Analysis):**
   - [ ] Grafik komparasi perkembangan skor LKE antar-periode (2024, 2025, 2026) untuk membuktikan adanya perbaikan berkelanjutan (*continuous improvement*).
 
