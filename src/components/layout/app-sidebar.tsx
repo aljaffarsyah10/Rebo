@@ -99,18 +99,23 @@ export default function AppSidebar() {
               })
               .map((item) => {
                 const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                const isChildActive = item.items?.some(
+                  (sub) =>
+                    pathname === sub.url ||
+                    (sub.url !== '#' && pathname.startsWith(sub.url))
+                );
                 return item?.items && item?.items?.length > 0 ? (
                   <Collapsible
                     key={item.title}
                     asChild
-                    defaultOpen={item.isActive}
+                    defaultOpen={item.isActive || isChildActive}
                     className='group/collapsible'
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
                           tooltip={item.title}
-                          isActive={pathname === item.url}
+                          isActive={pathname === item.url || isChildActive}
                         >
                           {item.icon && <Icon className='size-4 shrink-0' />}
                           <span>{item.title}</span>
@@ -119,18 +124,26 @@ export default function AppSidebar() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {item.items?.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === subItem.url}
-                              >
-                                <Link href={subItem.url}>
-                                  <span>{subItem.title}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
+                          {item.items?.map((subItem) => {
+                            const SubIcon = subItem.icon
+                              ? Icons[subItem.icon]
+                              : null;
+                            return (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === subItem.url}
+                                >
+                                  <Link href={subItem.url}>
+                                    {SubIcon && (
+                                      <SubIcon className='size-4 shrink-0' />
+                                    )}
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>

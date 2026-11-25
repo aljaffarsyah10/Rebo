@@ -19,14 +19,6 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
-    title: 'Tren Kinerja Multi-Tahun',
-    url: '/rebo/trend',
-    icon: 'trendingUp',
-    isActive: false,
-    shortcut: ['t', 'r'],
-    items: []
-  },
-  {
     title: 'Executive Command Center',
     url: '/rebo/command-center',
     icon: 'tv',
@@ -48,6 +40,206 @@ export const navItems: NavItem[] = [
     icon: 'trophy',
     isActive: false,
     shortcut: ['l', 'b'],
+    items: []
+  },
+  {
+    title: 'Kinerja & Akuntabilitas',
+    url: '#',
+    icon: 'trendingUp',
+    isActive: false,
+    items: [
+      {
+        title: 'Tren Kinerja Multi-Tahun',
+        url: '/rebo/trend',
+        icon: 'trendingUp',
+        shortcut: ['t', 'r']
+      },
+      {
+        title: 'Notulen Rapat Digital',
+        url: '/rebo/notulen',
+        icon: 'notulen',
+        shortcut: ['n', 't']
+      },
+      {
+        title: 'Pelacak Anggaran ZI/RB',
+        url: '/rebo/budget',
+        icon: 'billing',
+        shortcut: ['b', 'g']
+      },
+      {
+        title: 'Dampak Paperless (Green Gov)',
+        url: '/rebo/paperless',
+        icon: 'leaf',
+        shortcut: ['p', 'l']
+      }
+    ]
+  },
+  {
+    title: 'Pelayanan Publik & PST',
+    url: '#',
+    icon: 'award',
+    isActive: false,
+    items: [
+      {
+        title: 'Standar & Maklumat Pelayanan',
+        url: '/rebo/standar-pelayanan',
+        icon: 'award',
+        shortcut: ['s', 'p']
+      },
+      {
+        title: 'Inovasi Layanan',
+        url: '/rebo/inovasi',
+        icon: 'sparkles',
+        shortcut: ['i', 'v']
+      },
+      {
+        title: 'QR Meja Layanan PST',
+        url: '/rebo/pst-qrcode',
+        icon: 'qrcode',
+        shortcut: ['q', 'r']
+      },
+      {
+        title: 'Fasilitas Ramah Difabel',
+        url: '/rebo/fasilitas-difabel',
+        icon: 'wheelchair',
+        shortcut: ['f', 'd']
+      },
+      {
+        title: 'Sentimen & Word Cloud',
+        url: '/rebo/sentiment',
+        icon: 'sparkles',
+        shortcut: ['s', 'w']
+      }
+    ]
+  },
+  {
+    title: 'Integritas & Kepatuhan',
+    url: '#',
+    icon: 'shield',
+    isActive: false,
+    items: [
+      {
+        title: 'Kanal Pengaduan (WBS)',
+        url: '/rebo/wbs',
+        icon: 'warning',
+        shortcut: ['w', 's']
+      },
+      {
+        title: 'Kepatuhan LHKPN/ASN',
+        url: '/rebo/compliance/lhkpn',
+        icon: 'award',
+        shortcut: ['l', 'h']
+      },
+      {
+        title: 'Disiplin & Kode Etik',
+        url: '/rebo/compliance/disiplin',
+        icon: 'check',
+        shortcut: ['d', 'k']
+      },
+      {
+        title: 'Pengendalian Gratifikasi (UPG)',
+        url: '/rebo/compliance/upg',
+        icon: 'shield',
+        shortcut: ['u', 'p']
+      }
+    ]
+  },
+  {
+    title: 'Agenda & Rencana Kerja',
+    url: '/rebo/agenda',
+    icon: 'calendar',
+    isActive: false,
+    shortcut: ['a', 'g'],
+    items: []
+  },
+  {
+    title: 'Kanban Tindak Lanjut',
+    url: '/rebo/kanban',
+    icon: 'kanban',
+    isActive: false,
+    shortcut: ['k', 'k'],
+    items: []
+  },
+  {
+    title: 'Form Bukti Dukung RB',
+    url: '/rebo/formRB',
+    icon: 'post',
+    isActive: true,
+    items: [
+      {
+        title: 'Aspek-Pengungkit',
+        url: '/rebo/formRB/area',
+        icon: 'userPen',
+        shortcut: ['u', 'u']
+      },
+      {
+        title: 'Aspek-Hasil',
+        url: '/rebo/pilarHasil',
+        icon: 'userPen',
+        shortcut: ['h', 'h']
+      },
+      {
+        title: 'Area-Pemenuhan',
+        url: '/rebo/formRB/pemenuhan',
+        icon: 'userPen',
+        shortcut: ['p', 'p']
+      },
+      {
+        title: 'Area-Reform',
+        url: '/rebo/formRB/reform',
+        icon: 'userPen',
+        shortcut: ['r', 'r']
+      }
+    ]
+  },
+  {
+    title: 'Data RB',
+    url: '#',
+    icon: 'page',
+    isActive: false,
+    items: [
+      {
+        title: 'Pilar',
+        url: '/rebo/dataRB/pilar',
+        icon: 'post',
+        shortcut: ['l', 'l']
+      },
+      {
+        title: 'Subpilar',
+        url: '/rebo/dataRB/pilar/subpilar',
+        icon: 'post',
+        shortcut: ['s', 's']
+      },
+      {
+        title: 'Pertanyaan',
+        url: '/rebo/dataRB/pilar/pertanyaan',
+        icon: 'post',
+        shortcut: ['q', 'q']
+      }
+    ]
+  },
+  {
+    title: 'Arsip',
+    url: '/rebo/arsip',
+    icon: 'page',
+    isActive: false,
+    shortcut: ['r', 'r'],
+    items: []
+  },
+  {
+    title: 'Profil Pengguna',
+    url: '/rebo/profile',
+    icon: 'userPen',
+    shortcut: ['c', 'c'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Informasi RB',
+    url: '/rebo/informasi',
+    icon: 'help',
+    shortcut: ['i', 'i'],
+    isActive: false,
     items: []
   },
   {
@@ -136,199 +328,5 @@ export const navItems: NavItem[] = [
         shortcut: ['u', 'p']
       }
     ]
-  },
-  {
-    title: 'Form Bukti Dukung RB',
-    url: '/rebo/formRB',
-    icon: 'post',
-    isActive: true,
-    items: [
-      {
-        title: 'Aspek-Pengungkit',
-        url: '/rebo/formRB/area',
-        icon: 'userPen',
-        shortcut: ['u', 'u']
-      },
-      {
-        title: 'Aspek-Hasil',
-        url: '/rebo/pilarHasil',
-        icon: 'userPen',
-        shortcut: ['h', 'h']
-      },
-      {
-        title: 'Area-Pemenuhan',
-        url: '/rebo/formRB/pemenuhan',
-        icon: 'userPen',
-        shortcut: ['p', 'p']
-      },
-      {
-        title: 'Area-Reform',
-        url: '/rebo/formRB/reform',
-        icon: 'userPen',
-        shortcut: ['r', 'r']
-      }
-    ]
-  },
-  {
-    title: 'Data RB',
-    url: '#',
-    icon: 'page',
-    isActive: false,
-    items: [
-      {
-        title: 'Pilar',
-        url: '/rebo/dataRB/pilar',
-        icon: 'post',
-        shortcut: ['l', 'l']
-      },
-      {
-        title: 'Subpilar',
-        url: '/rebo/dataRB/pilar/subpilar',
-        icon: 'post',
-        shortcut: ['s', 's']
-      },
-      {
-        title: 'Pertanyaan',
-        url: '/rebo/dataRB/pilar/pertanyaan',
-        icon: 'post',
-        shortcut: ['q', 'q']
-      }
-    ]
-  },
-  {
-    title: 'Agenda & Rencana Kerja',
-    url: '/rebo/agenda',
-    icon: 'calendar',
-    isActive: false,
-    shortcut: ['a', 'g'],
-    items: []
-  },
-  {
-    title: 'Notulen Rapat Digital',
-    url: '/rebo/notulen',
-    icon: 'notulen',
-    isActive: false,
-    shortcut: ['n', 't'],
-    items: []
-  },
-  {
-    title: 'Kanban Tindak Lanjut',
-    url: '/rebo/kanban',
-    icon: 'kanban',
-    isActive: false,
-    shortcut: ['k', 'k'],
-    items: []
-  },
-  {
-    title: 'Pelacak Anggaran ZI/RB',
-    url: '/rebo/budget',
-    icon: 'billing',
-    isActive: false,
-    shortcut: ['b', 'g'],
-    items: []
-  },
-  {
-    title: 'Dampak Paperless (Green Gov)',
-    url: '/rebo/paperless',
-    icon: 'leaf',
-    isActive: false,
-    shortcut: ['p', 'l'],
-    items: []
-  },
-  {
-    title: 'Inovasi Layanan',
-    url: '/rebo/inovasi',
-    icon: 'sparkles',
-    isActive: false,
-    shortcut: ['i', 'v'],
-    items: []
-  },
-  {
-    title: 'QR Meja Layanan PST',
-    url: '/rebo/pst-qrcode',
-    icon: 'qrcode',
-    isActive: false,
-    shortcut: ['q', 'r'],
-    items: []
-  },
-  {
-    title: 'Fasilitas Ramah Difabel',
-    url: '/rebo/fasilitas-difabel',
-    icon: 'wheelchair',
-    isActive: false,
-    shortcut: ['f', 'd'],
-    items: []
-  },
-  {
-    title: 'Standar & Maklumat Pelayanan',
-    url: '/rebo/standar-pelayanan',
-    icon: 'award',
-    isActive: false,
-    shortcut: ['s', 'p'],
-    items: []
-  },
-  {
-    title: 'Sentimen & Word Cloud',
-    url: '/rebo/sentiment',
-    icon: 'sparkles',
-    isActive: false,
-    shortcut: ['s', 'w'],
-    items: []
-  },
-  {
-    title: 'Arsip',
-    url: '/rebo/arsip',
-    icon: 'page',
-    isActive: false,
-    shortcut: ['r', 'r'],
-    items: []
-  },
-  {
-    title: 'Profil Pengguna',
-    url: '/rebo/profile',
-    icon: 'userPen',
-    shortcut: ['c', 'c'],
-    isActive: false,
-    items: []
-  },
-  {
-    title: 'Informasi RB',
-    url: '/rebo/informasi',
-    icon: 'help',
-    shortcut: ['i', 'i'],
-    isActive: false,
-    items: []
-  },
-  {
-    title: 'Kanal Pengaduan (WBS)',
-    url: '/rebo/wbs',
-    icon: 'warning',
-    shortcut: ['w', 's'],
-    isActive: false,
-    items: []
-  },
-  {
-    title: 'Kepatuhan LHKPN/ASN',
-    url: '/rebo/compliance/lhkpn',
-    icon: 'award',
-    shortcut: ['l', 'h'],
-    isActive: false,
-    items: []
-  },
-  {
-    title: 'Disiplin & Kode Etik',
-    url: '/rebo/compliance/disiplin',
-    icon: 'check',
-    shortcut: ['d', 'k'],
-    isActive: false,
-    items: []
-  },
-  {
-    title: 'Pengendalian Gratifikasi (UPG)',
-    url: '/rebo/compliance/upg',
-    icon: 'shield',
-    shortcut: ['u', 'p'],
-    isActive: false,
-    items: []
   }
 ];
