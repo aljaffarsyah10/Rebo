@@ -37,7 +37,8 @@ import {
   IconCalendar,
   IconBrandWhatsapp,
   IconSparkles,
-  IconFileDescription
+  IconFileDescription,
+  IconQrcode
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -80,5 +81,6 @@ export const Icons = {
   calendar: IconCalendar,
   whatsapp: IconBrandWhatsapp,
   sparkles: IconSparkles,
-  notulen: IconFileDescription
+  notulen: IconFileDescription,
+  qrcode: IconQrcode
 };
