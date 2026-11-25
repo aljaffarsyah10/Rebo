@@ -232,8 +232,8 @@
   - [x] Formulir online pelaporan penolakan / penerimaan gratifikasi pegawai yang terhubung langsung dengan alur verifikasi Tim Kepatuhan Internal BPS Sitaro.
 
 ### 18. Aksesibilitas, Disabilitas & Ramah Difabel pada PST (Pilar 6 Pelayanan Publik)
-- [ ] **Katalog Fasilitas Ramah Kelompok Rentan & Difabel:**
-  - [ ] Dokumentasi sarana-prasarana inklusif ruang Pelayanan Statistik Terpadu (PST): jalur pemandu (*guiding block*), kursi roda, ruang laktasi, toilet difabel, formulir huruf braille, dan alat bantu dengar.
+- [x] **Katalog Fasilitas Ramah Kelompok Rentan & Difabel:**
+  - [x] Dokumentasi sarana-prasarana inklusif ruang Pelayanan Statistik Terpadu (PST): jalur pemandu (*guiding block*), kursi roda, ruang laktasi, toilet difabel, formulir huruf braille, dan alat bantu dengar.
 - [ ] **Widget Aksesibilitas Web (Text-to-Speech & Font Resizer):**
   - [ ] Integrasi alat bantu aksesibilitas pada formulir survei publik dan portal REBO untuk pengunjung disabilitas sesuai standar WCAG 2.1.
 - [ ] **Katalog Standar Pelayanan & Maklumat Pelayanan Digital:**

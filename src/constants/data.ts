@@ -206,6 +206,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Fasilitas Ramah Difabel',
+    url: '/rebo/fasilitas-difabel',
+    icon: 'wheelchair',
+    isActive: false,
+    shortcut: ['f', 'd'],
+    items: []
+  },
+  {
     title: 'Sentimen & Word Cloud',
     url: '/rebo/sentiment',
     icon: 'sparkles',
