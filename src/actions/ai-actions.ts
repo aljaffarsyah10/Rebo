@@ -6,6 +6,11 @@ import {
   type LKEAnalysisRequest,
   type LKEAnalysisResult
 } from '@/lib/ai/lke-checker';
+import {
+  extractDocumentMetadata,
+  type DocumentMetadataInput,
+  type DocumentMetadataResult
+} from '@/lib/ai/metadata-extractor';
 
 /**
  * Server Action: Cek kelengkapan & konsistensi narasi bukti dukung LKE
@@ -101,6 +106,98 @@ export async function generateSuggestedNarrationAction(
     return {
       success: false,
       error: err?.message || 'Gagal menghasilkan saran narasi.'
+    };
+  }
+}
+
+/**
+ * Server Action: Ekstraksi otomatis metadata dokumen bukti dukung & validasi periode evaluasi
+ * Mengekstrak nomor naskah dinas, tanggal dokumen, penandatangan, dan memvalidasi tahun terhadap periode aktif
+ */
+export async function extractDocumentMetadataAction(
+  params: DocumentMetadataInput
+): Promise<{
+  success: boolean;
+  data?: DocumentMetadataResult;
+  error?: string;
+}> {
+  try {
+    if (
+      !params ||
+      (!params.nama_dokumen && !params.file_url && !params.teks_konten)
+    ) {
+      return {
+        success: false,
+        error: 'Data dokumen tidak valid untuk ekstraksi metadata.'
+      };
+    }
+
+    // 1. Ekstraksi Pola Cerdas (Heuristic Engine) - Instan, deterministik, dan andal
+    const result = extractDocumentMetadata(params);
+
+    // 2. Jika konfigurasi LLM (GEMINI_API_KEY) tersedia dan nomor surat belum terdeteksi sempurna namun ada teks, coba perkaya
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (
+      geminiKey &&
+      (!result.nomor_surat || !result.penandatangan) &&
+      (params.teks_konten ||
+        (params.nama_dokumen && params.nama_dokumen.length > 25))
+    ) {
+      try {
+        const textSample =
+          `${params.nama_dokumen} ${params.teks_konten || ''}`.substring(
+            0,
+            500
+          );
+        const prompt = `Kamu adalah sistem ekstraksi naskah dinas resmi BPS (Badan Pusat Statistik). Dari teks berikut, ekstrak dalam format JSON valid: {"nomor_surat": string | null, "tanggal": string | null, "penandatangan": string | null}. Teks: "${textSample}". Berikan HANYA JSON.`;
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { maxOutputTokens: 200, temperature: 0.1 }
+            }),
+            signal: controller.signal
+          }
+        );
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const json = await res.json();
+          const rawAi = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (rawAi) {
+            const cleanJson = rawAi
+              .replace(/```json/gi, '')
+              .replace(/```/g, '')
+              .trim();
+            const parsed = JSON.parse(cleanJson);
+            if (!result.nomor_surat && parsed.nomor_surat) {
+              result.nomor_surat = parsed.nomor_surat;
+            }
+            if (!result.penandatangan && parsed.penandatangan) {
+              result.penandatangan = parsed.penandatangan;
+            }
+          }
+        }
+      } catch {
+        // Fallback anggun ke heuristic result
+      }
+    }
+
+    return {
+      success: true,
+      data: result
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || 'Gagal mengekstrak metadata dokumen.'
     };
   }
 }

@@ -34,6 +34,7 @@ import { QAChecklistCard } from '@/components/rebo/qa-checklist-card';
 import { DocumentPreviewModal } from '@/components/rebo/document-preview-modal';
 import { BatchUploadDropzone } from '@/components/rebo/batch-upload-dropzone';
 import { AICompletenessChecker } from '@/components/rebo/ai-completeness-checker';
+import { AIMetadataBadge } from '@/components/rebo/ai-metadata-badge';
 import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +58,7 @@ type Props = {
   canEdit?: boolean;
   canVerify?: boolean;
   activePeriodeId?: string;
+  activePeriodeYear?: number;
   targetPilarId?: string;
   onUpsertSuccess?: (idPertanyaan: string, freshData: any) => void;
   onUpsert?: (payload: Partial<any>, form?: HTMLFormElement) => Promise<any>;
@@ -69,6 +71,7 @@ export default function BuktiForm({
   setBuktiDukungMap,
   canEdit = true,
   activePeriodeId,
+  activePeriodeYear = 2026,
   targetPilarId,
   onUpsertSuccess,
   onUpsert
@@ -286,6 +289,18 @@ export default function BuktiForm({
       ...prev,
       [url]: result
     }));
+  };
+
+  const handleInsertCitationToCatatan = (citation: string) => {
+    setCatatanOperator((prev) => {
+      const cleanPrev = (prev || '').trim();
+      if (!cleanPrev) return citation;
+      if (cleanPrev.includes(citation)) return cleanPrev;
+      return `${cleanPrev}\n${citation}`;
+    });
+    toast.success(
+      'Referensi naskah dinas berhasil disisipkan ke catatan penjelasan!'
+    );
   };
 
   const handleCheckAllDocuments = async () => {
@@ -1010,6 +1025,17 @@ export default function BuktiForm({
                           handleHealthResult(doc.file_url, res)
                         }
                         compactBadge={true}
+                      />
+                    </div>
+
+                    {/* AI Metadata Extractor & Period Validation */}
+                    <div className='mt-1.5'>
+                      <AIMetadataBadge
+                        namaDokumen={doc.nama_dokumen}
+                        fileUrl={doc.file_url}
+                        tipeDokumen={doc.tipe_dokumen}
+                        activeYear={activePeriodeYear}
+                        onInsertNarration={handleInsertCitationToCatatan}
                       />
                     </div>
 
