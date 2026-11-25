@@ -19,6 +19,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Tren Kinerja Multi-Tahun',
+    url: '/rebo/trend',
+    icon: 'trendingUp',
+    isActive: false,
+    shortcut: ['t', 'r'],
+    items: []
+  },
+  {
     title: 'Executive Command Center',
     url: '/rebo/command-center',
     icon: 'tv',

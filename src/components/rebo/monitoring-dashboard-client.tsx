@@ -40,7 +40,8 @@ import {
   Compass,
   BarChart3,
   LayoutGrid,
-  Printer
+  Printer,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
@@ -167,6 +168,17 @@ export default function MonitoringDashboardClient({
               />
               Perbarui Data
             </Button>
+
+            <Link href='/rebo/trend'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-9 border-indigo-300 bg-indigo-50/90 font-semibold text-indigo-800 shadow-xs hover:bg-indigo-100 hover:text-indigo-900 dark:border-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-200 dark:hover:bg-indigo-900/80'
+              >
+                <TrendingUp className='mr-1.5 h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400' />
+                Tren Antar-Tahun (2024-2026)
+              </Button>
+            </Link>
 
             <Link href='/rebo/kanban'>
               <Button
@@ -360,47 +372,60 @@ export default function MonitoringDashboardClient({
             </p>
           </div>
 
-          {/* Toggle Mode Visualisasi */}
-          <div className='inline-flex items-center rounded-xl border border-slate-200 bg-slate-100/90 p-1 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90'>
-            <button
-              type='button'
-              onClick={() => setChartView('radar')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
-                chartView === 'radar'
-                  ? 'bg-white text-indigo-700 shadow-xs dark:bg-slate-800 dark:text-indigo-300'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-              )}
-            >
-              <Compass className='h-3.5 w-3.5' />
-              Spider Web 6 Pilar
-            </button>
-            <button
-              type='button'
-              onClick={() => setChartView('bar')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
-                chartView === 'bar'
-                  ? 'bg-white text-blue-700 shadow-xs dark:bg-slate-800 dark:text-blue-300'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-              )}
-            >
-              <BarChart3 className='h-3.5 w-3.5' />
-              Grafik Batang
-            </button>
-            <button
-              type='button'
-              onClick={() => setChartView('both')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
-                chartView === 'both'
-                  ? 'bg-white text-emerald-700 shadow-xs dark:bg-slate-800 dark:text-emerald-300'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-              )}
-            >
-              <LayoutGrid className='h-3.5 w-3.5' />
-              Semua Grafik
-            </button>
+          <div className='flex flex-wrap items-center gap-2.5'>
+            <Link href='/rebo/trend'>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='h-8 border border-indigo-200 bg-indigo-50/80 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300'
+              >
+                <Sparkles className='mr-1.5 h-3.5 w-3.5 text-indigo-500' />
+                Tren Multi-Tahun (2024-2026)
+              </Button>
+            </Link>
+
+            {/* Toggle Mode Visualisasi */}
+            <div className='inline-flex items-center rounded-xl border border-slate-200 bg-slate-100/90 p-1 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90'>
+              <button
+                type='button'
+                onClick={() => setChartView('radar')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                  chartView === 'radar'
+                    ? 'bg-white text-indigo-700 shadow-xs dark:bg-slate-800 dark:text-indigo-300'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                )}
+              >
+                <Compass className='h-3.5 w-3.5' />
+                Spider Web 6 Pilar
+              </button>
+              <button
+                type='button'
+                onClick={() => setChartView('bar')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                  chartView === 'bar'
+                    ? 'bg-white text-blue-700 shadow-xs dark:bg-slate-800 dark:text-blue-300'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                )}
+              >
+                <BarChart3 className='h-3.5 w-3.5' />
+                Grafik Batang
+              </button>
+              <button
+                type='button'
+                onClick={() => setChartView('both')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all',
+                  chartView === 'both'
+                    ? 'bg-white text-emerald-700 shadow-xs dark:bg-slate-800 dark:text-emerald-300'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                )}
+              >
+                <LayoutGrid className='h-3.5 w-3.5' />
+                Semua Grafik
+              </button>
+            </div>
           </div>
         </div>
 
