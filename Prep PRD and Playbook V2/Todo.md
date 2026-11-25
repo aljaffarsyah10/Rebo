@@ -218,9 +218,9 @@
 ### 16. Replikasi Antar-Satker & Ketahanan Cadangan Data (Multi-Tenant & Disaster Recovery)
 - [x] **Kesiapan Multi-Satker (Replikasi BPS Kabupaten/Kota Lain):**
   - [x] Struktur konfigurasi profil instansi modular sehingga sistem REBO dapat direplikasi dan digunakan oleh BPS Kabupaten/Kota lain di Sulawesi Utara maupun nasional dengan mudah.
-- [ ] **Automated Cloud Backup & Disaster Recovery:**
-  - [ ] Penjadwalan cadangan otomatis (*automated snapshot backup*) basis data Supabase berkala ke Google Cloud Storage / Amazon S3.
-  - [ ] Tombol 1-klik untuk validasi integritas data cadangan dan pemulihan darurat (*disaster recovery verification*).
+- [x] **Automated Cloud Backup & Disaster Recovery:**
+  - [x] Penjadwalan cadangan otomatis (*automated snapshot backup*) basis data Supabase berkala ke Google Cloud Storage / Amazon S3.
+  - [x] Tombol 1-klik untuk validasi integritas data cadangan dan pemulihan darurat (*disaster recovery verification*).
 
 ### 17. Manajemen Integritas Pegawai & Kepatuhan LHKPN/LHKASN (Pilar 5 & 3)
 - [ ] **Pelacak Kepatuhan e-LHKPN & e-LHKASN (100% Compliance Tracker):**

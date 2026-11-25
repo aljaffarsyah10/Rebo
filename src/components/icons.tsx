@@ -41,7 +41,8 @@ import {
   IconQrcode,
   IconTrophy,
   IconAward,
-  IconMedal
+  IconMedal,
+  IconDatabase
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -88,5 +89,6 @@ export const Icons = {
   qrcode: IconQrcode,
   trophy: IconTrophy,
   award: IconAward,
-  medal: IconMedal
+  medal: IconMedal,
+  database: IconDatabase
 };

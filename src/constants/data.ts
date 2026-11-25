@@ -80,6 +80,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/admin/satker',
         icon: 'settings',
         shortcut: ['s', 'k']
+      },
+      {
+        title: 'Backup & Cloud DR',
+        url: '/rebo/admin/backup',
+        icon: 'database',
+        shortcut: ['b', 'k']
       }
     ]
   },
