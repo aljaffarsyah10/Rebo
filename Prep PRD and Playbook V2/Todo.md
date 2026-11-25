@@ -194,9 +194,9 @@
 ### 13. Manajemen Pelayanan Publik, Suara Konsumen & Pengaduan (Voice of Customer)
 - [x] **Generator QR Code Meja Layanan PST (Pelayanan Statistik Terpadu):**
   - [x] Pembuat QR Code siap cetak (desain resmi BPS) untuk diletakkan di ruang resepsionis/PST agar tamu/responden dapat langsung memindai dan mengisi survei kepuasan lewat ponsel.
-- [ ] **Kanal Pengaduan & Whistleblowing System (WBS) Internal:**
-  - [ ] Formulir pengaduan masyarakat / pegawai yang aman, terenkripsi, dan dapat diisi secara anonim untuk mendukung pemenuhan bukti dukung Pilar 5 (Penguatan Pengawasan).
-  - [ ] Notifikasi langsung ke Tim Kepatuhan Internal saat ada laporan pengaduan masuk.
+- [x] **Kanal Pengaduan & Whistleblowing System (WBS) Internal:**
+  - [x] Formulir pengaduan masyarakat / pegawai yang aman, terenkripsi, dan dapat diisi secara anonim untuk mendukung pemenuhan bukti dukung Pilar 5 (Penguatan Pengawasan).
+  - [x] Notifikasi langsung ke Tim Kepatuhan Internal saat ada laporan pengaduan masuk.
 - [ ] **Analisis Sentimen & Word Cloud Kepuasan Konsumen:**
   - [ ] Visualisasi analisis kata kunci (*word cloud*) dan sentimen positif/negatif dari kritik dan saran pengunjung PST untuk bahan evaluasi berkala pimpinan.
 

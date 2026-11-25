@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition, useMemo } from 'react';
+import Link from 'next/link';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -357,6 +358,16 @@ export default function MatriksRisikoCard({
 
           {/* Action Buttons */}
           <div className='flex flex-wrap items-center gap-2.5'>
+            <Link href='/rebo/wbs'>
+              <Button
+                variant='outline'
+                className='gap-2 border-indigo-200 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 dark:border-indigo-900/60 dark:text-indigo-300 dark:hover:bg-indigo-950/40'
+              >
+                <ShieldAlert className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
+                Kanal WBS & Pengaduan
+              </Button>
+            </Link>
+
             <Button
               variant='outline'
               onClick={handleExportCSV}

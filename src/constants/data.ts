@@ -60,6 +60,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/admin/broadcast',
         icon: 'whatsapp',
         shortcut: ['b', 'c']
+      },
+      {
+        title: 'Pengaduan & WBS',
+        url: '/rebo/admin/wbs',
+        icon: 'warning',
+        shortcut: ['w', 'b']
       }
     ]
   },
@@ -182,6 +188,14 @@ export const navItems: NavItem[] = [
     url: '/rebo/informasi',
     icon: 'help',
     shortcut: ['i', 'i'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Kanal Pengaduan (WBS)',
+    url: '/rebo/wbs',
+    icon: 'warning',
+    shortcut: ['w', 's'],
     isActive: false,
     items: []
   }
