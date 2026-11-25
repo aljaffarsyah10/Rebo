@@ -214,6 +214,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Standar & Maklumat Pelayanan',
+    url: '/rebo/standar-pelayanan',
+    icon: 'award',
+    isActive: false,
+    shortcut: ['s', 'p'],
+    items: []
+  },
+  {
     title: 'Sentimen & Word Cloud',
     url: '/rebo/sentiment',
     icon: 'sparkles',

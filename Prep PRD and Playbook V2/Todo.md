@@ -236,8 +236,8 @@
   - [x] Dokumentasi sarana-prasarana inklusif ruang Pelayanan Statistik Terpadu (PST): jalur pemandu (*guiding block*), kursi roda, ruang laktasi, toilet difabel, formulir huruf braille, dan alat bantu dengar.
 - [x] **Widget Aksesibilitas Web (Text-to-Speech & Font Resizer):**
   - [x] Integrasi alat bantu aksesibilitas pada formulir survei publik dan portal REBO untuk pengunjung disabilitas sesuai standar WCAG 2.1.
-- [ ] **Katalog Standar Pelayanan & Maklumat Pelayanan Digital:**
-  - [ ] Tampilan interaktif Standar Pelayanan (SP) untuk seluruh produk data statistik BPS, alur kompensasi keterlambatan layanan, dan Maklumat Pelayanan BPS Sitaro.
+- [x] **Katalog Standar Pelayanan & Maklumat Pelayanan Digital:**
+  - [x] Tampilan interaktif Standar Pelayanan (SP) untuk seluruh produk data statistik BPS, alur kompensasi keterlambatan layanan, dan Maklumat Pelayanan BPS Sitaro.
 
 ### 19. Executive Command Center & Generator Slide Paparan TPN (Pimpinan)
 - [ ] **Executive Command Center (Mode Layar TV / Big Screen Display):**
