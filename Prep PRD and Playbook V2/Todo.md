@@ -261,6 +261,63 @@
 - [x] **Indikator Efisiensi & Dampak Paperless (Paperless Metric):**
   - [x] Metrik penghitungan estimasi penghematan lembar kertas dan biaya cetak (*paperless cost savings*) berkat digitalisasi penuh dokumen bukti dukung pada aplikasi REBO V2.
 
+---
+
+## 🛠️ Prioritas Perbaikan Fitur & Menu Eksisting (Hardening Berdasarkan Hasil Testing)
+
+*Catatan: Fokus pada pematangan, perbaikan bug/friction, ketahanan sistem (resilience), dan penyempurnaan fitur yang telah ada tanpa menambah menu baru.*
+
+### 1. Perbaikan & Ketahanan Notifikasi WhatsApp (`/rebo/admin/kontak`)
+- [ ] **Penanganan Cold Start / Sleep Gateway Render:**
+  - [ ] Tambahkan indikator visual loading/spinner saat tombol "Uji Kirim WA" atau submit bukti diklik ketika gateway baru bangun dari sleep, agar pengguna tidak mengira tombol macet.
+  - [ ] Tingkatkan toleransi timeout dari 5 detik menjadi 8-10 detik untuk panggilan pertama setelah periode idle.
+- [ ] **Auto-Refresh Status Koneksi Gateway:**
+  - [ ] Implementasikan auto-polling (interval 30-45 detik) pada card status di `/rebo/admin/kontak` sehingga saat QR code baru dipindai di tab `/qr`, status di antarmuka admin langsung berubah hijau (🟢 Terhubung) secara otomatis tanpa perlu refresh manual.
+- [ ] **Sanitasi & Validasi Input Nomor WhatsApp:**
+  - [ ] Terapkan pembersihan otomatis karakter non-angka (spasi, tanda hubung `-`, tanda kurung `()`) dan normalisasi otomatis prefix `08...`, `+62...` menjadi format standar internasional `628...` sebelum data kontak disimpan ke Supabase.
+
+### 2. Perbaikan Menu Formulir Bukti Dukung (Form RB & Input Bukti)
+- [ ] **Validasi Tautan Google Drive:**
+  - [ ] Tambahkan validasi regex URL saat operator menginput link bukti dukung (memastikan format diawali `https://drive.google.com/...` dan bukan link lokal/kosong).
+  - [ ] Peringatan dini jika link yang dimasukkan adalah link pencarian atau link folder padahal yang diminta berkas spesifik.
+- [ ] **Pencegahan Double-Submit & Feedback Simpan:**
+  - [ ] Disable tombol submit dan tampilkan status *"Menyimpan..."* secara instan saat operator mengunggah dokumen bukti dukung untuk mencegah duplikasi record akibat klik ganda.
+  - [ ] Pastikan modal input tertutup otomatis dan daftar bukti dukung langsung ter-refresh secara mulus tanpa kedip (*optimistic update*).
+- [ ] **Optimasi Rendering Daftar Indikator Panjang:**
+  - [ ] Optimasi komponen tabel indikator pada pilar dengan jumlah pertanyaan banyak (misal Pilar 3 & Pilar 5) agar scroll dan navigasi tetap lancar di laptop/perangkat berspesifikasi rendah.
+
+### 3. Perbaikan Papan Kanban Tindak Lanjut (`/rebo/kanban`)
+- [ ] **Penanganan Catatan Revisi Berteks Panjang:**
+  - [ ] Batasi tinggi kartu tugas (clamping text maksimal 3-4 baris) dengan tombol *"Lihat Selengkapnya"* / modal detail agar kartu dengan catatan verifikator yang panjang tidak merusak proporsi tata letak kolom Kanban.
+- [ ] **Status Sinkronisasi Drag-and-Drop Real-Time:**
+  - [ ] Pastikan perpindahan kartu antar kolom (To Do ➔ In Progress ➔ Done) langsung memperbarui status di database dengan feedback toast ringkas dan mekanisme rollback jika terjadi gangguan koneksi.
+- [ ] **Penyempurnaan Empty State Kolom:**
+  - [ ] Berikan visualisasi dan teks placeholder yang ramah pada kolom yang kosong (contoh: *"Bagus! Tidak ada catatan revisi yang tertunda"* pada kolom To Do).
+
+### 4. Perbaikan Menu Monitoring & Siklus Periode (`/rebo/monitoring` & `/rebo/admin/periode`)
+- [ ] **Penanganan Kasus Nilai Nol / Pembagian Nol (NaN Handling):**
+  - [ ] Pastikan rumus kalkulasi persentase pada komponen diagram dan tabel ringkasan aman dari pembagian nol (`0 / 0`) jika periode baru belum memiliki indikator, sehingga tidak memunculkan teks `NaN%` atau error komputasi.
+- [ ] **Format Hasil Ekspor Excel LKE:**
+  - [ ] Sertakan tahun periode evaluasi dan timestamp pada nama berkas hasil unduhan (contoh: `LKE_BPS_Sitaro_2026_Generated_YYYYMMDD.xlsx`).
+  - [ ] Rapikan lebar kolom, text-wrapping, dan pewarnaan header tabel hasil ekspor agar langsung siap cetak/presentasikan ke tim penilai tanpa perlu format ulang di Microsoft Excel.
+- [ ] **Konsistensi Sinkronisasi Periode Global:**
+  - [ ] Pastikan saat Admin mengubah status periode aktif di `/rebo/admin/periode`, seluruh halaman (Monitoring, Overview, Form RB, dan Kanban) langsung membaca periode tersebut tanpa memerlukan logout-login ulang.
+
+### 5. Perbaikan Menu Informasi RB & Katalog Arsip (`/rebo/informasi` & `/rebo/arsip`)
+- [ ] **Penanganan Broken Link Berkas Arsip:**
+  - [ ] Jika suatu tautan file arsip Google Drive eksternal memerlukan izin akses (*Request Access*) atau terhapus, berikan badge penanda khusus *"Periksa Izin Akses"* agar admin dapat segera memperbaikinya.
+- [ ] **Responsivitas Filter Kategori Arsip:**
+  - [ ] Pastikan filter kategori (SK, SOP, Laporan, Paparan) berjalan secara instan di sisi klien (*client-side fast filter*) tanpa membuat browser me-reload halaman dari awal.
+
+### 6. Perbaikan Autentikasi, Keamanan Sesi & Konsistensi UI
+- [ ] **Kelancaran Redirect Pasca Login (Clerk):**
+  - [ ] Pastikan alur setelah sign-in dari `/auth/sign-in` selalu mendarat langsung di `/rebo/overview` tanpa jeda layar kosong (*white flash*).
+- [ ] **Perlindungan Akses Menu Admin (RBAC View):**
+  - [ ] Sembunyikan navigasi menu administratif (Manajemen Pengguna, Manajemen Periode, Generator GDrive, Audit Log, Notifikasi WA) untuk akun dengan peran non-admin/tamu agar menu samping tetap ringkas dan tidak memicu akses tidak berizin.
+- [ ] **Penyelarasan Warna & Tipografi Mobile:**
+  - [ ] Terapkan palet warna lembut (*calm-soft neutral palette*) yang konsisten pada seluruh dialog konfirmasi dan modal formulir, serta sesuaikan padding kartu pada layar ponsel agar teks tidak terpotong di tepi layar.
+
+
 
 
 
