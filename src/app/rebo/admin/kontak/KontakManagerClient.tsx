@@ -272,9 +272,23 @@ export default function KontakManagerClient({
         contact.nama_pic
       );
       if (res.success) {
-        toast.success(res.message, {
-          description: `Pesan uji coba telah dikirim ke nomor ${contact.no_wa}.`
-        });
+        if (res.waDeepLink) {
+          try {
+            window.open(res.waDeepLink, '_blank');
+          } catch {
+            // Popup blocker handler
+          }
+          toast.success(res.message, {
+            action: {
+              label: 'Buka WhatsApp',
+              onClick: () => window.open(res.waDeepLink, '_blank')
+            }
+          });
+        } else {
+          toast.success(res.message, {
+            description: `Pesan uji coba telah dikirim ke nomor ${contact.no_wa}.`
+          });
+        }
       } else {
         toast.error(res.error || 'Pengiriman pesan uji coba gagal.', {
           description:

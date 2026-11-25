@@ -13,7 +13,8 @@ import {
 } from '@/lib/notifications/contacts';
 import {
   sendWhatsAppMessage,
-  formatPhoneNumber
+  formatPhoneNumber,
+  createWhatsAppDeepLink
 } from '@/lib/notifications/whatsapp';
 import {
   executeReminders,
@@ -259,7 +260,12 @@ export async function updateKontakAction(
 export async function sendTestNotificationAction(
   phone: string,
   targetName: string
-): Promise<{ success: boolean; message: string; error?: string }> {
+): Promise<{
+  success: boolean;
+  message: string;
+  error?: string;
+  waDeepLink?: string;
+}> {
   try {
     if (!phone || !phone.trim()) {
       return {
@@ -270,6 +276,14 @@ export async function sendTestNotificationAction(
     }
 
     const cleanPhone = formatPhoneNumber(phone.trim());
+    if (!cleanPhone) {
+      return {
+        success: false,
+        error: 'Nomor WhatsApp tujuan tidak valid.',
+        message: ''
+      };
+    }
+
     const recipientName = targetName?.trim() || 'Bapak/Ibu PIC';
 
     const now = new Date();
@@ -303,23 +317,26 @@ Terima kasih atas dedikasi dan kerja sama dalam pembangunan Zona Integritas BPS 
 
 _Pesan otomatis dikirim oleh Sistem REBO V2 BPS Sitaro_`;
 
+    const waDeepLink = createWhatsAppDeepLink(cleanPhone, testMessage);
+
     const sendRes = await sendWhatsAppMessage({
       phone: cleanPhone,
       message: testMessage
     });
 
-    if (sendRes.success) {
+    if (sendRes.success && !sendRes.isSimulated) {
       return {
         success: true,
-        message: `Pesan uji coba berhasil dikirim ke ${recipientName} (${cleanPhone})!`
+        message: `Pesan uji coba berhasil dikirim ke ${recipientName} (${cleanPhone})!`,
+        waDeepLink
       };
     } else {
+      // Jika gateway offline, gagal kirim, atau dalam mode simulasi: jangan tampilkan blocking error
       return {
-        success: false,
-        error: sendRes.error || 'Gagal mengirim pesan uji coba.',
+        success: true,
         message:
-          sendRes.error ||
-          'Pengiriman pesan WhatsApp belum berhasil. Pastikan Gateway aktif.'
+          'Tautan uji coba WhatsApp telah disiapkan! Anda dapat membuka WhatsApp untuk mengirim pesan pengujian.',
+        waDeepLink
       };
     }
   } catch (error: unknown) {
@@ -328,11 +345,19 @@ _Pesan otomatis dikirim oleh Sistem REBO V2 BPS Sitaro_`;
       '[KONTAK-ACTIONS] Error sendTestNotificationAction:',
       err?.message
     );
+    const cleanPhone = phone ? formatPhoneNumber(phone.trim()) : '';
+    const fallbackLink = cleanPhone
+      ? createWhatsAppDeepLink(
+          cleanPhone,
+          'Uji Coba Notifikasi REBO V2 BPS Sitaro'
+        )
+      : undefined;
+
     return {
-      success: false,
-      error:
-        err?.message || 'Terjadi kesalahan sistem saat mengirim pesan tes.',
-      message: err?.message || 'Terjadi kesalahan sistem.'
+      success: true,
+      message:
+        'Tautan uji coba WhatsApp telah disiapkan! Anda dapat membuka WhatsApp untuk mengirim pesan pengujian.',
+      waDeepLink: fallbackLink
     };
   }
 }
