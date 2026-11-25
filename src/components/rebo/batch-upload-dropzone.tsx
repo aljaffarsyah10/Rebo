@@ -16,10 +16,20 @@ import {
   RefreshCw,
   X,
   FileCheck2,
-  Tag
+  Tag,
+  Zap,
+  Leaf
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import {
+  compressImageFile,
+  isCompressibleImage,
+  formatFileSize,
+  type CompressionResult
+} from '@/lib/compression/client-compressor';
+import { FileCompressionBadge } from '@/components/rebo/file-compression-badge';
 
 export const TIPE_DOKUMEN_OPTIONS = [
   'Undangan',
@@ -40,6 +50,7 @@ export interface BatchDokumenItem {
   isAutoTagged: boolean;
   sourceType: 'file' | 'link';
   fileSize?: number;
+  compressionResult?: CompressionResult;
 }
 
 export interface BatchUploadDropzoneProps {
@@ -48,6 +59,7 @@ export interface BatchUploadDropzoneProps {
       nama_dokumen: string;
       file_url: string;
       tipe_dokumen: string;
+      compressionResult?: CompressionResult;
     }>
   ) => void;
   onCancel?: () => void;
@@ -152,6 +164,8 @@ export function BatchUploadDropzone({
   const [pasteText, setPasteText] = useState('');
   const [progress, setProgress] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [autoCompress, setAutoCompress] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // Animasi progress bar saat pemrosesan batch
@@ -180,38 +194,70 @@ export function BatchUploadDropzone({
     }, 550);
   };
 
-  // Handler Drop Files via react-dropzone
+  // Handler Drop Files via react-dropzone dengan kompresi client-side otomatis
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    async (acceptedFiles: File[]) => {
       if (!acceptedFiles || acceptedFiles.length === 0) return;
 
-      runProgressSimulation(() => {
-        const newItems: BatchDokumenItem[] = acceptedFiles.map((file, idx) => {
-          const title = cleanDocTitle(file.name);
-          const autoType = autoTagDocumentCategory(`${file.name} ${title}`);
+      setIsProcessing(true);
+      setIsCompressing(true);
+      setProgress(15);
 
-          // Buat URL default: jika ada folder indikator, gunakan tautan dengan anchor file,
-          // atau gunakan placeholder valid Google Drive yang dapat disunting pengguna
-          const initialUrl = defaultFolderUrl
-            ? `${defaultFolderUrl.replace(/\/$/, '')}#file=${encodeURIComponent(file.name)}`
-            : `https://drive.google.com/file/d/upload-${Date.now()}-${idx}/view`;
+      const newItems: BatchDokumenItem[] = [];
 
-          return {
-            id: `batch-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
-            nama_dokumen: title,
-            file_url: initialUrl,
-            tipe_dokumen: autoType,
-            isAutoTagged: true,
-            sourceType: 'file',
-            fileSize: file.size
-          };
+      for (let idx = 0; idx < acceptedFiles.length; idx++) {
+        let file = acceptedFiles[idx];
+        let compressionResult: CompressionResult | undefined = undefined;
+
+        if (autoCompress && isCompressibleImage(file)) {
+          try {
+            compressionResult = await compressImageFile(file);
+            if (compressionResult.isCompressed) {
+              file = compressionResult.file;
+            }
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn('Gagal kompresi file:', file.name, e);
+          }
+        }
+
+        const title = cleanDocTitle(file.name);
+        const autoType = autoTagDocumentCategory(`${file.name} ${title}`);
+
+        // Buat URL default: jika ada folder indikator, gunakan tautan dengan anchor file,
+        // atau gunakan placeholder valid Google Drive yang dapat disunting pengguna
+        const initialUrl = defaultFolderUrl
+          ? `${defaultFolderUrl.replace(/\/$/, '')}#file=${encodeURIComponent(file.name)}`
+          : `https://drive.google.com/file/d/upload-${Date.now()}-${idx}/view`;
+
+        newItems.push({
+          id: `batch-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+          nama_dokumen: title,
+          file_url: initialUrl,
+          tipe_dokumen: autoType,
+          isAutoTagged: true,
+          sourceType: 'file',
+          fileSize: file.size,
+          compressionResult
         });
 
+        const currentProg = Math.min(
+          95,
+          Math.round(20 + ((idx + 1) / acceptedFiles.length) * 75)
+        );
+        setProgress(currentProg);
+      }
+
+      setProgress(100);
+      setTimeout(() => {
         setStagedItems((prev) => [...prev, ...newItems]);
         setValidationError(null);
-      });
+        setIsProcessing(false);
+        setIsCompressing(false);
+        setProgress(null);
+      }, 250);
     },
-    [defaultFolderUrl]
+    [defaultFolderUrl, autoCompress]
   );
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } =
@@ -441,13 +487,29 @@ export function BatchUploadDropzone({
     const outputDocs = stagedItems.map((item) => ({
       nama_dokumen: item.nama_dokumen.trim(),
       file_url: item.file_url.trim(),
-      tipe_dokumen: item.tipe_dokumen
+      tipe_dokumen: item.tipe_dokumen,
+      compressionResult: item.compressionResult
     }));
 
     onBatchAdd(outputDocs);
     setStagedItems([]);
     setValidationError(null);
   };
+
+  // Kalkulasi total kuota penyimpanan yang dihemat
+  const totalSavedBytes = stagedItems.reduce(
+    (acc, item) => acc + (item.compressionResult?.savingsBytes || 0),
+    0
+  );
+  const totalOriginalBytes = stagedItems.reduce(
+    (acc, item) =>
+      acc + (item.compressionResult?.originalSize || item.fileSize || 0),
+    0
+  );
+  const totalSavedPercent =
+    totalOriginalBytes > 0 && totalSavedBytes > 0
+      ? parseFloat(((totalSavedBytes / totalOriginalBytes) * 100).toFixed(1))
+      : 0;
 
   return (
     <div
@@ -491,6 +553,44 @@ export function BatchUploadDropzone({
             Tutup
           </Button>
         )}
+      </div>
+
+      {/* Auto Compression Toggle Switch */}
+      <div className='mb-4 flex flex-col justify-between gap-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/70 p-3 shadow-2xs sm:flex-row sm:items-center dark:border-emerald-900/60 dark:bg-emerald-950/20'>
+        <div className='flex items-center gap-2.5'>
+          <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 shadow-2xs dark:bg-emerald-900/60 dark:text-emerald-300'>
+            <Zap className='h-4 w-4' />
+          </div>
+          <div>
+            <div className='flex items-center gap-2'>
+              <span className='text-xs font-bold text-emerald-900 dark:text-emerald-100'>
+                Kompresi Gambar Otomatis (Hemat Kuota)
+              </span>
+              <Badge
+                variant='outline'
+                className='border-emerald-300 bg-emerald-100/90 text-[10px] font-bold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900 dark:text-emerald-200'
+              >
+                Maks 1920px &bull; &lt; 1.5 MB
+              </Badge>
+            </div>
+            <p className='text-[11px] text-emerald-700/90 dark:text-emerald-300/80'>
+              Kompresi foto kegiatan &amp; dokumen scan di sisi peramban sebelum
+              upload untuk mempercepat proses saat sinyal internet kepulauan
+              lambat.
+            </p>
+          </div>
+        </div>
+
+        <div className='flex items-center gap-2 self-end sm:self-center'>
+          <span className='text-xs font-semibold text-emerald-800 dark:text-emerald-300'>
+            {autoCompress ? 'Aktif' : 'Nonaktif'}
+          </span>
+          <Switch
+            checked={autoCompress}
+            onCheckedChange={setAutoCompress}
+            aria-label='Toggle Kompresi Gambar Otomatis'
+          />
+        </div>
       </div>
 
       {/* Tabs Input Mode */}
@@ -658,6 +758,32 @@ export function BatchUploadDropzone({
             </div>
           </div>
 
+          {/* Total Quota Saved Banner */}
+          {totalSavedBytes > 0 && (
+            <div className='flex flex-wrap items-center justify-between gap-2.5 rounded-lg border border-emerald-300 bg-emerald-100/80 p-3 shadow-2xs dark:border-emerald-800 dark:bg-emerald-950/40'>
+              <div className='flex items-center gap-2.5'>
+                <div className='flex h-7 w-7 items-center justify-center rounded-full bg-emerald-200 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'>
+                  <Leaf className='h-4 w-4' />
+                </div>
+                <div>
+                  <span className='text-xs font-bold text-emerald-900 dark:text-emerald-100'>
+                    Total Hemat Kuota: {formatFileSize(totalSavedBytes)}
+                  </span>
+                  <span className='ml-1 text-xs font-medium text-emerald-700 dark:text-emerald-300'>
+                    ({totalSavedPercent}% kapasitas Google Drive BPS Sitaro
+                    berhasil dihemat)
+                  </span>
+                </div>
+              </div>
+              <Badge
+                variant='default'
+                className='bg-emerald-600 text-[10px] font-bold text-white shadow-xs hover:bg-emerald-700'
+              >
+                Siap Unggah Cepat (Sinyal Sitaro)
+              </Badge>
+            </div>
+          )}
+
           <div className='space-y-3'>
             {stagedItems.map((item, index) => (
               <div
@@ -697,6 +823,17 @@ export function BatchUploadDropzone({
                     <Trash2 className='h-3.5 w-3.5' />
                   </Button>
                 </div>
+
+                {/* Badge Kompresi Gambar jika berkas berhasil dikompresi */}
+                {item.compressionResult &&
+                  item.compressionResult.isCompressed && (
+                    <div className='mb-2.5'>
+                      <FileCompressionBadge
+                        result={item.compressionResult}
+                        fileName={item.nama_dokumen}
+                      />
+                    </div>
+                  )}
 
                 <div className='grid grid-cols-1 gap-2.5 md:grid-cols-12'>
                   {/* Nama Dokumen */}

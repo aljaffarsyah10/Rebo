@@ -23,7 +23,8 @@ import {
   RotateCcw,
   Cloud,
   WifiOff,
-  HardDrive
+  HardDrive,
+  Sparkles
 } from 'lucide-react';
 import { submitBuktiAction, deleteDokumenBukti } from '@/actions/bukti-actions';
 import {
@@ -45,6 +46,14 @@ import { BatchUploadDropzone } from '@/components/rebo/batch-upload-dropzone';
 import { AICompletenessChecker } from '@/components/rebo/ai-completeness-checker';
 import { AIMetadataBadge } from '@/components/rebo/ai-metadata-badge';
 import { SmartSuggestionCard } from '@/components/rebo/smart-suggestion-card';
+import {
+  compressImageFile,
+  isCompressibleImage,
+  formatFileSize,
+  cleanDocTitle,
+  type CompressionResult
+} from '@/lib/compression/client-compressor';
+import { FileCompressionBadge } from '@/components/rebo/file-compression-badge';
 import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -106,6 +115,7 @@ export default function BuktiForm({
       tipe_dokumen?: string | null;
       uploaded_by?: string;
       uploaded_at?: string;
+      compressionResult?: CompressionResult;
     }>
   >([]);
 
@@ -116,6 +126,9 @@ export default function BuktiForm({
   const [addDocMode, setAddDocMode] = useState<'none' | 'single' | 'batch'>(
     'none'
   );
+  const [singleDocCompression, setSingleDocCompression] =
+    useState<CompressionResult | null>(null);
+  const [isCompressingSingle, setIsCompressingSingle] = useState(false);
 
   const [isPending, startTransition] = useTransition();
   const [submittingType, setSubmittingType] = useState<
@@ -491,12 +504,14 @@ export default function BuktiForm({
       file_url: newDocUrl.trim(),
       tipe_dokumen: newDocTipe,
       uploaded_by: 'Operator (Belum Disimpan)',
-      uploaded_at: new Date().toISOString()
+      uploaded_at: new Date().toISOString(),
+      compressionResult: singleDocCompression || undefined
     };
 
     setDokumenList((prev) => [...prev, newDoc]);
     setNewDocNama('');
     setNewDocUrl('');
+    setSingleDocCompression(null);
     setAddDocMode('none');
     toast.success(`Berkas "${newDoc.nama_dokumen}" ditambahkan ke draf.`);
   }
@@ -507,6 +522,7 @@ export default function BuktiForm({
       nama_dokumen: string;
       file_url: string;
       tipe_dokumen: string;
+      compressionResult?: CompressionResult;
     }>
   ) {
     if (!newDocs || newDocs.length === 0) return;
@@ -517,7 +533,8 @@ export default function BuktiForm({
       file_url: doc.file_url,
       tipe_dokumen: doc.tipe_dokumen,
       uploaded_by: 'Operator (Belum Disimpan)',
-      uploaded_at: new Date().toISOString()
+      uploaded_at: new Date().toISOString(),
+      compressionResult: doc.compressionResult
     }));
 
     setDokumenList((prev) => [...prev, ...formattedDocs]);
@@ -1194,6 +1211,17 @@ export default function BuktiForm({
                       />
                     </div>
 
+                    {/* Badge Penghematan Kompresi Gambar Client-Side */}
+                    {doc.compressionResult &&
+                      doc.compressionResult.isCompressed && (
+                        <div className='mt-2'>
+                          <FileCompressionBadge
+                            result={doc.compressionResult}
+                            fileName={doc.nama_dokumen}
+                          />
+                        </div>
+                      )}
+
                     {healthResults[doc.file_url]?.status === 'RESTRICTED' && (
                       <div className='text-2xs mt-2 flex items-center gap-1.5 rounded border border-rose-200 bg-rose-50 px-2.5 py-1 font-medium text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
                         <AlertCircle className='h-3.5 w-3.5 shrink-0 text-rose-600' />
@@ -1335,6 +1363,63 @@ export default function BuktiForm({
               </div>
             </div>
 
+            {/* Opsi Unggah & Kompresi Otomatis Foto Dokumentasi / Dokumen Pindaian */}
+            <div className='mb-3 rounded-lg border border-dashed border-blue-300 bg-white/90 p-3 shadow-2xs dark:border-blue-700 dark:bg-gray-800/80'>
+              <div className='mb-1.5 flex items-center justify-between'>
+                <label className='flex items-center gap-1.5 text-xs font-semibold text-blue-900 dark:text-blue-200'>
+                  <Sparkles className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+                  <span>
+                    Unggah Foto Dokumentasi / Dokumen Scan (Kompresi Otomatis):
+                  </span>
+                </label>
+                {isCompressingSingle && (
+                  <span className='flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400'>
+                    <Loader2 className='h-3 w-3 animate-spin' /> Mengompresi...
+                  </span>
+                )}
+              </div>
+              <input
+                type='file'
+                accept='image/jpeg,image/png,image/webp,image/jpg'
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (isCompressibleImage(file)) {
+                    setIsCompressingSingle(true);
+                    try {
+                      const compRes = await compressImageFile(file);
+                      setSingleDocCompression(compRes);
+                      if (!newDocNama.trim()) {
+                        setNewDocNama(cleanDocTitle(file.name));
+                      }
+                      if (newDocTipe === 'Undangan') {
+                        setNewDocTipe('Dokumentasi / Foto');
+                      }
+                      if (!newDocUrl.trim()) {
+                        const genUrl = indicatorFolderUrl
+                          ? `${indicatorFolderUrl.replace(/\/$/, '')}#file=${encodeURIComponent(compRes.file.name)}`
+                          : `https://drive.google.com/file/d/upload-${Date.now()}/view`;
+                        setNewDocUrl(genUrl);
+                      }
+                      toast.success(
+                        `Foto terkompresi: Hemat ${compRes.savedPercent}% (${formatFileSize(compRes.savingsBytes)} kuota dihemat)`
+                      );
+                    } catch {
+                      toast.error('Gagal mengompresi gambar.');
+                    } finally {
+                      setIsCompressingSingle(false);
+                    }
+                  }
+                }}
+                className='w-full text-xs text-gray-600 file:mr-2.5 file:rounded-md file:border-0 file:bg-blue-100 file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-blue-700 hover:file:bg-blue-200 dark:text-gray-300 dark:file:bg-blue-950 dark:file:text-blue-300'
+              />
+              {singleDocCompression && singleDocCompression.isCompressed && (
+                <div className='mt-2.5'>
+                  <FileCompressionBadge result={singleDocCompression} />
+                </div>
+              )}
+            </div>
+
             <div className='mb-3'>
               <div className='mb-1 flex items-center justify-between'>
                 <label className='block text-xs font-semibold text-gray-700 dark:text-gray-300'>
@@ -1374,7 +1459,10 @@ export default function BuktiForm({
                 type='button'
                 variant='ghost'
                 size='sm'
-                onClick={() => setAddDocMode('none')}
+                onClick={() => {
+                  setAddDocMode('none');
+                  setSingleDocCompression(null);
+                }}
                 className='h-8 text-xs'
               >
                 Batal

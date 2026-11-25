@@ -203,8 +203,8 @@
 ### 14. PWA Lanjutan, Offline-First & Kecepatan Unggah Berkas
 - [x] **Penyimpanan Draf Offline (IndexedDB / Local-First):**
   - [x] Operator tetap dapat mengetik narasi jawaban LKE dan mengisi tautan saat koneksi internet kepulauan sedang bermasalah atau mati listrik; data tersimpan otomatis di browser lokal dan tersinkron ke cloud begitu online.
-- [ ] **Image & File Compressor Otomatis Sebelum Upload:**
-  - [ ] Kompresi berkas gambar/foto dokumentasi dan dokumen pindaian di sisi peramban (client-side) sebelum diunggah ke Google Drive guna menghemat kuota penyimpanan dan mempercepat proses upload.
+- [x] **Image & File Compressor Otomatis Sebelum Upload:**
+  - [x] Kompresi berkas gambar/foto dokumentasi dan dokumen pindaian di sisi peramban (client-side) sebelum diunggah ke Google Drive guna menghemat kuota penyimpanan dan mempercepat proses upload.
 - [ ] **PWA Quick Action Shortcuts:**
   - [ ] Tombol pintas saat ikon aplikasi REBO ditekan lama di layar beranda ponsel: *"Upload Bukti Cepat"*, *"Cek Status Indikator Saya"*, dan *"Buka Kanban"*.
 
