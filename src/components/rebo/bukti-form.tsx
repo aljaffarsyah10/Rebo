@@ -33,6 +33,7 @@ import type { GDriveHealthCheckResult } from '@/lib/gdrive/health-checker';
 import { QAChecklistCard } from '@/components/rebo/qa-checklist-card';
 import { DocumentPreviewModal } from '@/components/rebo/document-preview-modal';
 import { BatchUploadDropzone } from '@/components/rebo/batch-upload-dropzone';
+import { AICompletenessChecker } from '@/components/rebo/ai-completeness-checker';
 import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -1230,6 +1231,15 @@ export default function BuktiForm({
           disabled={!canEdit || isPending}
           placeholder='Tambahkan catatan penjelasan bukti dukung di sini...'
           className='w-full rounded-lg border border-gray-300 bg-white p-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:disabled:bg-gray-800'
+        />
+
+        {/* AI Completeness & Consistency Checker */}
+        <AICompletenessChecker
+          pertanyaan={pertanyaan}
+          catatan={catatanOperator}
+          dokumenList={dokumenList}
+          onApplyNarration={(text) => setCatatanOperator(text)}
+          disabled={!canEdit || isPending}
         />
       </div>
 

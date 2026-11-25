@@ -172,9 +172,9 @@
   - [x] Fleksibilitas penyesuaian bobot pilar/indikator jika KemenPAN-RB atau BPS RI memperbarui peraturan/juknis LKE PMPRB terbaru.
 
 ### 11. Asisten AI & Quality Control Penilaian Mandiri (Smart LKE Assistant)
-- [ ] **AI Completeness & Consistency Checker:**
-  - [ ] Analisis teks otomatis menggunakan LLM/AI untuk memeriksa apakah deskripsi penjelasan bukti dukung yang diinput operator sudah benar-benar menjawab esensi pertanyaan LKE sebelum diajukan ke Verifikator.
-  - [ ] Peringatan dini jika narasi terlalu singkat, tidak relevan, atau tidak menyebutkan nomor surat/dokumen yang dilampirkan.
+- [x] **AI Completeness & Consistency Checker:**
+  - [x] Analisis teks otomatis menggunakan LLM/AI untuk memeriksa apakah deskripsi penjelasan bukti dukung yang diinput operator sudah benar-benar menjawab esensi pertanyaan LKE sebelum diajukan ke Verifikator.
+  - [x] Peringatan dini jika narasi terlalu singkat, tidak relevan, atau tidak menyebutkan nomor surat/dokumen yang dilampirkan.
 - [ ] **AI Metadata Extractor Dokumen Bukti:**
   - [ ] Ekstraksi otomatis nomor surat, tanggal kegiatan, dan penandatangan dari berkas PDF/foto bukti dukung.
   - [ ] Validasi otomatis untuk memastikan tanggal berkas berada dalam rentang tahun periode evaluasi yang aktif (mencegah salah unggah dokumen kadaluarsa).
