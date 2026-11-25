@@ -36,7 +36,8 @@ import {
   IconHistory,
   IconCalendar,
   IconBrandWhatsapp,
-  IconSparkles
+  IconSparkles,
+  IconFileDescription
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -78,5 +79,6 @@ export const Icons = {
   history: IconHistory,
   calendar: IconCalendar,
   whatsapp: IconBrandWhatsapp,
-  sparkles: IconSparkles
+  sparkles: IconSparkles,
+  notulen: IconFileDescription
 };

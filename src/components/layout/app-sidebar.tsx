@@ -156,6 +156,12 @@ export default function AppSidebar() {
                             <span className='relative inline-flex h-2 w-2 rounded-full bg-blue-500'></span>
                           </span>
                         )}
+                        {item.title === 'Notulen Rapat Digital' && (
+                          <span className='relative mr-1 flex h-2 w-2'>
+                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75'></span>
+                            <span className='relative inline-flex h-2 w-2 rounded-full bg-cyan-500'></span>
+                          </span>
+                        )}
                         {item.title === 'Kanban Tindak Lanjut' && (
                           <span className='relative mr-1 flex h-2 w-2'>
                             <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75'></span>

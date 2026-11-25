@@ -124,6 +124,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Notulen Rapat Digital',
+    url: '/rebo/notulen',
+    icon: 'notulen',
+    isActive: false,
+    shortcut: ['n', 't'],
+    items: []
+  },
+  {
     title: 'Kanban Tindak Lanjut',
     url: '/rebo/kanban',
     icon: 'kanban',

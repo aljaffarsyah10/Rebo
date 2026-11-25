@@ -185,9 +185,9 @@
 - [x] **Kalender Jadwal Aksi & Rencana Kerja Tim ZI/RB:**
   - [x] Kalender interaktif terpadu untuk memantau jadwal rapat koordinasi pilar, jadwal sosialisasi internal, dan batas waktu pengumpulan bukti.
   - [x] Integrasi pengingat otomatis ke WhatsApp peserta rapat H-1 sebelum agenda dimulai (termasuk 1-klik Instant WA Dispatcher).
-- [ ] **Notulen Rapat Digital & Auto-Task Assignment:**
-  - [ ] Formulir pencatatan notulen rapat berkala tim ZI/RB di dalam aplikasi.
-  - [ ] Pembuatan butir kesepakatan rapat yang otomatis berubah menjadi tugas tindak lanjut di papan Kanban dan mengirim rincian tugas ke nomor WA pegawai yang ditugaskan.
+- [x] **Notulen Rapat Digital & Auto-Task Assignment:**
+  - [x] Formulir pencatatan notulen rapat berkala tim ZI/RB di dalam aplikasi.
+  - [x] Pembuatan butir kesepakatan rapat yang otomatis berubah menjadi tugas tindak lanjut di papan Kanban dan mengirim rincian tugas ke nomor WA pegawai yang ditugaskan.
 - [ ] **Broadcast Pengumuman Internal Satu-Arah:**
   - [ ] Fitur kirim pengumuman penting / arahan pimpinan BPS Sitaro secara serentak ke seluruh koordinator pilar via WhatsApp bot dan banner dinamis pada Beranda REBO.
 

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   type AgendaAksiZI,
   type AgendaKategori,
@@ -64,7 +65,8 @@ import {
   IconSend,
   IconSparkles,
   IconLayoutGrid,
-  IconList
+  IconList,
+  IconFileDescription
 } from '@tabler/icons-react';
 
 interface AgendaCalendarClientProps {
@@ -474,6 +476,15 @@ export default function AgendaCalendarClient({
         </div>
 
         <div className='flex flex-wrap items-center gap-2.5'>
+          <Link href='/rebo/notulen'>
+            <Button
+              variant='outline'
+              className='border-cyan-200 bg-cyan-50/70 text-cyan-700 hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/50 dark:text-cyan-300'
+            >
+              <IconFileDescription className='mr-1.5 h-4 w-4' /> Catat Notulen
+              Rapat
+            </Button>
+          </Link>
           <Button
             onClick={() => handleOpenAdd()}
             className='bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
@@ -1602,6 +1613,19 @@ export default function AgendaCalendarClient({
               </div>
 
               <div className='flex items-center gap-2'>
+                <Link
+                  href={`/rebo/notulen?agendaId=${selectedAgenda.id}&title=${encodeURIComponent(selectedAgenda.judul)}`}
+                >
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    className='border-cyan-300 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:hover:bg-cyan-950/40'
+                  >
+                    <IconFileDescription className='mr-1 h-3.5 w-3.5' /> Catat
+                    Notulen
+                  </Button>
+                </Link>
                 <Button
                   type='button'
                   variant='outline'
