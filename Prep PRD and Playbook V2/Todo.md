@@ -222,6 +222,46 @@
   - [ ] Penjadwalan cadangan otomatis (*automated snapshot backup*) basis data Supabase berkala ke Google Cloud Storage / Amazon S3.
   - [ ] Tombol 1-klik untuk validasi integritas data cadangan dan pemulihan darurat (*disaster recovery verification*).
 
+### 17. Manajemen Integritas Pegawai & Kepatuhan LHKPN/LHKASN (Pilar 5 & 3)
+- [ ] **Pelacak Kepatuhan e-LHKPN & e-LHKASN (100% Compliance Tracker):**
+  - [ ] Dashboard pemantauan status penyampaian bukti tanda terima pelaporan harta kekayaan seluruh pejabat dan ASN BPS Sitaro sebelum batas akhir 31 Maret.
+  - [ ] Pengingat otomatis via WhatsApp (H-30, H-14, H-7) kepada pegawai yang belum mengunggah bukti lapor LHKPN/LHKASN.
+- [ ] **Matriks Kepatuhan Disiplin & Kode Etik ASN:**
+  - [ ] Perekaman bukti dukung nihil penjatuhan hukuman disiplin tingkat sedang/berat (syarat mutlak kelolosan predikat WBK).
+- [ ] **Unit Pengendalian Gratifikasi (UPG) & Rekonsiliasi KPK:**
+  - [ ] Formulir online pelaporan penolakan / penerimaan gratifikasi pegawai yang terhubung langsung dengan alur verifikasi Tim Kepatuhan Internal BPS Sitaro.
+
+### 18. Aksesibilitas, Disabilitas & Ramah Difabel pada PST (Pilar 6 Pelayanan Publik)
+- [ ] **Katalog Fasilitas Ramah Kelompok Rentan & Difabel:**
+  - [ ] Dokumentasi sarana-prasarana inklusif ruang Pelayanan Statistik Terpadu (PST): jalur pemandu (*guiding block*), kursi roda, ruang laktasi, toilet difabel, formulir huruf braille, dan alat bantu dengar.
+- [ ] **Widget Aksesibilitas Web (Text-to-Speech & Font Resizer):**
+  - [ ] Integrasi alat bantu aksesibilitas pada formulir survei publik dan portal REBO untuk pengunjung disabilitas sesuai standar WCAG 2.1.
+- [ ] **Katalog Standar Pelayanan & Maklumat Pelayanan Digital:**
+  - [ ] Tampilan interaktif Standar Pelayanan (SP) untuk seluruh produk data statistik BPS, alur kompensasi keterlambatan layanan, dan Maklumat Pelayanan BPS Sitaro.
+
+### 19. Executive Command Center & Generator Slide Paparan TPN (Pimpinan)
+- [ ] **Executive Command Center (Mode Layar TV / Big Screen Display):**
+  - [ ] Tampilan dasbor visual layar penuh (*kiosk mode*) untuk monitor TV lobi kantor / ruang kerja Kepala BPS yang memutar rotasi realtime: progres 6 pilar, skor IKM/IPAK, hitung mundur batas waktu, dan capaian inovasi.
+- [ ] **One-Click Presentation Deck Generator (Ekspor Slide PPTX):**
+  - [ ] Pembuatan berkas presentasi PowerPoint (.pptx) paparan ZI BPS Sitaro secara otomatis dari data dan grafik riil sistem REBO untuk dipaparkan di hadapan Tim Penilai Nasional (TPN).
+- [ ] **Analisis Tren Kinerja Antar-Tahun (Multi-Year Trend Analysis):**
+  - [ ] Grafik komparasi perkembangan skor LKE antar-periode (2024, 2025, 2026) untuk membuktikan adanya perbaikan berkelanjutan (*continuous improvement*).
+
+### 20. Keamanan Lanjutan, Watermarking & Perlindungan Privasi (Data Shield)
+- [ ] **Watermarking Otomatis Berkas Bukti Dukung:**
+  - [ ] Penambahan watermark otomatis (*"HANYA UNTUK PENILAIAN ZI BPS SITARO - TAHUN [YYYY]"*) pada pratinjau dokumen PDF untuk mencegah kebocoran atau penyalahgunaan berkas kedinasan.
+- [ ] **Session Auto-Timeout & Suspicious Login Alert:**
+  - [ ] Penguncian sesi otomatis setelah inaktivitas 30 menit saat diakses dari komputer bersama (*shared PC kantor*), serta notifikasi peringatan jika ada login dari perangkat asing.
+- [ ] **Enkripsi File Sensitif (Doc Shield):**
+  - [ ] Enkripsi berkas dokumen pemeriksaan internal dan laporan keuangan sebelum disimpan ke cloud storage.
+
+### 21. Manajemen Anggaran & Rencana Aksi ZI (Resource & Efficiency Tracking)
+- [ ] **Pelacak Anggaran & Realisasi Kegiatan ZI/RB:**
+  - [ ] Monitoring penyerapan anggaran pendukung reformasi birokrasi (sosialisasi internal, survei kepuasan, pengadaan sarana PST, pakaian tim kerja).
+- [ ] **Indikator Efisiensi & Dampak Paperless (Paperless Metric):**
+  - [ ] Metrik penghitungan estimasi penghematan lembar kertas dan biaya cetak (*paperless cost savings*) berkat digitalisasi penuh dokumen bukti dukung pada aplikasi REBO V2.
+
+
 
 
 
