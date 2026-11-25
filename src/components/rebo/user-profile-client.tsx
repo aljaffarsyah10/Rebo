@@ -31,6 +31,11 @@ import {
 import type { UserProfileData } from '@/types/rebo';
 import { formatPhoneNumber } from '@/lib/notifications/whatsapp';
 import {
+  type AchievementBadge,
+  BADGE_TIER_CONFIGS
+} from '@/lib/gamification/badge-types';
+import { getUserPilarBadgesAction } from '@/actions/badge-actions';
+import {
   CheckCircle2,
   AlertCircle,
   Phone,
@@ -42,7 +47,17 @@ import {
   ExternalLink,
   Loader2,
   Sparkles,
-  Info
+  Info,
+  Trophy,
+  Award,
+  Medal,
+  Zap,
+  ShieldCheck,
+  Crown,
+  Flame,
+  FileCheck,
+  Lock,
+  ArrowUpRight
 } from 'lucide-react';
 
 interface UserProfileClientProps {
@@ -51,6 +66,8 @@ interface UserProfileClientProps {
     imageUrl?: string;
     username?: string;
   };
+  initialBadges?: AchievementBadge[];
+  initialPilarNama?: string;
 }
 
 const PILAR_OPTIONS = [
@@ -64,7 +81,9 @@ const PILAR_OPTIONS = [
 
 export default function UserProfileClient({
   initialProfile,
-  clerkUserInfo
+  clerkUserInfo,
+  initialBadges = [],
+  initialPilarNama = ''
 }: UserProfileClientProps) {
   const [profile, setProfile] = useState<UserProfileData>(initialProfile);
   const [fullName, setFullName] = useState(initialProfile.full_name || '');
@@ -83,6 +102,10 @@ export default function UserProfileClient({
   const [notifDeadline, setNotifDeadline] = useState(
     initialProfile.notif_wa_deadline ?? true
   );
+
+  // States lencana tim kerja
+  const [badges, setBadges] = useState<AchievementBadge[]>(initialBadges);
+  const [pilarNama, setPilarNama] = useState<string>(initialPilarNama);
 
   // States feedback
   const [isPending, startTransition] = useTransition();
@@ -419,8 +442,16 @@ export default function UserProfileClient({
                   ? String(pilarTugas)
                   : 'all'
               }
-              onValueChange={(val) => {
-                setPilarTugas(val === 'all' ? null : parseInt(val, 10));
+              onValueChange={async (val) => {
+                const nextPilar = val === 'all' ? null : parseInt(val, 10);
+                setPilarTugas(nextPilar);
+                if (nextPilar) {
+                  const res = await getUserPilarBadgesAction(nextPilar);
+                  if (res.success && res.badges) {
+                    setBadges(res.badges);
+                    setPilarNama(res.pilarNama);
+                  }
+                }
               }}
             >
               <SelectTrigger id='pilarTugas' className='w-full'>
@@ -446,7 +477,108 @@ export default function UserProfileClient({
         </CardContent>
       </Card>
 
-      {/* 4. Kartu Preferensi Notifikasi Personal (Worker-Tracking) */}
+      {/* 4. Kartu Lencana Kehormatan Tim Kerja (Digital Recognition Badges) */}
+      <Card className='border-amber-200/80 bg-gradient-to-br from-amber-50/20 via-white to-amber-50/10 dark:border-amber-900/40 dark:from-slate-900 dark:to-slate-900'>
+        <CardHeader className='pb-3'>
+          <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex items-center gap-2'>
+              <Award className='h-5 w-5 text-amber-500' />
+              <div>
+                <CardTitle className='text-lg'>
+                  Lencana Penghargaan Tim Kerja
+                </CardTitle>
+                <CardDescription className='text-xs'>
+                  Koleksi lencana kehormatan digital atas pencapaian milestone
+                  Zona Integritas tim Anda.
+                </CardDescription>
+              </div>
+            </div>
+            <div className='flex items-center gap-2'>
+              <Badge className='border-amber-300 bg-amber-500/15 text-xs font-bold text-amber-800 dark:border-amber-700 dark:text-amber-300'>
+                {badges.filter((b) => b.unlocked).length} dari{' '}
+                {badges.length || 8} Terbuka
+              </Badge>
+              <Link
+                href='/rebo/leaderboard'
+                className='inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400'
+              >
+                <span>Galeri Lengkap</span>
+                <ArrowUpRight className='h-3 w-3' />
+              </Link>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className='space-y-4'>
+          {pilarNama && (
+            <div className='text-xs font-medium text-slate-600 dark:text-slate-400'>
+              Menampilkan lencana untuk:{' '}
+              <strong className='text-slate-900 dark:text-slate-100'>
+                {pilarNama}
+              </strong>
+            </div>
+          )}
+
+          <div className='grid grid-cols-2 gap-2.5 sm:grid-cols-4'>
+            {badges.map((badge) => {
+              const tierConf = BADGE_TIER_CONFIGS[badge.tier];
+              const isUnlocked = badge.unlocked;
+
+              return (
+                <div
+                  key={badge.id}
+                  className={`relative flex flex-col justify-between rounded-xl border p-3 text-xs transition-all ${
+                    isUnlocked
+                      ? `${tierConf.badgeBg} ${tierConf.borderColor} shadow-2xs`
+                      : 'border-dashed border-slate-200 bg-slate-50/50 opacity-60 dark:border-slate-800 dark:bg-slate-900/30'
+                  }`}
+                >
+                  <div className='space-y-1.5'>
+                    <div className='flex items-center justify-between'>
+                      <Badge
+                        className={`text-[8px] font-black tracking-wider uppercase ${
+                          isUnlocked
+                            ? `${tierConf.badgeBg} ${tierConf.textColor} border ${tierConf.borderColor}`
+                            : 'bg-slate-200 text-slate-500 dark:bg-slate-800'
+                        }`}
+                      >
+                        {badge.tier}
+                      </Badge>
+                      {isUnlocked ? (
+                        <CheckCircle2 className='h-3.5 w-3.5 text-emerald-600' />
+                      ) : (
+                        <Lock className='h-3 w-3 text-slate-400' />
+                      )}
+                    </div>
+
+                    <div className='line-clamp-1 font-bold text-slate-900 dark:text-slate-100'>
+                      {badge.title}
+                    </div>
+
+                    <p className='line-clamp-2 text-[10px] leading-tight text-slate-500 dark:text-slate-400'>
+                      {badge.criteria_summary}
+                    </p>
+                  </div>
+
+                  <div className='mt-2 border-t border-slate-200/50 pt-1.5 text-[9px] dark:border-slate-800/60'>
+                    {isUnlocked ? (
+                      <span className='font-semibold text-emerald-600 dark:text-emerald-400'>
+                        ✓ {badge.unlocked_at || 'Terbuka'}
+                      </span>
+                    ) : (
+                      <span className='text-slate-400'>
+                        {badge.progress_percent || 0}% tercapai
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 5. Kartu Preferensi Notifikasi Personal (Worker-Tracking) */}
       <Card>
         <CardHeader>
           <div className='flex items-center gap-2'>

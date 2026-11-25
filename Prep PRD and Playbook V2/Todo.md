@@ -211,9 +211,9 @@
 ### 15. Gamifikasi, Motivasi & Papan Apresiasi Tim Kerja (Recognition Hub)
 - [x] **Leaderboard Progresivitas & Kepatuhan 6 Pilar:**
   - [x] Papan peringkat sehat antar-pilar yang menampilkan pilar tercepat dalam menyelesaikan verifikasi berkas 100% dan pilar dengan tingkat revisi terendah.
-- [ ] **Lencana Penghargaan Digital (Achievement Badges):**
-  - [ ] Pemberian badge apresiasi otomatis di profil tim kerja (contoh: *"Pilar Terdisiplin"*, *"Zero Revision Champion"*, *"Dokumen Terlengkap"*).
-  - [ ] Notifikasi apresiasi dari Kepala BPS Sitaro ke grup tim kerja atas pencapaian milestone penting.
+- [x] **Lencana Penghargaan Digital (Achievement Badges):**
+  - [x] Pemberian badge apresiasi otomatis di profil tim kerja (contoh: *"Pilar Terdisiplin"*, *"Zero Revision Champion"*, *"Dokumen Terlengkap"*).
+  - [x] Notifikasi apresiasi dari Kepala BPS Sitaro ke grup tim kerja atas pencapaian milestone penting.
 
 ### 16. Replikasi Antar-Satker & Ketahanan Cadangan Data (Multi-Tenant & Disaster Recovery)
 - [ ] **Kesiapan Multi-Satker (Replikasi BPS Kabupaten/Kota Lain):**

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { currentUser } from '@clerk/nextjs/server';
 import { getUserProfileAction } from '@/actions/profile-actions';
+import { getUserPilarBadgesAction } from '@/actions/badge-actions';
 import UserProfileClient from '@/components/rebo/user-profile-client';
 import type { UserProfileData } from '@/types/rebo';
 
@@ -40,6 +41,10 @@ export default async function ProfilePage() {
   };
 
   const initialProfile = profileRes.data || fallbackProfile;
+  const pilarId =
+    initialProfile.pilar_tugas ?? initialProfile.assigned_pilar_id ?? 1;
+
+  const badgesRes = await getUserPilarBadgesAction(pilarId);
 
   return (
     <div className='flex-1 space-y-4 p-4 pt-6 md:p-8'>
@@ -49,6 +54,8 @@ export default async function ProfilePage() {
           imageUrl: clerkUser.imageUrl,
           username: clerkUser.username || undefined
         }}
+        initialBadges={badgesRes.badges}
+        initialPilarNama={badgesRes.pilarNama}
       />
     </div>
   );
