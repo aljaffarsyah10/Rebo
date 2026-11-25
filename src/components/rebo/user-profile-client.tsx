@@ -24,6 +24,14 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import {
   updateUserProfileAction,
   sendTestNotificationToSelfAction,
   type ProfileActionResult
@@ -57,7 +65,12 @@ import {
   Flame,
   FileCheck,
   Lock,
-  ArrowUpRight
+  ArrowUpRight,
+  MessageSquare,
+  Copy,
+  Check,
+  Clock,
+  Smartphone
 } from 'lucide-react';
 
 interface UserProfileClientProps {
@@ -107,7 +120,7 @@ export default function UserProfileClient({
   const [badges, setBadges] = useState<AchievementBadge[]>(initialBadges);
   const [pilarNama, setPilarNama] = useState<string>(initialPilarNama);
 
-  // States feedback
+  // States feedback & loading
   const [isPending, startTransition] = useTransition();
   const [isTestingWa, setIsTestingWa] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
@@ -116,11 +129,28 @@ export default function UserProfileClient({
     deepLink?: string;
   } | null>(null);
 
-  // Format preview
-  const formattedWaPreview = noWa ? formatPhoneNumber(noWa) : '';
-  const isWaValid =
-    formattedWaPreview.length >= 10 &&
-    /^628[0-9]{7,13}$/.test(formattedWaPreview);
+  // States modal dialog hasil uji coba WhatsApp
+  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    phone: string;
+    deepLink: string;
+    messageText: string;
+    timestamp: string;
+    gatewaySuccess: boolean;
+    feedbackText: string;
+  } | null>(null);
+  const [copiedMessage, setCopiedMessage] = useState(false);
+
+  // Phone Sanitization & Validation:
+  // Bersihkan karakter non-digit kecuali '+' agar mendukung format 0821-9001-0001, +62 821 9001 0001, dll.
+  const cleanPhone = (noWa || '').replace(/[^\d+]/g, '');
+  const formattedWaPreview = cleanPhone ? formatPhoneNumber(cleanPhone) : '';
+  const isWaValid = Boolean(
+    formattedWaPreview &&
+      formattedWaPreview.length >= 10 &&
+      formattedWaPreview.length <= 16 &&
+      /^628[0-9]{7,13}$/.test(formattedWaPreview)
+  );
 
   const getRoleBadgeVariant = (role?: string | null) => {
     switch (role?.toLowerCase()) {
@@ -160,10 +190,11 @@ export default function UserProfileClient({
       return;
     }
 
+    const sanitizedPhone = cleanPhone ? formatPhoneNumber(cleanPhone) : '';
     if (noWa && !isWaValid) {
       setStatusMessage({
         type: 'error',
-        text: 'Format nomor WhatsApp tidak valid. Gunakan format nomor Indonesia (contoh: 082190010001 atau 6282190010001).'
+        text: 'Format nomor WhatsApp tidak valid. Gunakan format nomor Indonesia (contoh: 082190010001, 0821-9001-0001, atau +62 821 9001 0001).'
       });
       return;
     }
@@ -172,7 +203,7 @@ export default function UserProfileClient({
       const res: ProfileActionResult<UserProfileData> =
         await updateUserProfileAction({
           full_name: fullName,
-          no_wa: noWa,
+          no_wa: sanitizedPhone || noWa,
           pilar_tugas: pilarTugas,
           notif_wa_approval: notifApproval,
           notif_wa_revision: notifRevision,
@@ -181,6 +212,9 @@ export default function UserProfileClient({
 
       if (res.success && res.data) {
         setProfile(res.data);
+        if (res.data.no_wa) {
+          setNoWa(res.data.no_wa);
+        }
         setStatusMessage({
           type: 'success',
           text:
@@ -196,45 +230,93 @@ export default function UserProfileClient({
     });
   };
 
-  // Handler kirim tes WA
+  // Handler kirim tes WA (dapat dijalankan langsung bahkan sebelum profil disimpan)
   const handleTestWa = async () => {
     if (!noWa || !isWaValid) {
       setStatusMessage({
         type: 'error',
-        text: 'Masukkan nomor WhatsApp yang valid terlebih dahulu sebelum melakukan tes.'
+        text: 'Masukkan nomor WhatsApp yang valid terlebih dahulu (contoh: 082190010001, 0821-9001-0001, atau +62 821 9001 0001).'
       });
       return;
     }
 
+    const targetPhone = formattedWaPreview || formatPhoneNumber(cleanPhone);
     setIsTestingWa(true);
     setStatusMessage({
       type: 'info',
-      text: 'Sedang mengirim pesan pengujian melalui WhatsApp Gateway...'
+      text: `Menyiapkan pengujian pesan ke nomor ${targetPhone}...`
     });
 
     try {
-      const res = await sendTestNotificationToSelfAction(noWa);
-      if (res.success) {
+      const res = await sendTestNotificationToSelfAction(targetPhone);
+
+      if (res.success && res.waDeepLink) {
+        const feedback =
+          res.message ||
+          'Pesan uji coba WhatsApp resmi siap dikirim! Klik tombol di bawah atau periksa tab WhatsApp yang terbuka.';
+
+        const resultData = {
+          phone: targetPhone,
+          deepLink: res.waDeepLink,
+          messageText:
+            res.data?.testMessage ||
+            `🔔 *[UJI COBA NOTIFIKASI PERSONAL REBO V2]*\n\nHalo *${fullName || 'Rekan Pegawai BPS Sitaro'}*,\n\nIni adalah pesan pengujian koneksi notifikasi WhatsApp personal dari Sistem REBO BPS Sitaro ke nomor ${targetPhone}.`,
+          timestamp:
+            res.data?.timestamp ||
+            `${new Date().toLocaleString('id-ID', {
+              timeZone: 'Asia/Makassar',
+              dateStyle: 'full',
+              timeStyle: 'medium'
+            })} WITA`,
+          gatewaySuccess: Boolean(res.data?.gatewaySuccess),
+          feedbackText: feedback
+        };
+
+        setTestResult(resultData);
+        setIsTestDialogOpen(true);
+
+        // Otomatis buka WhatsApp di tab baru
+        try {
+          if (typeof window !== 'undefined') {
+            window.open(res.waDeepLink, '_blank', 'noopener,noreferrer');
+          }
+        } catch (popupErr) {
+          console.warn(
+            '[WA-TEST] Auto popup window.open dibatasi browser:',
+            popupErr
+          );
+        }
+
         setStatusMessage({
           type: 'success',
-          text:
-            res.message || 'Pesan tes berhasil dikirim ke nomor WhatsApp Anda!',
+          text: feedback,
           deepLink: res.waDeepLink
         });
       } else {
         setStatusMessage({
           type: 'error',
-          text: res.error || 'Gagal mengirim pesan melalui Gateway.',
-          deepLink: res.waDeepLink
+          text: res.error || 'Gagal memproses pesan uji coba WhatsApp.'
         });
       }
     } catch (err: any) {
       setStatusMessage({
         type: 'error',
-        text: err?.message || 'Terjadi kesalahan koneksi saat pengujian pesan.'
+        text:
+          err?.message || 'Terjadi kesalahan jaringan saat pengujian WhatsApp.'
       });
     } finally {
       setIsTestingWa(false);
+    }
+  };
+
+  const handleCopyMessage = async () => {
+    if (!testResult?.messageText) return;
+    try {
+      await navigator.clipboard.writeText(testResult.messageText);
+      setCopiedMessage(true);
+      setTimeout(() => setCopiedMessage(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
     }
   };
 
@@ -375,11 +457,13 @@ export default function UserProfileClient({
 
           {/* Helper Format WhatsApp */}
           <div className='bg-muted/60 text-muted-foreground rounded-lg p-3 text-xs'>
-            <div className='flex items-center justify-between'>
+            <div className='flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between'>
               <span>
                 Format nomor didukung:{' '}
-                <strong className='text-foreground'>08xxx</strong> atau{' '}
-                <strong className='text-foreground'>628xxx</strong>
+                <strong className='text-foreground'>08xxx</strong>,{' '}
+                <strong className='text-foreground'>628xxx</strong>, atau{' '}
+                <strong className='text-foreground'>+62 8xxx</strong> (spasi &
+                tanda minus otomatis dibersihkan)
               </span>
               {formattedWaPreview && (
                 <span className='font-mono'>
@@ -394,8 +478,8 @@ export default function UserProfileClient({
           {/* Tombol Uji Notifikasi WhatsApp ke Nomor Sendiri */}
           <div className='flex flex-wrap items-center justify-between gap-3 pt-2'>
             <div className='text-muted-foreground text-xs'>
-              Pastikan bot WhatsApp Gateway aktif untuk menerima pesan uji coba
-              otomatis.
+              Uji coba dapat dijalankan langsung untuk memeriksa penerimaan
+              notifikasi di perangkat Anda.
             </div>
             <Button
               type='button'
@@ -418,6 +502,95 @@ export default function UserProfileClient({
               )}
             </Button>
           </div>
+
+          {/* Alert Card Interaktif Hasil Pengujian WhatsApp */}
+          {testResult && (
+            <div className='mt-4 rounded-xl border border-emerald-300 bg-emerald-50/80 p-4 shadow-xs dark:border-emerald-800 dark:bg-emerald-950/40'>
+              <div className='space-y-3'>
+                <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <span className='flex h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500' />
+                    <span className='text-sm font-bold text-emerald-950 dark:text-emerald-100'>
+                      Pesan Uji Coba WhatsApp Siap Digunakan
+                    </span>
+                  </div>
+                  <Badge
+                    variant='outline'
+                    className='border-emerald-400 bg-emerald-100/70 text-[11px] font-semibold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
+                  >
+                    {testResult.gatewaySuccess
+                      ? 'Gateway Terkirim Otomatis'
+                      : 'Kirim Mandiri (wa.me)'}
+                  </Badge>
+                </div>
+
+                <p className='text-xs text-emerald-900/90 dark:text-emerald-200'>
+                  {testResult.feedbackText}
+                </p>
+
+                {/* Detail Nomor & Timestamp */}
+                <div className='flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-emerald-200/80 bg-white/70 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200'>
+                  <div className='flex items-center gap-1.5 font-mono font-bold'>
+                    <Smartphone className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+                    <span>Nomor Tujuan: {testResult.phone}</span>
+                  </div>
+                  <div className='text-muted-foreground flex items-center gap-1.5 dark:text-emerald-300/80'>
+                    <Clock className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+                    <span>{testResult.timestamp}</span>
+                  </div>
+                </div>
+
+                {/* Tombol Interaktif Utama */}
+                <div className='flex flex-col items-stretch gap-2 pt-1 sm:flex-row sm:items-center'>
+                  <Button
+                    asChild
+                    size='default'
+                    className='flex-1 gap-2 bg-[#25D366] font-bold text-white shadow-xs transition-all hover:bg-[#1EBE5D] hover:shadow-md'
+                  >
+                    <a
+                      href={testResult.deepLink}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      <MessageSquare className='h-4 w-4 fill-white' />
+                      Buka WhatsApp Sekarang (Kirim Pesan)
+                      <ExternalLink className='h-3.5 w-3.5 opacity-90' />
+                    </a>
+                  </Button>
+
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='default'
+                    onClick={handleCopyMessage}
+                    className='gap-1.5 border-emerald-300 bg-white font-medium text-emerald-900 hover:bg-emerald-50 dark:border-emerald-700 dark:bg-slate-900 dark:text-emerald-100 dark:hover:bg-slate-800'
+                  >
+                    {copiedMessage ? (
+                      <>
+                        <Check className='h-4 w-4 text-emerald-600' />
+                        Tersalin!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className='h-4 w-4' />
+                        Salin Pesan
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='default'
+                    onClick={() => setIsTestDialogOpen(true)}
+                    className='px-3 text-xs text-emerald-900 hover:bg-emerald-100/60 hover:text-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900/40'
+                  >
+                    Lihat Isi Pesan
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -715,6 +888,148 @@ export default function UserProfileClient({
           </div>
         </div>
       </div>
+
+      {/* 6. Dialog Interaktif Uji Coba WhatsApp Personal */}
+      <Dialog open={isTestDialogOpen} onOpenChange={setIsTestDialogOpen}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <div className='mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 sm:mx-0 dark:bg-emerald-950/80 dark:text-emerald-400'>
+              <MessageSquare className='h-6 w-6' />
+            </div>
+            <DialogTitle className='text-lg font-bold text-slate-900 dark:text-slate-100'>
+              Uji Coba Notifikasi WhatsApp Personal
+            </DialogTitle>
+            <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
+              Pesan pengujian telah disiapkan untuk memastikan nomor WhatsApp
+              Anda menerima notifikasi otomatis persetujuan, revisi, dan
+              deadline LKE.
+            </DialogDescription>
+          </DialogHeader>
+
+          {testResult && (
+            <div className='space-y-4 py-1'>
+              {/* Box Ringkasan Penerima & Waktu */}
+              <div className='space-y-2 rounded-lg border bg-slate-50/90 p-3 text-xs dark:border-slate-800 dark:bg-slate-900/60'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-muted-foreground flex items-center gap-1.5'>
+                    <Smartphone className='h-3.5 w-3.5 text-slate-500' />
+                    Nomor Tujuan:
+                  </span>
+                  <span className='text-foreground font-mono font-bold'>
+                    {testResult.phone}
+                  </span>
+                </div>
+                <div className='flex items-center justify-between'>
+                  <span className='text-muted-foreground flex items-center gap-1.5'>
+                    <Clock className='h-3.5 w-3.5 text-slate-500' />
+                    Waktu Pengujian:
+                  </span>
+                  <span className='font-medium text-slate-700 dark:text-slate-300'>
+                    {testResult.timestamp}
+                  </span>
+                </div>
+                <div className='flex items-center justify-between border-t border-slate-200/60 pt-1 dark:border-slate-800'>
+                  <span className='text-muted-foreground flex items-center gap-1.5'>
+                    <CheckCircle2 className='h-3.5 w-3.5 text-emerald-500' />
+                    Status Saluran:
+                  </span>
+                  <Badge
+                    variant='outline'
+                    className='border-emerald-300 bg-emerald-50 text-[10px] font-semibold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                  >
+                    {testResult.gatewaySuccess
+                      ? 'Gateway Aktif Terkirim'
+                      : 'Kirim Mandiri WhatsApp Web (wa.me)'}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Preview Chat Bubble Monospace */}
+              <div className='space-y-1.5'>
+                <div className='flex items-center justify-between text-xs'>
+                  <span className='font-semibold text-slate-700 dark:text-slate-300'>
+                    Preview Pesan WhatsApp:
+                  </span>
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    onClick={handleCopyMessage}
+                    className='text-primary hover:bg-primary/10 h-6 gap-1 px-2 text-[11px]'
+                  >
+                    {copiedMessage ? (
+                      <>
+                        <Check className='h-3 w-3 text-emerald-600' />
+                        Tersalin
+                      </>
+                    ) : (
+                      <>
+                        <Copy className='h-3 w-3' />
+                        Salin Teks
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className='relative max-h-44 overflow-y-auto rounded-lg border border-emerald-200/80 bg-emerald-50/50 p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-slate-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200'>
+                  {testResult.messageText}
+                </div>
+              </div>
+
+              {/* Tombol Aksi Utama */}
+              <div className='space-y-2 pt-1'>
+                <Button
+                  asChild
+                  size='lg'
+                  className='w-full gap-2 bg-[#25D366] py-6 text-sm font-bold text-white shadow-md transition-all hover:bg-[#1EBE5D] hover:shadow-lg'
+                >
+                  <a
+                    href={testResult.deepLink}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    onClick={() => setIsTestDialogOpen(false)}
+                  >
+                    <MessageSquare className='h-5 w-5 fill-white' />
+                    Buka WhatsApp Sekarang (Kirim Pesan)
+                    <ExternalLink className='ml-1 h-4 w-4 opacity-90' />
+                  </a>
+                </Button>
+
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handleCopyMessage}
+                  className='w-full gap-2 text-xs'
+                >
+                  {copiedMessage ? (
+                    <>
+                      <Check className='h-4 w-4 text-emerald-600' />
+                      Teks Pesan Berhasil Disalin ke Clipboard!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className='h-4 w-4' />
+                      Salin Pesan
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className='border-t pt-3 sm:justify-end'>
+            <Button
+              type='button'
+              variant='ghost'
+              size='sm'
+              onClick={() => setIsTestDialogOpen(false)}
+              className='text-xs'
+            >
+              Tutup Dialog
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

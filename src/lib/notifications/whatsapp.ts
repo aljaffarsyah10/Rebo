@@ -14,13 +14,18 @@ export interface WhatsAppNotificationPayload {
 
 /**
  * Format nomor telepon Indonesia ke standar internasional (contoh: 08123... -> 628123...)
+ * Menangani nomor dengan awalan 0, +62, 62, atau 8, serta membersihkan spasi dan tanda minus
  */
 export function formatPhoneNumber(phone: string): string {
+  if (!phone) return '';
+  // Bersihkan semua karakter selain angka
   let cleaned = phone.replace(/[^0-9]/g, '');
   if (cleaned.startsWith('0')) {
     cleaned = '62' + cleaned.slice(1);
-  } else if (cleaned.startsWith('+62')) {
-    cleaned = cleaned.slice(1);
+  } else if (cleaned.startsWith('62')) {
+    // Sudah berawalan kode negara 62
+  } else if (cleaned.startsWith('8')) {
+    cleaned = '62' + cleaned;
   }
   return cleaned;
 }
@@ -35,11 +40,11 @@ export function createWhatsAppDeepLink(phone: string, message: string): string {
 
 /**
  * Kirim notifikasi WhatsApp otomatis melalui Self-Hosted WA Gateway / Free Webhook
- * Jika WA_GATEWAY_URL tidak dikonfigurasi di environment, fungsi ini akan me-log tanpa menimbulkan error
+ * Jika WA_GATEWAY_URL tidak dikonfigurasi di environment, fungsi ini akan me-log simulasi tanpa error
  */
 export async function sendWhatsAppMessage(
   payload: WhatsAppNotificationPayload
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; isSimulated?: boolean }> {
   try {
     let gatewayUrl =
       process.env.WHATSAPP_GATEWAY_URL || process.env.WA_GATEWAY_URL;
@@ -52,13 +57,14 @@ export async function sendWhatsAppMessage(
 
     const formattedPhone = formatPhoneNumber(payload.phone);
 
-    // Jika URL Gateway belum diset, log preview pesan
+    // Jika URL Gateway belum diset, log preview pesan dalam mode simulasi
     if (!gatewayUrl) {
       console.log(
         `[WA-NOTIFICATION] (Mode Simulasi) Pesan ke ${formattedPhone}:\n${payload.message}`
       );
       return {
-        success: true
+        success: true,
+        isSimulated: true
       };
     }
 
