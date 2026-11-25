@@ -112,6 +112,12 @@ export const navItems: NavItem[] = [
         shortcut: ['b', 'k']
       },
       {
+        title: 'Enkripsi File (Doc Shield)',
+        url: '/rebo/admin/doc-shield',
+        icon: 'shield',
+        shortcut: ['d', 's']
+      },
+      {
         title: 'Kepatuhan LHKPN/LHKASN',
         url: '/rebo/compliance/lhkpn',
         icon: 'award',

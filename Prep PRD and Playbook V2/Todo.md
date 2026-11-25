@@ -252,8 +252,8 @@
   - [x] Penambahan watermark otomatis (*"HANYA UNTUK PENILAIAN ZI BPS SITARO - TAHUN [YYYY] • RAHASIA KEDINASAN"*) pada pratinjau dokumen PDF untuk mencegah kebocoran atau penyalahgunaan berkas kedinasan.
 - [x] **Session Auto-Timeout & Suspicious Login Alert:**
   - [x] Penguncian sesi otomatis setelah inaktivitas 30 menit saat diakses dari komputer bersama (*shared PC kantor*), serta notifikasi peringatan jika ada login dari perangkat asing.
-- [ ] **Enkripsi File Sensitif (Doc Shield):**
-  - [ ] Enkripsi berkas dokumen pemeriksaan internal dan laporan keuangan sebelum disimpan ke cloud storage.
+- [x] **Enkripsi File Sensitif (Doc Shield):**
+  - [x] Enkripsi berkas dokumen pemeriksaan internal dan laporan keuangan sebelum disimpan ke cloud storage.
 
 ### 21. Manajemen Anggaran & Rencana Aksi ZI (Resource & Efficiency Tracking)
 - [ ] **Pelacak Anggaran & Realisasi Kegiatan ZI/RB:**
