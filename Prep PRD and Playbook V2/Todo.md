@@ -223,9 +223,9 @@
   - [x] Tombol 1-klik untuk validasi integritas data cadangan dan pemulihan darurat (*disaster recovery verification*).
 
 ### 17. Manajemen Integritas Pegawai & Kepatuhan LHKPN/LHKASN (Pilar 5 & 3)
-- [ ] **Pelacak Kepatuhan e-LHKPN & e-LHKASN (100% Compliance Tracker):**
-  - [ ] Dashboard pemantauan status penyampaian bukti tanda terima pelaporan harta kekayaan seluruh pejabat dan ASN BPS Sitaro sebelum batas akhir 31 Maret.
-  - [ ] Pengingat otomatis via WhatsApp (H-30, H-14, H-7) kepada pegawai yang belum mengunggah bukti lapor LHKPN/LHKASN.
+- [x] **Pelacak Kepatuhan e-LHKPN & e-LHKASN (100% Compliance Tracker):**
+  - [x] Dashboard pemantauan status penyampaian bukti tanda terima pelaporan harta kekayaan seluruh pejabat dan ASN BPS Sitaro sebelum batas akhir 31 Maret.
+  - [x] Pengingat otomatis via WhatsApp (H-30, H-14, H-7) kepada pegawai yang belum mengunggah bukti lapor LHKPN/LHKASN.
 - [ ] **Matriks Kepatuhan Disiplin & Kode Etik ASN:**
   - [ ] Perekaman bukti dukung nihil penjatuhan hukuman disiplin tingkat sedang/berat (syarat mutlak kelolosan predikat WBK).
 - [ ] **Unit Pengendalian Gratifikasi (UPG) & Rekonsiliasi KPK:**

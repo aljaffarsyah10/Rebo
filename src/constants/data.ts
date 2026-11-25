@@ -86,6 +86,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/admin/backup',
         icon: 'database',
         shortcut: ['b', 'k']
+      },
+      {
+        title: 'Kepatuhan LHKPN/LHKASN',
+        url: '/rebo/compliance/lhkpn',
+        icon: 'award',
+        shortcut: ['l', 'h']
       }
     ]
   },
@@ -224,6 +230,14 @@ export const navItems: NavItem[] = [
     url: '/rebo/wbs',
     icon: 'warning',
     shortcut: ['w', 's'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Kepatuhan LHKPN/ASN',
+    url: '/rebo/compliance/lhkpn',
+    icon: 'award',
+    shortcut: ['l', 'h'],
     isActive: false,
     items: []
   }
