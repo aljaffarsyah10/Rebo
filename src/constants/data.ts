@@ -168,6 +168,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Sentimen & Word Cloud',
+    url: '/rebo/sentiment',
+    icon: 'sparkles',
+    isActive: false,
+    shortcut: ['s', 'w'],
+    items: []
+  },
+  {
     title: 'Arsip',
     url: '/rebo/arsip',
     icon: 'page',

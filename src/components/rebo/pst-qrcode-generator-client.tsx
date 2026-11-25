@@ -350,6 +350,16 @@ export default function PSTQRCodeGeneratorClient({
           </div>
 
           <div className='flex flex-wrap items-center gap-2.5'>
+            <Link href='/rebo/sentiment'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='border-blue-300/40 bg-white/10 text-xs font-medium text-white hover:bg-white/20'
+              >
+                <Sparkles className='mr-1.5 h-3.5 w-3.5 text-emerald-300' />
+                Sentimen & Word Cloud
+              </Button>
+            </Link>
             <Link href='/rebo/inovasi'>
               <Button
                 variant='outline'

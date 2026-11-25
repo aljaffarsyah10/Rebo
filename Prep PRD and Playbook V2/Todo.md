@@ -197,8 +197,8 @@
 - [x] **Kanal Pengaduan & Whistleblowing System (WBS) Internal:**
   - [x] Formulir pengaduan masyarakat / pegawai yang aman, terenkripsi, dan dapat diisi secara anonim untuk mendukung pemenuhan bukti dukung Pilar 5 (Penguatan Pengawasan).
   - [x] Notifikasi langsung ke Tim Kepatuhan Internal saat ada laporan pengaduan masuk.
-- [ ] **Analisis Sentimen & Word Cloud Kepuasan Konsumen:**
-  - [ ] Visualisasi analisis kata kunci (*word cloud*) dan sentimen positif/negatif dari kritik dan saran pengunjung PST untuk bahan evaluasi berkala pimpinan.
+- [x] **Analisis Sentimen & Word Cloud Kepuasan Konsumen:**
+  - [x] Visualisasi analisis kata kunci (*word cloud*) dan sentimen positif/negatif dari kritik dan saran pengunjung PST untuk bahan evaluasi berkala pimpinan.
 
 ### 14. PWA Lanjutan, Offline-First & Kecepatan Unggah Berkas
 - [ ] **Penyimpanan Draf Offline (IndexedDB / Local-First):**

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -242,6 +243,17 @@ export default function SurveiIkmIpakCard({
             >
               Mode: {skalaMode === 'skala4' ? 'Skala 4' : 'Skala 100'}
             </Button>
+
+            <Link href='/rebo/sentiment'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-8 border-indigo-200 bg-indigo-50/70 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300'
+              >
+                <Sparkles className='mr-1.5 h-3.5 w-3.5 text-amber-500' />
+                Sentimen & Word Cloud
+              </Button>
+            </Link>
           </div>
         </div>
       </CardHeader>
