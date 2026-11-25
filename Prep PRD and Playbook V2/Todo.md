@@ -226,8 +226,8 @@
 - [x] **Pelacak Kepatuhan e-LHKPN & e-LHKASN (100% Compliance Tracker):**
   - [x] Dashboard pemantauan status penyampaian bukti tanda terima pelaporan harta kekayaan seluruh pejabat dan ASN BPS Sitaro sebelum batas akhir 31 Maret.
   - [x] Pengingat otomatis via WhatsApp (H-30, H-14, H-7) kepada pegawai yang belum mengunggah bukti lapor LHKPN/LHKASN.
-- [ ] **Matriks Kepatuhan Disiplin & Kode Etik ASN:**
-  - [ ] Perekaman bukti dukung nihil penjatuhan hukuman disiplin tingkat sedang/berat (syarat mutlak kelolosan predikat WBK).
+- [x] **Matriks Kepatuhan Disiplin & Kode Etik ASN:**
+  - [x] Perekaman bukti dukung nihil penjatuhan hukuman disiplin tingkat sedang/berat (syarat mutlak kelolosan predikat WBK).
 - [ ] **Unit Pengendalian Gratifikasi (UPG) & Rekonsiliasi KPK:**
   - [ ] Formulir online pelaporan penolakan / penerimaan gratifikasi pegawai yang terhubung langsung dengan alur verifikasi Tim Kepatuhan Internal BPS Sitaro.
 

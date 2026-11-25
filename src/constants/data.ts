@@ -92,6 +92,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/compliance/lhkpn',
         icon: 'award',
         shortcut: ['l', 'h']
+      },
+      {
+        title: 'Disiplin & Kode Etik',
+        url: '/rebo/compliance/disiplin',
+        icon: 'check',
+        shortcut: ['d', 'k']
       }
     ]
   },
@@ -238,6 +244,14 @@ export const navItems: NavItem[] = [
     url: '/rebo/compliance/lhkpn',
     icon: 'award',
     shortcut: ['l', 'h'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Disiplin & Kode Etik',
+    url: '/rebo/compliance/disiplin',
+    icon: 'check',
+    shortcut: ['d', 'k'],
     isActive: false,
     items: []
   }
