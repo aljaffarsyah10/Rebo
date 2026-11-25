@@ -228,6 +228,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Dampak Paperless (Green Gov)',
+    url: '/rebo/paperless',
+    icon: 'leaf',
+    isActive: false,
+    shortcut: ['p', 'l'],
+    items: []
+  },
+  {
     title: 'Inovasi Layanan',
     url: '/rebo/inovasi',
     icon: 'sparkles',

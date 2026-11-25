@@ -258,8 +258,8 @@
 ### 21. Manajemen Anggaran & Rencana Aksi ZI (Resource & Efficiency Tracking)
 - [x] **Pelacak Anggaran & Realisasi Kegiatan ZI/RB:**
   - [x] Monitoring penyerapan anggaran pendukung reformasi birokrasi (sosialisasi internal, survei kepuasan, pengadaan sarana PST, pakaian tim kerja).
-- [ ] **Indikator Efisiensi & Dampak Paperless (Paperless Metric):**
-  - [ ] Metrik penghitungan estimasi penghematan lembar kertas dan biaya cetak (*paperless cost savings*) berkat digitalisasi penuh dokumen bukti dukung pada aplikasi REBO V2.
+- [x] **Indikator Efisiensi & Dampak Paperless (Paperless Metric):**
+  - [x] Metrik penghitungan estimasi penghematan lembar kertas dan biaya cetak (*paperless cost savings*) berkat digitalisasi penuh dokumen bukti dukung pada aplikasi REBO V2.
 
 
 

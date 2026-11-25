@@ -45,7 +45,10 @@ import {
   IconDatabase,
   IconShieldCheck,
   IconWheelchair,
-  IconDeviceTv
+  IconDeviceTv,
+  IconTrendingUp,
+  IconChartBar,
+  IconLeaf
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -96,5 +99,8 @@ export const Icons = {
   database: IconDatabase,
   shield: IconShieldCheck,
   wheelchair: IconWheelchair,
-  tv: IconDeviceTv
+  tv: IconDeviceTv,
+  trendingUp: IconTrendingUp,
+  chartBar: IconChartBar,
+  leaf: IconLeaf
 };
