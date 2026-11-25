@@ -201,8 +201,8 @@
   - [x] Visualisasi analisis kata kunci (*word cloud*) dan sentimen positif/negatif dari kritik dan saran pengunjung PST untuk bahan evaluasi berkala pimpinan.
 
 ### 14. PWA Lanjutan, Offline-First & Kecepatan Unggah Berkas
-- [ ] **Penyimpanan Draf Offline (IndexedDB / Local-First):**
-  - [ ] Operator tetap dapat mengetik narasi jawaban LKE dan mengisi tautan saat koneksi internet kepulauan sedang bermasalah atau mati listrik; data tersimpan otomatis di browser lokal dan tersinkron ke cloud begitu online.
+- [x] **Penyimpanan Draf Offline (IndexedDB / Local-First):**
+  - [x] Operator tetap dapat mengetik narasi jawaban LKE dan mengisi tautan saat koneksi internet kepulauan sedang bermasalah atau mati listrik; data tersimpan otomatis di browser lokal dan tersinkron ke cloud begitu online.
 - [ ] **Image & File Compressor Otomatis Sebelum Upload:**
   - [ ] Kompresi berkas gambar/foto dokumentasi dan dokumen pindaian di sisi peramban (client-side) sebelum diunggah ke Google Drive guna menghemat kuota penyimpanan dan mempercepat proses upload.
 - [ ] **PWA Quick Action Shortcuts:**

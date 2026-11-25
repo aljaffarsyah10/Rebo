@@ -21,9 +21,18 @@ import {
   UploadCloud,
   Check,
   RotateCcw,
-  Cloud
+  Cloud,
+  WifiOff,
+  HardDrive
 } from 'lucide-react';
 import { submitBuktiAction, deleteDokumenBukti } from '@/actions/bukti-actions';
+import {
+  saveOfflineDraft,
+  getOfflineDraft,
+  deleteOfflineDraft,
+  isOnline,
+  type OfflineDraftPayload
+} from '@/lib/offline/offline-draft-store';
 import { checkBatchGDriveHealthAction } from '@/actions/gdrive-actions';
 import {
   GDriveHealthBadge,
@@ -119,25 +128,30 @@ export default function BuktiForm({
   >({});
   const [isCheckingAll, setIsCheckingAll] = useState(false);
 
-  // Auto-save draft states (Local Storage)
+  // Auto-save draft states (IndexedDB / Local-First)
   const draftStorageKey = `rebo_draft_p${pertanyaan.id_pertanyaan}`;
   const [autoSaveStatus, setAutoSaveStatus] = useState<
     'idle' | 'saving' | 'saved'
   >('idle');
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const [hasDraftNotice, setHasDraftNotice] = useState(false);
-  const [savedDraftData, setSavedDraftData] = useState<any | null>(null);
+  const [savedDraftData, setSavedDraftData] =
+    useState<OfflineDraftPayload | null>(null);
 
   const isMountedRef = useRef(false);
   const isRestoringRef = useRef(false);
 
-  // Check and load draft on mount
+  // Check and load draft on mount from IndexedDB (fallback localStorage)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try {
-      const raw = localStorage.getItem(draftStorageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
+
+    let isSubscribed = true;
+
+    async function loadInitialDraft() {
+      try {
+        const draft = await getOfflineDraft(pertanyaan.id_pertanyaan);
+        if (!isSubscribed || !draft) return;
+
         const serverKategori = currentBukti?.id_kategori
           ? String(currentBukti.id_kategori)
           : '';
@@ -147,38 +161,51 @@ export default function BuktiForm({
           ''
         ).trim();
 
-        const draftKategori = parsed.selectedKategori
-          ? String(parsed.selectedKategori)
-          : '';
-        const draftCatatan = (parsed.catatanOperator || '').trim();
+        const draftKategori = (
+          draft.selectedKategori ||
+          draft.id_kategori ||
+          ''
+        ).toString();
+        const draftCatatan = (
+          draft.catatanOperator ||
+          draft.catatan_operator ||
+          ''
+        ).trim();
+
+        const draftDocs = draft.dokumenList || draft.dokumen_list || [];
 
         // Check if local draft contains different unsubmitted data
         const isDifferent =
           (Boolean(draftKategori) && draftKategori !== serverKategori) ||
           (Boolean(draftCatatan) && draftCatatan !== serverCatatan) ||
-          (Array.isArray(parsed.dokumenList) &&
-            parsed.dokumenList.some((d: any) => d.id?.startsWith('temp-')));
+          (Array.isArray(draftDocs) &&
+            draftDocs.some((d: any) => d.id?.startsWith('temp-')));
 
         if (isDifferent) {
           setHasDraftNotice(true);
-          setSavedDraftData(parsed);
-        } else if (parsed.savedAt) {
-          setLastSavedTime(parsed.savedAt);
+          setSavedDraftData(draft);
+        } else if (draft.savedAt) {
+          setLastSavedTime(draft.savedAt);
           setAutoSaveStatus('saved');
         }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Gagal membaca draf lokal offline:', err);
+      } finally {
+        setTimeout(() => {
+          if (isSubscribed) isMountedRef.current = true;
+        }, 500);
       }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Gagal membaca draf lokal:', err);
-    } finally {
-      const timer = setTimeout(() => {
-        isMountedRef.current = true;
-      }, 500);
-      return () => clearTimeout(timer);
     }
-  }, [draftStorageKey, currentBukti]);
 
-  // Debounced Auto-Save (800ms)
+    loadInitialDraft();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [pertanyaan.id_pertanyaan, currentBukti]);
+
+  // Debounced Auto-Save (800ms) ke IndexedDB / Local-First Store
   useEffect(() => {
     if (!isMountedRef.current || !canEdit || typeof window === 'undefined')
       return;
@@ -197,7 +224,7 @@ export default function BuktiForm({
 
     setAutoSaveStatus('saving');
 
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       try {
         const now = new Date();
         const timeStr = now.toLocaleTimeString('id-ID', {
@@ -206,20 +233,33 @@ export default function BuktiForm({
           second: '2-digit'
         });
 
-        const dataToSave = {
+        const formattedDocs = dokumenList.map((d) => ({
+          id: d.id,
+          nama_dokumen: d.nama_dokumen,
+          file_url: d.file_url,
+          tipe_dokumen: d.tipe_dokumen || null
+        }));
+
+        const dataToSave: OfflineDraftPayload = {
+          id_pertanyaan: String(pertanyaan.id_pertanyaan),
+          id_periode: activePeriodeId,
+          id_kategori: selectedKategori || null,
           selectedKategori,
+          catatan_operator: catatanOperator.trim() || null,
           catatanOperator,
+          dokumen_list: formattedDocs,
           dokumenList,
           savedAt: timeStr,
-          timestamp: now.toISOString()
+          timestamp: now.toISOString(),
+          syncStatus: 'pending'
         };
 
-        localStorage.setItem(draftStorageKey, JSON.stringify(dataToSave));
+        await saveOfflineDraft(pertanyaan.id_pertanyaan, dataToSave);
         setLastSavedTime(timeStr);
         setAutoSaveStatus('saved');
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error('Gagal auto-save draf:', err);
+        console.error('Gagal auto-save draf offline:', err);
         setAutoSaveStatus('idle');
       }
     }, 800);
@@ -230,7 +270,8 @@ export default function BuktiForm({
     catatanOperator,
     dokumenList,
     canEdit,
-    draftStorageKey
+    pertanyaan.id_pertanyaan,
+    activePeriodeId
   ]);
 
   // Actions for restoring or clearing local draft
@@ -238,29 +279,35 @@ export default function BuktiForm({
     if (!savedDraftData) return;
     isRestoringRef.current = true;
 
-    if (savedDraftData.selectedKategori) {
-      setSelectedKategori(String(savedDraftData.selectedKategori));
+    const kategoriToRestore =
+      savedDraftData.selectedKategori || savedDraftData.id_kategori;
+    if (kategoriToRestore) {
+      setSelectedKategori(String(kategoriToRestore));
     }
-    if (savedDraftData.catatanOperator !== undefined) {
-      setCatatanOperator(savedDraftData.catatanOperator);
+
+    const catatanToRestore =
+      savedDraftData.catatanOperator ?? savedDraftData.catatan_operator;
+    if (catatanToRestore !== undefined && catatanToRestore !== null) {
+      setCatatanOperator(catatanToRestore);
     }
-    if (
-      Array.isArray(savedDraftData.dokumenList) &&
-      savedDraftData.dokumenList.length > 0
-    ) {
-      setDokumenList(savedDraftData.dokumenList);
+
+    const docsToRestore =
+      savedDraftData.dokumenList || savedDraftData.dokumen_list;
+    if (Array.isArray(docsToRestore) && docsToRestore.length > 0) {
+      setDokumenList(docsToRestore);
     }
+
     if (savedDraftData.savedAt) {
       setLastSavedTime(savedDraftData.savedAt);
     }
     setAutoSaveStatus('saved');
     setHasDraftNotice(false);
-    toast.success('Draf lokal berhasil dipulihkan.');
+    toast.success('Draf lokal berhasil dipulihkan dari IndexedDB.');
   };
 
-  const handleDiscardDraft = () => {
+  const handleDiscardDraft = async () => {
     try {
-      localStorage.removeItem(draftStorageKey);
+      await deleteOfflineDraft(pertanyaan.id_pertanyaan);
     } catch {}
     setHasDraftNotice(false);
     setSavedDraftData(null);
@@ -547,6 +594,76 @@ export default function BuktiForm({
     setSubmittingType(submitForReview ? 'review' : 'draft');
 
     startTransition(async () => {
+      const offlinePayload: OfflineDraftPayload = {
+        id_pertanyaan: String(pertanyaan.id_pertanyaan),
+        id_periode: activePeriodeId,
+        id_kategori: selectedKategori || null,
+        selectedKategori,
+        catatan_operator: catatanOperator.trim() || null,
+        catatanOperator,
+        dokumen_list: dokumenList.map((d) => ({
+          id: d.id,
+          nama_dokumen: d.nama_dokumen,
+          file_url: d.file_url,
+          tipe_dokumen: d.tipe_dokumen || null
+        })),
+        dokumenList,
+        submit_for_review: submitForReview,
+        syncStatus: 'pending'
+      };
+
+      // 1. Penanganan saat submit form ketika offline (Internet Sitaro terputus)
+      if (!isOnline()) {
+        try {
+          await saveOfflineDraft(pertanyaan.id_pertanyaan, offlinePayload);
+          setAutoSaveStatus('saved');
+          setLastSavedTime(
+            new Date().toLocaleTimeString('id-ID', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            })
+          );
+        } catch {}
+
+        toast.success(
+          'Koneksi terputus. Isian Anda aman tersimpan di IndexedDB dan akan disinkronkan otomatis saat online.',
+          { duration: 6000 }
+        );
+
+        if (setBuktiDukungMap) {
+          setBuktiDukungMap((prev) => {
+            const prevItem = prev[pertanyaan.id_pertanyaan] || {};
+            const updatedItem: BuktiDukung = {
+              ...prevItem,
+              id_pertanyaan: pertanyaan.id_pertanyaan,
+              id_kategori: selectedKategori || null,
+              nilai_mandiri: currentNilaiMandiri,
+              nilai_akhir: currentNilaiMandiri,
+              catatan_operator: catatanOperator.trim() || null,
+              catatan_user: catatanOperator.trim() || null,
+              status_kelengkapan: submitForReview
+                ? 1
+                : (prevItem.status_kelengkapan ?? 0),
+              status: submitForReview
+                ? 'Menunggu Review (Draf Lokal)'
+                : (prevItem.status ?? 'Belum Diisi'),
+              nama_status: submitForReview
+                ? 'Menunggu Review (Draf Lokal)'
+                : (prevItem.nama_status ?? 'Belum Diisi'),
+              dokumen_bukti: dokumenList as DokumenBukti[]
+            };
+            return {
+              ...prev,
+              [pertanyaan.id_pertanyaan]: updatedItem
+            };
+          });
+        }
+
+        setSubmittingType(null);
+        return;
+      }
+
       try {
         const payload = {
           id_pertanyaan: pertanyaan.id_pertanyaan,
@@ -570,7 +687,7 @@ export default function BuktiForm({
         if (res.success) {
           // Hapus draf lokal otomatis ketika user berhasil simpan / ajukan bukti
           try {
-            localStorage.removeItem(draftStorageKey);
+            await deleteOfflineDraft(pertanyaan.id_pertanyaan);
           } catch {}
           setHasDraftNotice(false);
           setSavedDraftData(null);
@@ -629,7 +746,26 @@ export default function BuktiForm({
       } catch (err: any) {
         // eslint-disable-next-line no-console
         console.error('Error in handleSave:', err);
-        toast.error('Terjadi kesalahan saat memproses penyimpanan.');
+
+        const isNetworkIssue =
+          !isOnline() ||
+          err?.message?.includes('fetch') ||
+          err?.message?.includes('network') ||
+          err?.message?.includes('NetworkError') ||
+          err?.message?.includes('Failed to fetch');
+
+        if (isNetworkIssue) {
+          try {
+            await saveOfflineDraft(pertanyaan.id_pertanyaan, offlinePayload);
+            setAutoSaveStatus('saved');
+          } catch {}
+          toast.success(
+            'Koneksi terputus. Isian Anda aman tersimpan di IndexedDB dan akan disinkronkan otomatis saat online.',
+            { duration: 6000 }
+          );
+        } else {
+          toast.error('Terjadi kesalahan saat memproses penyimpanan.');
+        }
       } finally {
         setSubmittingType(null);
       }
@@ -646,16 +782,16 @@ export default function BuktiForm({
         <div className='flex flex-col justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50/90 p-3.5 text-xs text-sky-900 shadow-xs sm:flex-row sm:items-center dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200'>
           <div className='flex items-center gap-2.5'>
             <div className='flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300'>
-              <Cloud className='h-4 w-4' />
+              <HardDrive className='h-4 w-4' />
             </div>
             <div>
               <div className='font-semibold text-sky-950 dark:text-sky-100'>
-                Ditemukan Draf Lokal Belum Disimpan
+                Draf Lokal Ditemukan (IndexedDB)
               </div>
               <p className='text-2xs mt-0.5 text-sky-800/80 dark:text-sky-300/80'>
                 {savedDraftData?.savedAt
-                  ? `Draf tersimpan dari sesi sebelumnya (pukul ${savedDraftData.savedAt}). Ingin memulihkan data tersebut?`
-                  : 'Terdapat perubahan isian lokal yang belum dikirim ke server.'}
+                  ? `Draf lokal ditemukan dari tanggal/waktu ${savedDraftData.savedAt}. Klik untuk Pulihkan.`
+                  : 'Terdapat perubahan isian lokal tersimpan di browser yang belum dikirim ke server. Klik untuk Pulihkan.'}
               </p>
             </div>
           </div>
@@ -687,20 +823,20 @@ export default function BuktiForm({
       {canEdit && (
         <div className='flex items-center justify-between border-b border-gray-100 pb-2 dark:border-gray-800'>
           <div className='text-2xs flex items-center gap-1.5 text-gray-500 dark:text-gray-400'>
-            <Cloud className='h-3.5 w-3.5 text-blue-500' />
-            <span>Auto-Save Draf Lokal Aktif</span>
+            <HardDrive className='h-3.5 w-3.5 text-blue-500' />
+            <span>Penyimpanan Draf Offline Aktif (IndexedDB)</span>
           </div>
           <div>
             {autoSaveStatus === 'saving' && (
               <span className='text-2xs inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'>
                 <Loader2 className='h-3 w-3 animate-spin text-amber-500' />
-                <span>Menyimpan draf...</span>
+                <span>Menyimpan draf ke IndexedDB...</span>
               </span>
             )}
             {autoSaveStatus === 'saved' && lastSavedTime && (
               <span className='text-2xs inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
                 <Check className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
-                <span>Draf Tersimpan Otomatis ({lastSavedTime})</span>
+                <span>Draf Tersimpan Lokal ({lastSavedTime})</span>
               </span>
             )}
           </div>

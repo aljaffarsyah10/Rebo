@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import PertanyaanItem from '@/components/rebo/pertanyaan-item';
+import { OfflineSyncIndicator } from '@/components/rebo/offline-sync-indicator';
 import {
   ROLE_LABELS,
   type PilarDefinition,
@@ -228,7 +229,8 @@ export default function FormRBPilarClient({
           </span>
         </div>
 
-        <div className='flex items-center gap-2'>
+        <div className='flex flex-wrap items-center gap-2'>
+          <OfflineSyncIndicator className='hidden md:flex' />
           <Link href='/rebo/formRB/area'>
             <Button variant='outline' size='sm' className='h-8 text-xs'>
               <ArrowLeft className='mr-1.5 h-3.5 w-3.5' />
@@ -614,12 +616,9 @@ export default function FormRBPilarClient({
               </div>
             </div>
 
-            {/* Right: Auto-Save Active Indicator & Scroll To Top */}
+            {/* Right: Offline Sync Indicator & Scroll To Top */}
             <div className='flex shrink-0 items-center gap-2'>
-              <div className='text-3xs hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-2.5 py-1 font-medium text-emerald-700 md:inline-flex dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300'>
-                <Cloud className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
-                <span>Auto-Save Aktif</span>
-              </div>
+              <OfflineSyncIndicator compact />
 
               <Button
                 type='button'
