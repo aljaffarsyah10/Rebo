@@ -44,7 +44,8 @@ import {
   IconMedal,
   IconDatabase,
   IconShieldCheck,
-  IconWheelchair
+  IconWheelchair,
+  IconDeviceTv
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -94,5 +95,6 @@ export const Icons = {
   medal: IconMedal,
   database: IconDatabase,
   shield: IconShieldCheck,
-  wheelchair: IconWheelchair
+  wheelchair: IconWheelchair,
+  tv: IconDeviceTv
 };

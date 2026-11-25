@@ -19,6 +19,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Executive Command Center',
+    url: '/rebo/command-center',
+    icon: 'tv',
+    isActive: false,
+    shortcut: ['t', 'v'],
+    items: []
+  },
+  {
     title: 'Leaderboard & Apresiasi',
     url: '/rebo/leaderboard',
     icon: 'trophy',

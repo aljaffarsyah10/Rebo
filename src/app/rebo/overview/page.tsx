@@ -21,7 +21,8 @@ import {
   Download,
   Milestone,
   Calendar,
-  Sparkles
+  Sparkles,
+  Tv
 } from 'lucide-react';
 import Link from 'next/link';
 import { PengumumanBanner } from '@/components/rebo/pengumuman-banner';
@@ -139,7 +140,7 @@ export default function Overview() {
         <div className='relative z-10 space-y-5'>
           {/* Header Baris Status & Salam */}
           <div className='space-y-1.5'>
-            <div className='flex items-center space-x-2'>
+            <div className='flex flex-wrap items-center gap-2'>
               <Badge
                 variant='outline'
                 className='border-blue-300/60 bg-blue-100/60 px-3 py-0.5 text-xs font-semibold text-blue-700 dark:border-blue-700/60 dark:bg-blue-950/50 dark:text-blue-300'
@@ -153,6 +154,16 @@ export default function Overview() {
                 </span>
                 <span>REBO V2.0 Aktif</span>
               </div>
+              <Link href='/rebo/command-center'>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='h-6 gap-1.5 rounded-full border-purple-300/80 bg-purple-100/80 px-2.5 text-[11px] font-semibold text-purple-800 shadow-2xs transition-colors hover:bg-purple-200 dark:border-purple-800/70 dark:bg-purple-950/50 dark:text-purple-300 dark:hover:bg-purple-900/50'
+                >
+                  <Tv className='h-3 w-3 text-purple-600 dark:text-purple-400' />
+                  <span>Executive Command Center (Mode TV)</span>
+                </Button>
+              </Link>
             </div>
 
             <h1 className='bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-700 bg-clip-text text-3xl font-black text-transparent md:text-4xl dark:from-slate-100 dark:via-blue-300 dark:to-indigo-300'>
@@ -400,7 +411,30 @@ export default function Overview() {
           </span>
         </div>
 
-        <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+        <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-5'>
+          <Link href='/rebo/command-center' className='group block'>
+            <Button
+              variant='outline'
+              className='group h-auto w-full cursor-pointer items-center justify-between border-purple-200/80 bg-purple-50/50 p-3 text-purple-900 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-purple-400 hover:bg-purple-100/70 hover:shadow-sm active:scale-[0.98] dark:border-purple-900/60 dark:bg-purple-950/25 dark:text-purple-200 dark:hover:bg-purple-900/40'
+            >
+              <div className='flex items-center text-left'>
+                <div className='mr-2.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-700 transition-colors group-hover:bg-purple-200/80 dark:bg-purple-900/50 dark:text-purple-300'>
+                  <Tv className='h-4 w-4' />
+                </div>
+                <div>
+                  <div className='flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-100'>
+                    <span>Command Center</span>
+                    <span className='h-1.5 w-1.5 animate-ping rounded-full bg-purple-500'></span>
+                  </div>
+                  <div className='text-[10px] font-normal text-purple-700/80 dark:text-purple-300/80'>
+                    Mode TV Kiosk Lobi
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className='ml-2 h-4 w-4 shrink-0 text-purple-500/70 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-purple-700 dark:text-purple-400 dark:group-hover:text-purple-300' />
+            </Button>
+          </Link>
+
           <Link href='/rebo/formRB/area' className='group block'>
             <Button
               variant='outline'

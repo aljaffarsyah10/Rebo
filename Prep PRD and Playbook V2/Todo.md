@@ -240,8 +240,8 @@
   - [x] Tampilan interaktif Standar Pelayanan (SP) untuk seluruh produk data statistik BPS, alur kompensasi keterlambatan layanan, dan Maklumat Pelayanan BPS Sitaro.
 
 ### 19. Executive Command Center & Generator Slide Paparan TPN (Pimpinan)
-- [ ] **Executive Command Center (Mode Layar TV / Big Screen Display):**
-  - [ ] Tampilan dasbor visual layar penuh (*kiosk mode*) untuk monitor TV lobi kantor / ruang kerja Kepala BPS yang memutar rotasi realtime: progres 6 pilar, skor IKM/IPAK, hitung mundur batas waktu, dan capaian inovasi.
+- [x] **Executive Command Center (Mode Layar TV / Big Screen Display):**
+  - [x] Tampilan dasbor visual layar penuh (*kiosk mode*) untuk monitor TV lobi kantor / ruang kerja Kepala BPS yang memutar rotasi realtime: progres 6 pilar, skor IKM/IPAK, hitung mundur batas waktu, dan capaian inovasi.
 - [ ] **One-Click Presentation Deck Generator (Ekspor Slide PPTX):**
   - [ ] Pembuatan berkas presentasi PowerPoint (.pptx) paparan ZI BPS Sitaro secara otomatis dari data dan grafik riil sistem REBO untuk dipaparkan di hadapan Tim Penilai Nasional (TPN).
 - [ ] **Analisis Tren Kinerja Antar-Tahun (Multi-Year Trend Analysis):**
