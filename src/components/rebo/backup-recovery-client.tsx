@@ -1023,14 +1023,14 @@ export default function BackupRecoveryClient({
                     <strong className='text-foreground'>
                       Validasi Ulang Checksum SHA-256:
                     </strong>{' '}
-                    Tekan tombol "Verifikasi" untuk memastikan berkas snapshot
-                    cloud tidak mengalami degradasi bit.
+                    Tekan tombol &quot;Verifikasi&quot; untuk memastikan berkas
+                    snapshot cloud tidak mengalami degradasi bit.
                   </li>
                   <li>
                     <strong className='text-foreground'>
                       Otorisasi Disaster Recovery:
                     </strong>{' '}
-                    Klik "Pulihkan", masukkan kode keamanan ketat{' '}
+                    Klik &quot;Pulihkan&quot;, masukkan kode keamanan ketat{' '}
                     <code className='bg-muted text-primary rounded px-1.5 py-0.5 font-mono font-bold'>
                       PULIHKAN-SITAROWBK
                     </code>

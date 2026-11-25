@@ -539,8 +539,8 @@ export default function WBSPortalClient({
                 />
                 <p className='text-[11px] text-slate-500 dark:text-slate-400'>
                   Unggah foto, dokumen rekam jejak, atau rekaman ke Google Drive
-                  lalu cantumkan tautannya dengan akses "Siapa saja dengan
-                  tautan dapat melihat".
+                  lalu cantumkan tautannya dengan akses &quot;Siapa saja dengan
+                  tautan dapat melihat&quot;.
                 </p>
               </div>
 
@@ -920,9 +920,9 @@ export default function WBSPortalClient({
                 </div>
                 <p>
                   Gunakan nomor tiket ini sewaktu-waktu pada tab{' '}
-                  <strong>"Lacak Tiket Aduan"</strong> untuk melihat tindak
-                  lanjut resmi dari Inspektorat / Tim Kepatuhan BPS Sitaro tanpa
-                  perlu mempublikasikan identitas Anda.
+                  <strong>&quot;Lacak Tiket Aduan&quot;</strong> untuk melihat
+                  tindak lanjut resmi dari Inspektorat / Tim Kepatuhan BPS
+                  Sitaro tanpa perlu mempublikasikan identitas Anda.
                 </p>
                 {createdTicketInfo.wa_sent && (
                   <p className='font-medium text-emerald-700 dark:text-emerald-400'>
