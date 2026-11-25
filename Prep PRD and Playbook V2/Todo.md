@@ -234,8 +234,8 @@
 ### 18. Aksesibilitas, Disabilitas & Ramah Difabel pada PST (Pilar 6 Pelayanan Publik)
 - [x] **Katalog Fasilitas Ramah Kelompok Rentan & Difabel:**
   - [x] Dokumentasi sarana-prasarana inklusif ruang Pelayanan Statistik Terpadu (PST): jalur pemandu (*guiding block*), kursi roda, ruang laktasi, toilet difabel, formulir huruf braille, dan alat bantu dengar.
-- [ ] **Widget Aksesibilitas Web (Text-to-Speech & Font Resizer):**
-  - [ ] Integrasi alat bantu aksesibilitas pada formulir survei publik dan portal REBO untuk pengunjung disabilitas sesuai standar WCAG 2.1.
+- [x] **Widget Aksesibilitas Web (Text-to-Speech & Font Resizer):**
+  - [x] Integrasi alat bantu aksesibilitas pada formulir survei publik dan portal REBO untuk pengunjung disabilitas sesuai standar WCAG 2.1.
 - [ ] **Katalog Standar Pelayanan & Maklumat Pelayanan Digital:**
   - [ ] Tampilan interaktif Standar Pelayanan (SP) untuk seluruh produk data statistik BPS, alur kompensasi keterlambatan layanan, dan Maklumat Pelayanan BPS Sitaro.
 

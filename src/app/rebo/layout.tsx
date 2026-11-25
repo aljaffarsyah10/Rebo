@@ -4,6 +4,7 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { PWAQuickActions } from '@/components/rebo/pwa-quick-actions';
+import { AccessibilityWidget } from '@/components/rebo/accessibility-widget';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 
@@ -29,6 +30,7 @@ export default async function ReboLayout({
           <div className='flex-1'>{children}</div>
           <Footer />
           <PWAQuickActions />
+          <AccessibilityWidget />
         </SidebarInset>
       </SidebarProvider>
     </KBar>

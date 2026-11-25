@@ -268,3 +268,60 @@
 .animate-beacon {
   animation: beacon-ping 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* ==========================================================================
+   WCAG 2.1 AA Inklusif & Difabel Styles (REBO Accessibility Engine)
+   ========================================================================== */
+
+/* 1. Mode Kontras Tinggi (High Contrast Mode) */
+html.a11y-high-contrast {
+  filter: contrast(125%);
+}
+
+html.a11y-high-contrast body {
+  background-color: #030712 !important;
+  color: #f8fafc !important;
+}
+
+html.a11y-high-contrast .bg-card,
+html.a11y-high-contrast .bg-background,
+html.a11y-high-contrast .bg-popover,
+html.a11y-high-contrast .bg-sidebar,
+html.a11y-high-contrast [data-slot='card'],
+html.a11y-high-contrast [data-slot='sidebar'] {
+  background-color: #0b0f19 !important;
+  color: #ffffff !important;
+  border-color: #38bdf8 !important;
+}
+
+html.a11y-high-contrast button:not([data-a11y-ignore='true']),
+html.a11y-high-contrast a:not([data-a11y-ignore='true']),
+html.a11y-high-contrast input,
+html.a11y-high-contrast select,
+html.a11y-high-contrast textarea {
+  outline: 2px solid #38bdf8 !important;
+  outline-offset: 2px;
+}
+
+/* 2. Font Ekstra Terbaca & Spasi Lapang (Dyslexia-friendly & Low-vision) */
+html.a11y-readable-font,
+html.a11y-readable-font body,
+html.a11y-readable-font h1,
+html.a11y-readable-font h2,
+html.a11y-readable-font h3,
+html.a11y-readable-font h4,
+html.a11y-readable-font h5,
+html.a11y-readable-font h6,
+html.a11y-readable-font p,
+html.a11y-readable-font span,
+html.a11y-readable-font a,
+html.a11y-readable-font button,
+html.a11y-readable-font li,
+html.a11y-readable-font td,
+html.a11y-readable-font th {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif !important;
+  letter-spacing: 0.05em !important;
+  word-spacing: 0.1em !important;
+  line-height: 1.8 !important;
+}
