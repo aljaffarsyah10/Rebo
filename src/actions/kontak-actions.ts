@@ -134,7 +134,15 @@ export async function updateKontakAction(
       };
     }
 
+    // Sanitasi menyeluruh non-digit & normalisasi 08.../+62... -> 628...
     const cleanNoWa = formatPhoneNumber(data.no_wa.trim());
+    if (!cleanNoWa || cleanNoWa.length < 9) {
+      return {
+        success: false,
+        error:
+          'Format nomor WhatsApp tidak valid. Masukkan nomor HP Indonesia yang sah (minimal 9 digit).'
+      };
+    }
 
     // 3. Siapkan client Supabase
     let supabase: any = null;
@@ -245,6 +253,123 @@ export async function updateKontakAction(
     return {
       success: false,
       error: err?.message || 'Terjadi kesalahan saat memperbarui kontak.'
+    };
+  }
+}
+
+/**
+ * Menambahkan kontak baru (PIC Pilar atau Verifikator) dengan sanitasi nomor WhatsApp
+ * dan normalisasi ke standar internasional 628...
+ */
+export async function createKontakAction(data: {
+  nama_pic: string;
+  no_wa: string;
+  jabatan?: string;
+  email?: string;
+  id_pilar?: number | null;
+  nama_pilar?: string;
+  kategori?: string;
+  is_active?: boolean;
+}): Promise<KontakActionResult<KontakPilarRecord>> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!isAdmin(session.role) && !isTPI(session.role)) {
+      return {
+        success: false,
+        error:
+          'Akses ditolak: Hanya Administrator atau Tim Verifikator yang berhak menambahkan kontak.'
+      };
+    }
+
+    if (!data.nama_pic || !data.nama_pic.trim()) {
+      return {
+        success: false,
+        error: 'Nama PIC tidak boleh kosong.'
+      };
+    }
+
+    if (!data.no_wa || !data.no_wa.trim()) {
+      return {
+        success: false,
+        error: 'Nomor WhatsApp tidak boleh kosong.'
+      };
+    }
+
+    const cleanNoWa = formatPhoneNumber(data.no_wa.trim());
+    if (!cleanNoWa || cleanNoWa.length < 9) {
+      return {
+        success: false,
+        error:
+          'Format nomor WhatsApp tidak valid. Masukkan nomor HP Indonesia yang sah (minimal 9 digit).'
+      };
+    }
+
+    let supabase: any = null;
+    try {
+      supabase = await createServerSupabaseClient();
+    } catch {
+      supabase = getIndependentSupabaseClient();
+    }
+
+    if (!supabase) {
+      supabase = getIndependentSupabaseClient();
+    }
+
+    if (!supabase) {
+      return {
+        success: false,
+        error: 'Koneksi ke database Supabase gagal diinisialisasi.'
+      };
+    }
+
+    const isPilar =
+      data.id_pilar !== undefined &&
+      data.id_pilar !== null &&
+      data.id_pilar >= 1 &&
+      data.id_pilar <= 6;
+
+    const insertPayload = {
+      id_pilar: isPilar ? data.id_pilar : null,
+      kategori: data.kategori || (isPilar ? 'pilar' : 'verifikator'),
+      nama_pilar:
+        data.nama_pilar?.trim() ||
+        (isPilar ? `Pilar ${data.id_pilar}` : 'Tim Verifikator Internal ZI/RB'),
+      nama_pic: data.nama_pic.trim(),
+      jabatan:
+        data.jabatan?.trim() ||
+        (isPilar
+          ? `Koordinator Pilar ${data.id_pilar}`
+          : 'Tim Verifikator Internal ZI/RB BPS Sitaro'),
+      no_wa: cleanNoWa,
+      email: data.email?.trim() || '',
+      is_active: data.is_active !== undefined ? data.is_active : true,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: inserted, error: insErr } = await supabase
+      .from('kontak_pilar')
+      .insert(insertPayload)
+      .select()
+      .single();
+
+    if (insErr) {
+      throw new Error(`Gagal membuat record kontak baru: ${insErr.message}`);
+    }
+
+    revalidatePath('/rebo/admin/kontak');
+    revalidatePath('/rebo/overview');
+
+    return {
+      success: true,
+      data: inserted as KontakPilarRecord,
+      message: `Kontak ${inserted.nama_pic} berhasil ditambahkan!`
+    };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('[KONTAK-ACTIONS] Error createKontakAction:', err?.message);
+    return {
+      success: false,
+      error: err?.message || 'Terjadi kesalahan saat menambahkan kontak baru.'
     };
   }
 }
@@ -471,7 +596,8 @@ export async function getGatewayStatusAction(): Promise<GatewayStatusResult> {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4500);
+    // Tingkatkan timeout dari 4500ms ke 10000ms untuk toleransi cold start Render
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const res = await fetch(`${baseUrl}/`, {
       method: 'GET',
@@ -504,7 +630,7 @@ export async function getGatewayStatusAction(): Promise<GatewayStatusResult> {
 
     // Coba fallback ke /health
     const healthController = new AbortController();
-    const healthTimeout = setTimeout(() => healthController.abort(), 3500);
+    const healthTimeout = setTimeout(() => healthController.abort(), 8000);
 
     const healthRes = await fetch(`${baseUrl}/health`, {
       method: 'GET',
@@ -544,7 +670,9 @@ export async function getGatewayStatusAction(): Promise<GatewayStatusResult> {
     const err = error as Error;
     const isTimeout =
       err?.name === 'AbortError' ||
-      err?.message?.toLowerCase().includes('aborted');
+      err?.name === 'TimeoutError' ||
+      err?.message?.toLowerCase().includes('aborted') ||
+      err?.message?.toLowerCase().includes('timeout');
 
     return {
       configured: true,
@@ -555,7 +683,7 @@ export async function getGatewayStatusAction(): Promise<GatewayStatusResult> {
       botName: null,
       hasActiveQr: false,
       message: isTimeout
-        ? 'Koneksi ke gateway timeout (4.5 detik). Layanan di Render mungkin sedang tertidur (sleep).'
+        ? 'Koneksi ke gateway timeout (10 detik). Layanan di Render mungkin sedang tertidur (sleep) atau sedang booting.'
         : `Tidak dapat menghubungi gateway (${err?.message || 'Offline'}).`
     };
   }

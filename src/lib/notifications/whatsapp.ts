@@ -13,20 +13,34 @@ export interface WhatsAppNotificationPayload {
 }
 
 /**
- * Format nomor telepon Indonesia ke standar internasional (contoh: 08123... -> 628123...)
- * Menangani nomor dengan awalan 0, +62, 62, atau 8, serta membersihkan spasi dan tanda minus
+ * Format dan sanitasi nomor telepon ke standar internasional Indonesia (contoh: 08123... -> 628123...)
+ * Menghapus seluruh karakter non-angka (spasi, tanda hubung -, tanda kurung (), titik, plus, dll)
+ * Menangani nomor dengan awalan 0, +62, 62, 0062, atau 8, serta mengatasi input keliru seperti 6208...
  */
 export function formatPhoneNumber(phone: string): string {
   if (!phone) return '';
   // Bersihkan semua karakter selain angka
   let cleaned = phone.replace(/[^0-9]/g, '');
-  if (cleaned.startsWith('0')) {
+
+  if (!cleaned) return '';
+
+  // Hilangkan prefix internasional 00 jika ada (misal 0062...)
+  if (cleaned.startsWith('00')) {
+    cleaned = cleaned.slice(2);
+  }
+
+  // Jika berawalan 620... (misal pengguna mengetik +6208...), buang angka 0 setelah 62
+  if (cleaned.startsWith('620')) {
+    cleaned = '62' + cleaned.slice(3);
+  } else if (cleaned.startsWith('0')) {
+    // Awalan 08... -> 628...
     cleaned = '62' + cleaned.slice(1);
-  } else if (cleaned.startsWith('62')) {
-    // Sudah berawalan kode negara 62
   } else if (cleaned.startsWith('8')) {
+    // Awalan 8... -> 628...
     cleaned = '62' + cleaned;
   }
+  // Jika sudah berawalan 628... tetap dipertahankan
+
   return cleaned;
 }
 
@@ -74,27 +88,69 @@ export async function sendWhatsAppMessage(
       gatewayUrl += '/send-message';
     }
 
-    // Kirim request ke WA Gateway (kompatibel dengan format umum Baileys/WPPConnect/Fonnte)
-    const response = await fetch(gatewayUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(gatewayApiKey ? { Authorization: `Bearer ${gatewayApiKey}` } : {})
-      },
-      body: JSON.stringify({
-        target: formattedPhone,
-        phone: formattedPhone,
-        message: payload.message,
-        text: payload.message
-      }),
-      // Set timeout 5 detik agar tidak membebani server action
-      signal: AbortSignal.timeout(5000)
+    const requestBody = JSON.stringify({
+      target: formattedPhone,
+      phone: formattedPhone,
+      message: payload.message,
+      text: payload.message
     });
+
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+      ...(gatewayApiKey ? { Authorization: `Bearer ${gatewayApiKey}` } : {})
+    };
+
+    // Kirim request ke WA Gateway dengan timeout 10000ms untuk toleransi cold start Render free-tier
+    let response: Response;
+    try {
+      response = await fetch(gatewayUrl, {
+        method: 'POST',
+        headers: requestHeaders,
+        body: requestBody,
+        // Meningkatkan timeout dari 5000ms ke 10000ms untuk menampung cold start Render
+        signal: AbortSignal.timeout(10000)
+      });
+    } catch (fetchErr: any) {
+      // Jika error terjadi karena cold-start (timeout atau koneksi terputus saat gateway booting),
+      // lakukan 1x percobaan ulang (cold-start recovery retry)
+      console.warn(
+        `[WA-NOTIFICATION] Percobaan pertama menghubungi gateway mengalami kendala (${fetchErr.message}). Mencoba ulang (cold-start recovery)...`
+      );
+
+      try {
+        response = await fetch(gatewayUrl, {
+          method: 'POST',
+          headers: requestHeaders,
+          body: requestBody,
+          signal: AbortSignal.timeout(10000)
+        });
+      } catch (retryErr: any) {
+        const isRetryTimeout =
+          retryErr?.name === 'TimeoutError' ||
+          retryErr?.name === 'AbortError' ||
+          retryErr?.message?.toLowerCase().includes('aborted') ||
+          retryErr?.message?.toLowerCase().includes('timeout');
+
+        const userFriendlyMessage = isRetryTimeout
+          ? 'Gateway WhatsApp sedang bangun dari mode sleep (Render cold start timeout). Silakan coba kirim ulang dalam 15-30 detik.'
+          : `Gagal menghubungi WhatsApp Gateway: ${retryErr.message || 'Layanan sedang offline atau memulai ulang.'}`;
+
+        console.warn(
+          '[WA-NOTIFICATION] Percobaan ulang gateway gagal:',
+          retryErr.message
+        );
+        return { success: false, error: userFriendlyMessage };
+      }
+    }
 
     if (!response.ok) {
       const errText = await response.text();
       console.warn('[WA-NOTIFICATION] Gateway response error:', errText);
-      return { success: false, error: `Gateway error: ${response.statusText}` };
+      const isGatewayStarting = [502, 503, 504].includes(response.status);
+      const errorMessage = isGatewayStarting
+        ? 'Layanan WhatsApp Gateway sedang dalam proses booting (Render 502/503/504). Mohon tunggu sebentar lalu coba lagi.'
+        : `Gateway error: ${response.statusText} (${response.status})`;
+      return { success: false, error: errorMessage };
     }
 
     return { success: true };

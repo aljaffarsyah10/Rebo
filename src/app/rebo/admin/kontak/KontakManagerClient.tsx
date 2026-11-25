@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   MessageSquare,
@@ -134,6 +134,27 @@ export default function KontakManagerClient({
     'deadline' | 'recap' | null
   >(null);
 
+  // Auto-polling states
+  const [autoPolling, setAutoPolling] = useState(true);
+  const [lastPolledAt, setLastPolledAt] = useState<Date>(new Date());
+
+  // Auto-polling status gateway tiap 35 detik untuk mendeteksi perubahan status koneksi secara otomatis
+  useEffect(() => {
+    if (!autoPolling) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await getGatewayStatusAction();
+        setGatewayStatus(res);
+        setLastPolledAt(new Date());
+      } catch (err: unknown) {
+        // Silent failure pada background polling agar tidak memunculkan toast error berkala
+      }
+    }, 35000); // 35 detik
+
+    return () => clearInterval(intervalId);
+  }, [autoPolling]);
+
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'pilar' | 'verifikator'>(
@@ -242,9 +263,20 @@ export default function KontakManagerClient({
       return;
     }
 
+    const cleanNoWa = formatPhoneNumber(editFormData.no_wa.trim());
+    if (!cleanNoWa || cleanNoWa.length < 9) {
+      toast.error(
+        'Format nomor WhatsApp tidak valid. Masukkan nomor HP Indonesia yang sah (minimal 9 digit).'
+      );
+      return;
+    }
+
     setIsSavingEdit(true);
     try {
-      const res = await updateKontakAction(editingContact.id, editFormData);
+      const res = await updateKontakAction(editingContact.id, {
+        ...editFormData,
+        no_wa: cleanNoWa
+      });
       if (res.success && res.data) {
         toast.success(res.message || 'Kontak berhasil diperbarui.');
         // Update local state
@@ -266,11 +298,19 @@ export default function KontakManagerClient({
   // 5. Handler Kirim Pesan Uji Coba WA ke Kontak Tertentu
   const handleSendTestToContact = async (contact: KontakPilarRecord) => {
     setSendingTestId(contact.id);
+    const toastId = toast.loading(
+      `Menghubungi Gateway WhatsApp untuk ${contact.nama_pic}...`,
+      {
+        description:
+          'Menunggu respons gateway (proses cold-start server Render dapat membutuhkan waktu hingga 10 detik).'
+      }
+    );
     try {
       const res = await sendTestNotificationAction(
         contact.no_wa,
         contact.nama_pic
       );
+      toast.dismiss(toastId);
       if (res.success) {
         if (res.waDeepLink) {
           try {
@@ -296,6 +336,7 @@ export default function KontakManagerClient({
         });
       }
     } catch (err: unknown) {
+      toast.dismiss(toastId);
       const error = err as Error;
       toast.error('Gagal mengirim pesan uji coba: ' + error.message);
     } finally {
@@ -555,9 +596,44 @@ export default function KontakManagerClient({
                   />
                   <span>Cek Koneksi Ulang</span>
                 </Button>
+
+                {/* Toggle Auto-Polling Gateway Status (35 Detik) */}
+                <div className='bg-background/60 flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs shadow-2xs backdrop-blur-xs'>
+                  <Switch
+                    id='auto-poll-gateway'
+                    checked={autoPolling}
+                    onCheckedChange={setAutoPolling}
+                    className='scale-75 data-[state=checked]:bg-emerald-600'
+                  />
+                  <Label
+                    htmlFor='auto-poll-gateway'
+                    className='text-muted-foreground flex cursor-pointer items-center gap-1.5 text-xs font-medium select-none'
+                  >
+                    <span>Auto-Polling (35 dtk)</span>
+                    {autoPolling ? (
+                      <span
+                        className='size-1.5 animate-pulse rounded-full bg-emerald-500'
+                        title='Auto-polling aktif setiap 35 detik'
+                      />
+                    ) : (
+                      <span className='text-muted-foreground text-[10px]'>
+                        (Jeda)
+                      </span>
+                    )}
+                  </Label>
+                </div>
               </div>
 
-              <div className='text-muted-foreground text-xs'>
+              <div className='text-muted-foreground flex flex-wrap items-center gap-2 text-xs'>
+                <span className='font-mono text-[11px] opacity-75'>
+                  Terakhir dicek:{' '}
+                  {lastPolledAt.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  })}
+                </span>
+                <span>•</span>
                 {isConnected ? (
                   <span className='flex items-center gap-1 text-emerald-600 dark:text-emerald-400'>
                     <CheckCircle2 className='size-3.5' /> Auto keep-alive aktif
@@ -844,11 +920,18 @@ export default function KontakManagerClient({
                       className='h-8 gap-1.5 border-emerald-300 text-xs text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40'
                     >
                       {sendingTestId === contact.id ? (
-                        <RefreshCw className='size-3.5 animate-spin' />
+                        <>
+                          <RefreshCw className='size-3.5 animate-spin text-emerald-600 dark:text-emerald-400' />
+                          <span className='animate-pulse font-medium'>
+                            Menghubungi Gateway...
+                          </span>
+                        </>
                       ) : (
-                        <Send className='size-3.5' />
+                        <>
+                          <Send className='size-3.5' />
+                          <span>Uji Kirim WA</span>
+                        </>
                       )}
-                      <span>Uji Kirim WA</span>
                     </Button>
                   </div>
                 </Card>
@@ -910,9 +993,22 @@ export default function KontakManagerClient({
 
               {/* Nomor WhatsApp */}
               <div className='space-y-1.5'>
-                <Label htmlFor='no_wa' className='text-xs'>
-                  Nomor WhatsApp <span className='text-rose-500'>*</span>
-                </Label>
+                <div className='flex items-center justify-between gap-2'>
+                  <Label htmlFor='no_wa' className='text-xs'>
+                    Nomor WhatsApp <span className='text-rose-500'>*</span>
+                  </Label>
+                  {editFormData.no_wa.trim() && (
+                    <Badge
+                      variant='outline'
+                      className='gap-1 border-emerald-300 bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    >
+                      <CheckCircle2 className='size-3 text-emerald-600 dark:text-emerald-400' />
+                      <span>
+                        Standar: +{formatPhoneNumber(editFormData.no_wa) || '-'}
+                      </span>
+                    </Badge>
+                  )}
+                </div>
                 <Input
                   id='no_wa'
                   value={editFormData.no_wa}
@@ -922,13 +1018,15 @@ export default function KontakManagerClient({
                       no_wa: e.target.value
                     }))
                   }
-                  placeholder='Contoh: 082190010001 atau 62821...'
+                  placeholder='Contoh: 0821-9001-0001 atau +62 821...'
                   className='font-mono text-xs'
                 />
-                <p className='text-muted-foreground text-[11px]'>
-                  Format 08... akan otomatis dikonversi ke format internasional
-                  (628...).
-                </p>
+                <div className='text-muted-foreground flex items-center justify-between text-[11px]'>
+                  <span>
+                    Spasi, tanda minus (-), kurung (), dan awalan 08 / +62
+                    dibersihkan otomatis.
+                  </span>
+                </div>
               </div>
 
               {/* Jabatan */}

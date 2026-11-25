@@ -268,13 +268,13 @@
 *Catatan: Fokus pada pematangan, perbaikan bug/friction, ketahanan sistem (resilience), dan penyempurnaan fitur yang telah ada tanpa menambah menu baru.*
 
 ### 1. Perbaikan & Ketahanan Notifikasi WhatsApp (`/rebo/admin/kontak`)
-- [ ] **Penanganan Cold Start / Sleep Gateway Render:**
-  - [ ] Tambahkan indikator visual loading/spinner saat tombol "Uji Kirim WA" atau submit bukti diklik ketika gateway baru bangun dari sleep, agar pengguna tidak mengira tombol macet.
-  - [ ] Tingkatkan toleransi timeout dari 5 detik menjadi 8-10 detik untuk panggilan pertama setelah periode idle.
-- [ ] **Auto-Refresh Status Koneksi Gateway:**
-  - [ ] Implementasikan auto-polling (interval 30-45 detik) pada card status di `/rebo/admin/kontak` sehingga saat QR code baru dipindai di tab `/qr`, status di antarmuka admin langsung berubah hijau (🟢 Terhubung) secara otomatis tanpa perlu refresh manual.
-- [ ] **Sanitasi & Validasi Input Nomor WhatsApp:**
-  - [ ] Terapkan pembersihan otomatis karakter non-angka (spasi, tanda hubung `-`, tanda kurung `()`) dan normalisasi otomatis prefix `08...`, `+62...` menjadi format standar internasional `628...` sebelum data kontak disimpan ke Supabase.
+- [x] **Penanganan Cold Start / Sleep Gateway Render:**
+  - [x] Tambahkan indikator visual loading/spinner saat tombol "Uji Kirim WA" atau submit bukti diklik ketika gateway baru bangun dari sleep, agar pengguna tidak mengira tombol macet.
+  - [x] Tingkatkan toleransi timeout dari 5 detik menjadi 8-10 detik untuk panggilan pertama setelah periode idle.
+- [x] **Auto-Refresh Status Koneksi Gateway:**
+  - [x] Implementasikan auto-polling (interval 30-45 detik) pada card status di `/rebo/admin/kontak` sehingga saat QR code baru dipindai di tab `/qr`, status di antarmuka admin langsung berubah hijau (🟢 Terhubung) secara otomatis tanpa perlu refresh manual.
+- [x] **Sanitasi & Validasi Input Nomor WhatsApp:**
+  - [x] Terapkan pembersihan otomatis karakter non-angka (spasi, tanda hubung `-`, tanda kurung `()`) dan normalisasi otomatis prefix `08...`, `+62...` menjadi format standar internasional `628...` sebelum data kontak disimpan ke Supabase.
 
 ### 2. Perbaikan Menu Formulir Bukti Dukung (Form RB & Input Bukti)
 - [ ] **Validasi Tautan Google Drive:**
