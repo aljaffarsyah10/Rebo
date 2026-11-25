@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="bg-kanban" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#003366"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="24" fill="url(#bg-kanban)"/>
+  <circle cx="48" cy="48" r="38" fill="none" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="2"/>
+  <!-- Kanban 3 columns -->
+  <!-- Col 1 -->
+  <rect x="22" y="26" width="14" height="44" rx="4" fill="#FFFFFF" fill-opacity="0.95"/>
+  <rect x="25" y="30" width="8" height="12" rx="2" fill="#4F46E5"/>
+  <rect x="25" y="46" width="8" height="16" rx="2" fill="#818CF8"/>
+
+  <!-- Col 2 -->
+  <rect x="41" y="26" width="14" height="44" rx="4" fill="#FFFFFF" fill-opacity="0.95"/>
+  <rect x="44" y="30" width="8" height="18" rx="2" fill="#0284C7"/>
+  <rect x="44" y="52" width="8" height="10" rx="2" fill="#38BDF8"/>
+
+  <!-- Col 3 -->
+  <rect x="60" y="26" width="14" height="44" rx="4" fill="#FFFFFF" fill-opacity="0.95"/>
+  <rect x="63" y="30" width="8" height="14" rx="2" fill="#10B981"/>
+  <rect x="63" y="48" width="8" height="14" rx="2" fill="#34D399"/>
+</svg>

@@ -205,8 +205,8 @@
   - [x] Operator tetap dapat mengetik narasi jawaban LKE dan mengisi tautan saat koneksi internet kepulauan sedang bermasalah atau mati listrik; data tersimpan otomatis di browser lokal dan tersinkron ke cloud begitu online.
 - [x] **Image & File Compressor Otomatis Sebelum Upload:**
   - [x] Kompresi berkas gambar/foto dokumentasi dan dokumen pindaian di sisi peramban (client-side) sebelum diunggah ke Google Drive guna menghemat kuota penyimpanan dan mempercepat proses upload.
-- [ ] **PWA Quick Action Shortcuts:**
-  - [ ] Tombol pintas saat ikon aplikasi REBO ditekan lama di layar beranda ponsel: *"Upload Bukti Cepat"*, *"Cek Status Indikator Saya"*, dan *"Buka Kanban"*.
+- [x] **PWA Quick Action Shortcuts:**
+  - [x] Tombol pintas saat ikon aplikasi REBO ditekan lama di layar beranda ponsel: *"Upload Bukti Cepat"*, *"Cek Status Indikator Saya"*, dan *"Buka Kanban"*.
 
 ### 15. Gamifikasi, Motivasi & Papan Apresiasi Tim Kerja (Recognition Hub)
 - [ ] **Leaderboard Progresivitas & Kepatuhan 6 Pilar:**

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="bg-upload" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#003366"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="24" fill="url(#bg-upload)"/>
+  <circle cx="48" cy="48" r="38" fill="none" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="2"/>
+  <!-- Cloud Body -->
+  <path d="M30 62 C25 62 21 57.5 21 52 C21 47 25 43 30 43 C30.8 43 31.6 43.1 32.4 43.4 C34.5 35.6 41.6 30 50 30 C59.8 30 67.9 37.6 68.9 47.3 C72.9 48.4 76 52 76 56.5 C76 61.7 71.7 66 66.5 66 L30 66 Z" fill="#FFFFFF" fill-opacity="0.95"/>
+  <!-- Arrow Up inside Cloud -->
+  <path d="M48 38 L36 50 L43 50 L43 62 L53 62 L53 50 L60 50 Z" fill="#003366"/>
+</svg>

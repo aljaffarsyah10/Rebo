@@ -32,32 +32,76 @@
   ],
   "shortcuts": [
     {
-      "name": "Dashboard Utama",
-      "short_name": "Overview",
-      "description": "Buka Dashboard Utama REBO V2",
-      "url": "/rebo/overview",
-      "icons": [{ "src": "/icons/manifest-icon-192.maskable.png", "sizes": "192x192" }]
+      "name": "Upload Bukti Cepat",
+      "short_name": "Upload Bukti",
+      "description": "Unggah cepat dokumen bukti dukung LKE Zona Integritas",
+      "url": "/rebo/formRB?quick=upload",
+      "icons": [
+        {
+          "src": "/icons/shortcut-upload.svg",
+          "sizes": "96x96 192x192",
+          "type": "image/svg+xml"
+        },
+        {
+          "src": "/icons/manifest-icon-192.maskable.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
-      "name": "Formulir LKE",
-      "short_name": "Form RB",
-      "description": "Akses Pengisian Bukti Dukung RB",
-      "url": "/rebo/formRB/area",
-      "icons": [{ "src": "/icons/manifest-icon-192.maskable.png", "sizes": "192x192" }]
+      "name": "Cek Status Indikator Saya",
+      "short_name": "Status Saya",
+      "description": "Pantau status indikator dan penugasan LKE ZI Saya",
+      "url": "/rebo/overview?filter=my-tasks",
+      "icons": [
+        {
+          "src": "/icons/shortcut-tasks.svg",
+          "sizes": "96x96 192x192",
+          "type": "image/svg+xml"
+        },
+        {
+          "src": "/icons/manifest-icon-192.maskable.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
-      "name": "Monitoring Progress",
-      "short_name": "Monitoring",
-      "description": "Pantau Capaian dan Skor LKE",
-      "url": "/rebo/monitoring",
-      "icons": [{ "src": "/icons/manifest-icon-192.maskable.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Kanban Tindak Lanjut",
+      "name": "Buka Kanban",
       "short_name": "Kanban",
-      "description": "Daftar Tugas dan Revisi Dokumen Bukti",
+      "description": "Buka papan Kanban penugasan dan revisi bukti dukung",
       "url": "/rebo/kanban",
-      "icons": [{ "src": "/icons/manifest-icon-192.maskable.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/shortcut-kanban.svg",
+          "sizes": "96x96 192x192",
+          "type": "image/svg+xml"
+        },
+        {
+          "src": "/icons/manifest-icon-192.maskable.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Kanal Pengaduan WBS",
+      "short_name": "Lapor WBS",
+      "description": "Whistleblowing System rahasia BPS Kabupaten Kepulauan Sitaro",
+      "url": "/rebo/wbs",
+      "icons": [
+        {
+          "src": "/icons/shortcut-wbs.svg",
+          "sizes": "96x96 192x192",
+          "type": "image/svg+xml"
+        },
+        {
+          "src": "/icons/manifest-icon-192.maskable.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

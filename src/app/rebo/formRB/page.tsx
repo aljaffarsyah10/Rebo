@@ -10,6 +10,16 @@ export const metadata = {
  * Rute induk /rebo/formRB mengarahkan pengguna ke halaman pemilihan area evaluasi
  * (/rebo/formRB/area) yang terbagi menjadi Area Pemenuhan dan Area Reform.
  */
-export default async function FormRBPage() {
+export default async function FormRBPage({
+  searchParams
+}: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  if (params?.quick) {
+    redirect(
+      `/rebo/formRB/area?quick=${encodeURIComponent(String(params.quick))}`
+    );
+  }
   redirect('/rebo/formRB/area');
 }

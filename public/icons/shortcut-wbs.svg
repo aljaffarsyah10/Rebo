@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <defs>
+    <linearGradient id="bg-wbs" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#831843"/>
+      <stop offset="100%" stop-color="#E11D48"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="24" fill="url(#bg-wbs)"/>
+  <circle cx="48" cy="48" r="38" fill="none" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="2"/>
+  <!-- Shield with lock/whistle -->
+  <path d="M48 24 C57 28 66 28 72 29 C72 49 62 64 48 72 C34 64 24 49 24 29 C30 28 39 28 48 24 Z" fill="#FFFFFF" fill-opacity="0.95"/>
+  <!-- Lock inside Shield -->
+  <rect x="40" y="44" width="16" height="13" rx="2.5" fill="#831843"/>
+  <path d="M43 44 L43 39 C43 36.2 45.2 34 48 34 C50.8 34 53 36.2 53 39 L53 44" fill="none" stroke="#831843" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="48" cy="49" r="1.5" fill="#FFFFFF"/>
+  <line x1="48" y1="50.5" x2="48" y2="53.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
