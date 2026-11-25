@@ -6,7 +6,7 @@ import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
 import {
   DEFAULT_PRESENTATION_DATA,
   PresentationDeckData
-} from '@/lib/presentation/pptx-generator';
+} from '@/lib/presentation/presentation-types';
 import PresentationDeckClient from '@/components/rebo/presentation-deck-client';
 
 export const metadata: Metadata = {

@@ -34,7 +34,7 @@ import {
   PresentationDeckData,
   SlideData,
   DEFAULT_PRESENTATION_DATA
-} from '@/lib/presentation/pptx-generator';
+} from '@/lib/presentation/presentation-types';
 
 interface PresentationDeckClientProps {
   initialData?: PresentationDeckData;

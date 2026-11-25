@@ -13,7 +13,32 @@ const baseConfig: NextConfig = {
       }
     ]
   },
-  transpilePackages: ['geist']
+  transpilePackages: ['geist'],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve = config.resolve || {};
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        https: false,
+        http: false,
+        net: false,
+        tls: false,
+        os: false,
+        path: false,
+        stream: false,
+        zlib: false,
+        'node:https': false,
+        'node:http': false,
+        'node:fs': false,
+        'node:path': false,
+        'node:os': false,
+        'node:stream': false,
+        'node:zlib': false
+      };
+    }
+    return config;
+  }
 };
 
 // Wrap base config with PWA first. Make sure `next-pwa` and `@sentry/nextjs` are installed in your environment
