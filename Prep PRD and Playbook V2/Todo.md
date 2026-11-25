@@ -216,8 +216,8 @@
   - [x] Notifikasi apresiasi dari Kepala BPS Sitaro ke grup tim kerja atas pencapaian milestone penting.
 
 ### 16. Replikasi Antar-Satker & Ketahanan Cadangan Data (Multi-Tenant & Disaster Recovery)
-- [ ] **Kesiapan Multi-Satker (Replikasi BPS Kabupaten/Kota Lain):**
-  - [ ] Struktur konfigurasi profil instansi modular sehingga sistem REBO dapat direplikasi dan digunakan oleh BPS Kabupaten/Kota lain di Sulawesi Utara maupun nasional dengan mudah.
+- [x] **Kesiapan Multi-Satker (Replikasi BPS Kabupaten/Kota Lain):**
+  - [x] Struktur konfigurasi profil instansi modular sehingga sistem REBO dapat direplikasi dan digunakan oleh BPS Kabupaten/Kota lain di Sulawesi Utara maupun nasional dengan mudah.
 - [ ] **Automated Cloud Backup & Disaster Recovery:**
   - [ ] Penjadwalan cadangan otomatis (*automated snapshot backup*) basis data Supabase berkala ke Google Cloud Storage / Amazon S3.
   - [ ] Tombol 1-klik untuk validasi integritas data cadangan dan pemulihan darurat (*disaster recovery verification*).

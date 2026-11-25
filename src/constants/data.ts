@@ -74,6 +74,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/admin/wbs',
         icon: 'warning',
         shortcut: ['w', 'b']
+      },
+      {
+        title: 'Konfigurasi Satker',
+        url: '/rebo/admin/satker',
+        icon: 'settings',
+        shortcut: ['s', 'k']
       }
     ]
   },
