@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import {
   Sparkles,
   Star,
   Printer,
+  QrCode,
   ExternalLink,
   Video,
   FileText,
@@ -335,6 +337,15 @@ export default function InovasiShowcaseClient({
             </div>
 
             <div className='flex shrink-0 flex-wrap items-center gap-2.5'>
+              <Link href='/rebo/pst-qrcode'>
+                <Button
+                  variant='outline'
+                  className='border-blue-200 bg-blue-50/70 text-xs font-medium text-blue-700 hover:bg-blue-100 sm:text-sm dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300'
+                >
+                  <QrCode className='mr-1.5 size-4 text-blue-600 dark:text-blue-400' />
+                  QR Meja PST
+                </Button>
+              </Link>
               <Button
                 variant='outline'
                 onClick={handlePrintOnePager}

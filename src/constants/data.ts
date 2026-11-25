@@ -154,6 +154,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'QR Meja Layanan PST',
+    url: '/rebo/pst-qrcode',
+    icon: 'qrcode',
+    isActive: false,
+    shortcut: ['q', 'r'],
+    items: []
+  },
+  {
     title: 'Arsip',
     url: '/rebo/arsip',
     icon: 'page',

@@ -192,8 +192,8 @@
   - [x] Fitur kirim pengumuman penting / arahan pimpinan BPS Sitaro secara serentak ke seluruh koordinator pilar via WhatsApp bot dan banner dinamis pada Beranda REBO.
 
 ### 13. Manajemen Pelayanan Publik, Suara Konsumen & Pengaduan (Voice of Customer)
-- [ ] **Generator QR Code Meja Layanan PST (Pelayanan Statistik Terpadu):**
-  - [ ] Pembuat QR Code siap cetak (desain resmi BPS) untuk diletakkan di ruang resepsionis/PST agar tamu/responden dapat langsung memindai dan mengisi survei kepuasan lewat ponsel.
+- [x] **Generator QR Code Meja Layanan PST (Pelayanan Statistik Terpadu):**
+  - [x] Pembuat QR Code siap cetak (desain resmi BPS) untuk diletakkan di ruang resepsionis/PST agar tamu/responden dapat langsung memindai dan mengisi survei kepuasan lewat ponsel.
 - [ ] **Kanal Pengaduan & Whistleblowing System (WBS) Internal:**
   - [ ] Formulir pengaduan masyarakat / pegawai yang aman, terenkripsi, dan dapat diisi secara anonim untuk mendukung pemenuhan bukti dukung Pilar 5 (Penguatan Pengawasan).
   - [ ] Notifikasi langsung ke Tim Kepatuhan Internal saat ada laporan pengaduan masuk.
