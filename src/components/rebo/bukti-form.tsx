@@ -67,6 +67,29 @@ const TIPE_DOKUMEN_OPTIONS = [
   'Dokumen Pendukung Lainnya'
 ];
 
+export const GOOGLE_DRIVE_URL_REGEX =
+  /^https:\/\/(drive|docs)\.google\.com\/.+/i;
+
+export function isValidGoogleDriveUrl(url: string): boolean {
+  if (!url) return false;
+  return GOOGLE_DRIVE_URL_REGEX.test(url.trim());
+}
+
+export function isGoogleDriveFolderOrSearchUrl(url: string): boolean {
+  if (!url) return false;
+  const lower = url.trim().toLowerCase();
+  return (
+    lower.includes('drive.google.com/drive/search') ||
+    lower.includes('drive.google.com/drive/folders') ||
+    lower.includes('/drive/folders') ||
+    (lower.includes('/drive/u/') &&
+      (lower.includes('/folders/') || lower.includes('/search'))) ||
+    lower.includes('/folders/') ||
+    lower.includes('search?q=') ||
+    lower.endsWith('/search')
+  );
+}
+
 type Props = {
   pertanyaan: Pertanyaan;
   bukti?: BuktiDukung | null;
@@ -74,6 +97,10 @@ type Props = {
   setBuktiDukungMap?: React.Dispatch<
     React.SetStateAction<Record<string, BuktiDukung>>
   >;
+  onUpdateBukti?: (
+    idPertanyaan: string,
+    updatedData: Partial<BuktiDukung>
+  ) => void;
   canEdit?: boolean;
   canVerify?: boolean;
   activePeriodeId?: string;
@@ -88,6 +115,7 @@ export default function BuktiForm({
   bukti,
   buktiDukungMap,
   setBuktiDukungMap,
+  onUpdateBukti,
   canEdit = true,
   activePeriodeId,
   activePeriodeYear = 2026,
@@ -131,6 +159,8 @@ export default function BuktiForm({
   const [isCompressingSingle, setIsCompressingSingle] = useState(false);
 
   const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [submittingType, setSubmittingType] = useState<
     'draft' | 'review' | null
   >(null);
@@ -481,27 +511,29 @@ export default function BuktiForm({
       toast.error('Masukkan nama berkas dokumen.');
       return;
     }
-    if (!newDocUrl.trim()) {
+    const cleanUrl = newDocUrl.trim();
+    if (!cleanUrl) {
       toast.error('Masukkan URL berkas Google Drive.');
       return;
     }
 
-    try {
-      // Basic URL verification
-      const parsed = new URL(newDocUrl.trim());
-      if (!parsed.protocol.startsWith('http')) {
-        toast.error('URL berkas harus diawali dengan http:// atau https://');
-        return;
-      }
-    } catch {
-      toast.error('URL berkas Google Drive tidak valid.');
+    if (!isValidGoogleDriveUrl(cleanUrl)) {
+      toast.error(
+        'Tautan berkas harus berupa link resmi Google Drive atau Google Docs (diawali https://drive.google.com/ atau https://docs.google.com/).'
+      );
       return;
+    }
+
+    if (isGoogleDriveFolderOrSearchUrl(cleanUrl)) {
+      toast.warning(
+        '⚠️ Link ini mengarah ke folder/pencarian. Untuk evidensi resmi, disarankan menautkan berkas spesifik (PDF/Dokumen).'
+      );
     }
 
     const newDoc = {
       id: `temp-${Date.now()}`,
       nama_dokumen: newDocNama.trim(),
-      file_url: newDocUrl.trim(),
+      file_url: cleanUrl,
       tipe_dokumen: newDocTipe,
       uploaded_by: 'Operator (Belum Disimpan)',
       uploaded_at: new Date().toISOString(),
@@ -579,6 +611,13 @@ export default function BuktiForm({
       return;
     }
 
+    // Instant guard against double-clicks and concurrent submissions
+    if (isSubmitting || submittingRef.current || isPending) {
+      return;
+    }
+    submittingRef.current = true;
+    setIsSubmitting(true);
+
     if (submitForReview) {
       if (
         (pertanyaan.kategoriPenilaian?.length || 0) > 0 &&
@@ -587,12 +626,16 @@ export default function BuktiForm({
         toast.error(
           'Pilih opsi penilaian mandiri terlebih dahulu sebelum mengajukan verifikasi.'
         );
+        submittingRef.current = false;
+        setIsSubmitting(false);
         return;
       }
       if (dokumenList.length === 0) {
         toast.error(
           'Tambahkan minimal 1 berkas bukti dukung sebelum mengajukan verifikasi.'
         );
+        submittingRef.current = false;
+        setIsSubmitting(false);
         return;
       }
 
@@ -604,7 +647,11 @@ export default function BuktiForm({
         const proceed = window.confirm(
           `Peringatan Pre-Audit Guard: Berkas "${restrictedDoc.nama_dokumen}" terdeteksi berstatus Izin Terkunci (Restricted).\n\nVerifikator atau Penilai tidak dapat membaca berkas ini jika izin belum diubah menjadi "Siapa saja yang memiliki link".\n\nTetap lanjutkan pengajuan verifikasi?`
         );
-        if (!proceed) return;
+        if (!proceed) {
+          submittingRef.current = false;
+          setIsSubmitting(false);
+          return;
+        }
       }
     }
 
@@ -648,35 +695,38 @@ export default function BuktiForm({
           { duration: 6000 }
         );
 
-        if (setBuktiDukungMap) {
-          setBuktiDukungMap((prev) => {
-            const prevItem = prev[pertanyaan.id_pertanyaan] || {};
-            const updatedItem: BuktiDukung = {
-              ...prevItem,
-              id_pertanyaan: pertanyaan.id_pertanyaan,
-              id_kategori: selectedKategori || null,
-              nilai_mandiri: currentNilaiMandiri,
-              nilai_akhir: currentNilaiMandiri,
-              catatan_operator: catatanOperator.trim() || null,
-              catatan_user: catatanOperator.trim() || null,
-              status_kelengkapan: submitForReview
-                ? 1
-                : (prevItem.status_kelengkapan ?? 0),
-              status: submitForReview
-                ? 'Menunggu Review (Draf Lokal)'
-                : (prevItem.status ?? 'Belum Diisi'),
-              nama_status: submitForReview
-                ? 'Menunggu Review (Draf Lokal)'
-                : (prevItem.nama_status ?? 'Belum Diisi'),
-              dokumen_bukti: dokumenList as DokumenBukti[]
-            };
-            return {
-              ...prev,
-              [pertanyaan.id_pertanyaan]: updatedItem
-            };
-          });
+        const updatedOfflineItem: BuktiDukung = {
+          ...(currentBukti || {}),
+          id_pertanyaan: pertanyaan.id_pertanyaan,
+          id_kategori: selectedKategori || null,
+          nilai_mandiri: currentNilaiMandiri,
+          nilai_akhir: currentNilaiMandiri,
+          catatan_operator: catatanOperator.trim() || null,
+          catatan_user: catatanOperator.trim() || null,
+          status_kelengkapan: submitForReview
+            ? 1
+            : ((currentBukti?.status_kelengkapan as any) ?? 0),
+          status: submitForReview
+            ? 'Menunggu Review (Draf Lokal)'
+            : (currentBukti?.status ?? 'Belum Diisi'),
+          nama_status: submitForReview
+            ? 'Menunggu Review (Draf Lokal)'
+            : (currentBukti?.nama_status ?? 'Belum Diisi'),
+          dokumen_bukti: dokumenList as DokumenBukti[]
+        };
+
+        if (onUpdateBukti) {
+          onUpdateBukti(pertanyaan.id_pertanyaan, updatedOfflineItem);
+        } else if (setBuktiDukungMap) {
+          setBuktiDukungMap((prev) => ({
+            ...prev,
+            [pertanyaan.id_pertanyaan]: updatedOfflineItem
+          }));
         }
 
+        setAddDocMode('none');
+        setIsSubmitting(false);
+        submittingRef.current = false;
         setSubmittingType(null);
         return;
       }
@@ -702,6 +752,9 @@ export default function BuktiForm({
         const res = await submitBuktiAction(payload);
 
         if (res.success) {
+          // Tutup form penambahan dokumen jika terbuka
+          setAddDocMode('none');
+
           // Hapus draf lokal otomatis ketika user berhasil simpan / ajukan bukti
           try {
             await deleteOfflineDraft(pertanyaan.id_pertanyaan);
@@ -713,35 +766,63 @@ export default function BuktiForm({
 
           toast.success(res.message || 'Data berhasil disimpan.');
 
-          // Update parent state if setBuktiDukungMap is present
-          if (setBuktiDukungMap) {
-            setBuktiDukungMap((prev) => {
-              const prevItem = prev[pertanyaan.id_pertanyaan] || {};
-              const updatedItem: BuktiDukung = {
-                ...prevItem,
-                id_pertanyaan: pertanyaan.id_pertanyaan,
-                id_kategori: selectedKategori || null,
-                nilai_mandiri: currentNilaiMandiri,
-                nilai_akhir: currentNilaiMandiri,
-                catatan_operator: catatanOperator.trim() || null,
-                catatan_user: catatanOperator.trim() || null,
-                status_kelengkapan:
-                  res.newStatus ??
-                  (submitForReview ? 1 : (prevItem.status_kelengkapan ?? 0)),
-                status: submitForReview
-                  ? 'Menunggu Review'
-                  : (prevItem.status ?? 'Belum Diisi'),
-                nama_status: submitForReview
-                  ? 'Menunggu Review'
-                  : (prevItem.nama_status ?? 'Belum Diisi'),
-                dokumen_bukti:
-                  res.data?.dokumen_bukti ?? (dokumenList as DokumenBukti[])
-              };
-              return {
-                ...prev,
-                [pertanyaan.id_pertanyaan]: updatedItem
-              };
-            });
+          // Perbarui dokumenList lokal secara optimistik tanpa flicker ID temp
+          if (res.data?.dokumen_bukti && res.data.dokumen_bukti.length > 0) {
+            setDokumenList(
+              res.data.dokumen_bukti.map((d: DokumenBukti) => ({
+                id: d.id,
+                nama_dokumen: d.nama_dokumen,
+                file_url: d.file_url,
+                tipe_dokumen: d.tipe_dokumen,
+                uploaded_by: d.uploaded_by,
+                uploaded_at: d.uploaded_at
+              }))
+            );
+          } else {
+            setDokumenList((prev) =>
+              prev.map((d) => ({
+                ...d,
+                id: d.id?.startsWith('temp-')
+                  ? d.id.replace('temp-', 'saved-')
+                  : d.id,
+                uploaded_by: d.uploaded_by?.includes('Belum Disimpan')
+                  ? 'Operator'
+                  : d.uploaded_by
+              }))
+            );
+          }
+
+          // Update parent state optimistically
+          const updatedItem: BuktiDukung = {
+            ...(currentBukti || {}),
+            id_pertanyaan: pertanyaan.id_pertanyaan,
+            id_kategori: selectedKategori || null,
+            nilai_mandiri: currentNilaiMandiri,
+            nilai_akhir: currentNilaiMandiri,
+            catatan_operator: catatanOperator.trim() || null,
+            catatan_user: catatanOperator.trim() || null,
+            status_kelengkapan:
+              res.newStatus ??
+              (submitForReview
+                ? 1
+                : ((currentBukti?.status_kelengkapan as any) ?? 0)),
+            status: submitForReview
+              ? 'Menunggu Review'
+              : (currentBukti?.status ?? 'Belum Diisi'),
+            nama_status: submitForReview
+              ? 'Menunggu Review'
+              : (currentBukti?.nama_status ?? 'Belum Diisi'),
+            dokumen_bukti:
+              res.data?.dokumen_bukti ?? (dokumenList as DokumenBukti[])
+          };
+
+          if (onUpdateBukti) {
+            onUpdateBukti(pertanyaan.id_pertanyaan, updatedItem);
+          } else if (setBuktiDukungMap) {
+            setBuktiDukungMap((prev) => ({
+              ...prev,
+              [pertanyaan.id_pertanyaan]: updatedItem
+            }));
           }
 
           if (onUpsertSuccess && res.data) {
@@ -784,6 +865,8 @@ export default function BuktiForm({
           toast.error('Terjadi kesalahan saat memproses penyimpanan.');
         }
       } finally {
+        setIsSubmitting(false);
+        submittingRef.current = false;
         setSubmittingType(null);
       }
     });
@@ -1447,6 +1530,39 @@ export default function BuktiForm({
                 className='w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
                 required
               />
+
+              {/* Real-time Google Drive URL Validation Feedback */}
+              {newDocUrl.trim().length > 0 && (
+                <div className='mt-1.5'>
+                  {!isValidGoogleDriveUrl(newDocUrl) ? (
+                    <div className='text-2xs flex items-start gap-1.5 rounded-md border border-rose-200 bg-rose-50 p-2 font-medium text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'>
+                      <AlertCircle className='mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400' />
+                      <span>
+                        URL tidak valid. Tautan berkas harus diawali dengan{' '}
+                        <code>https://drive.google.com/</code> atau{' '}
+                        <code>https://docs.google.com/</code>.
+                      </span>
+                    </div>
+                  ) : isGoogleDriveFolderOrSearchUrl(newDocUrl) ? (
+                    <div className='text-2xs flex items-start gap-1.5 rounded-md border border-amber-300 bg-amber-50 p-2 font-medium text-amber-900 dark:border-amber-800/80 dark:bg-amber-950/40 dark:text-amber-200'>
+                      <AlertTriangle className='mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400' />
+                      <span>
+                        ⚠️ Link ini mengarah ke folder/pencarian. Untuk evidensi
+                        resmi, disarankan menautkan berkas spesifik
+                        (PDF/Dokumen)
+                      </span>
+                    </div>
+                  ) : (
+                    <div className='text-2xs flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400'>
+                      <CheckCircle2 className='h-3.5 w-3.5 text-emerald-600' />
+                      <span>
+                        Tautan berkas Google Drive valid (berkas spesifik).
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <p className='text-2xs mt-1 text-gray-500 dark:text-gray-400'>
                 💡 Pastikan berkas Google Drive disetel ke izin lihat:
                 &quot;Siapa saja yang memiliki link&quot; atau dibagikan ke
@@ -1539,26 +1655,40 @@ export default function BuktiForm({
           <Button
             type='button'
             variant='outline'
-            disabled={isPending}
+            disabled={isSubmitting || isPending}
             onClick={() => handleSave(false)}
-            className='h-10 border-gray-300 px-5 text-xs font-semibold hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800'
+            className='h-10 border-gray-300 px-5 text-xs font-semibold hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:hover:bg-gray-800'
           >
-            <Save className='mr-1.5 h-4 w-4' />
-            {isPending && submittingType === 'draft'
-              ? 'Menyimpan...'
-              : 'Simpan Draf'}
+            {isSubmitting && submittingType === 'draft' ? (
+              <>
+                <Loader2 className='mr-1.5 h-4 w-4 animate-spin text-blue-600' />
+                <span>Menyimpan Dokumen...</span>
+              </>
+            ) : (
+              <>
+                <Save className='mr-1.5 h-4 w-4' />
+                <span>Simpan Draf</span>
+              </>
+            )}
           </Button>
 
           <Button
             type='button'
-            disabled={isPending}
+            disabled={isSubmitting || isPending}
             onClick={() => handleSave(true)}
-            className='h-10 bg-gradient-to-r from-blue-600 to-indigo-600 px-6 text-xs font-semibold text-white shadow-xs hover:from-blue-700 hover:to-indigo-700'
+            className='h-10 bg-gradient-to-r from-blue-600 to-indigo-600 px-6 text-xs font-semibold text-white shadow-xs hover:from-blue-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-60'
           >
-            <Send className='mr-1.5 h-4 w-4' />
-            {isPending && submittingType === 'review'
-              ? 'Mengajukan...'
-              : 'Kirim & Ajukan Verifikasi'}
+            {isSubmitting && submittingType === 'review' ? (
+              <>
+                <Loader2 className='mr-1.5 h-4 w-4 animate-spin text-white' />
+                <span>Menyimpan Dokumen...</span>
+              </>
+            ) : (
+              <>
+                <Send className='mr-1.5 h-4 w-4' />
+                <span>Kirim & Ajukan Verifikasi</span>
+              </>
+            )}
           </Button>
         </div>
       )}

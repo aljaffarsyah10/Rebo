@@ -277,14 +277,14 @@
   - [x] Terapkan pembersihan otomatis karakter non-angka (spasi, tanda hubung `-`, tanda kurung `()`) dan normalisasi otomatis prefix `08...`, `+62...` menjadi format standar internasional `628...` sebelum data kontak disimpan ke Supabase.
 
 ### 2. Perbaikan Menu Formulir Bukti Dukung (Form RB & Input Bukti)
-- [ ] **Validasi Tautan Google Drive:**
-  - [ ] Tambahkan validasi regex URL saat operator menginput link bukti dukung (memastikan format diawali `https://drive.google.com/...` dan bukan link lokal/kosong).
-  - [ ] Peringatan dini jika link yang dimasukkan adalah link pencarian atau link folder padahal yang diminta berkas spesifik.
-- [ ] **Pencegahan Double-Submit & Feedback Simpan:**
-  - [ ] Disable tombol submit dan tampilkan status *"Menyimpan..."* secara instan saat operator mengunggah dokumen bukti dukung untuk mencegah duplikasi record akibat klik ganda.
-  - [ ] Pastikan modal input tertutup otomatis dan daftar bukti dukung langsung ter-refresh secara mulus tanpa kedip (*optimistic update*).
-- [ ] **Optimasi Rendering Daftar Indikator Panjang:**
-  - [ ] Optimasi komponen tabel indikator pada pilar dengan jumlah pertanyaan banyak (misal Pilar 3 & Pilar 5) agar scroll dan navigasi tetap lancar di laptop/perangkat berspesifikasi rendah.
+- [x] **Validasi Tautan Google Drive:**
+  - [x] Tambahkan validasi regex URL saat operator menginput link bukti dukung (memastikan format diawali `https://drive.google.com/...` dan bukan link lokal/kosong).
+  - [x] Peringatan dini jika link yang dimasukkan adalah link pencarian atau link folder padahal yang diminta berkas spesifik.
+- [x] **Pencegahan Double-Submit & Feedback Simpan:**
+  - [x] Disable tombol submit dan tampilkan status *"Menyimpan..."* secara instan saat operator mengunggah dokumen bukti dukung untuk mencegah duplikasi record akibat klik ganda.
+  - [x] Pastikan modal input tertutup otomatis dan daftar bukti dukung langsung ter-refresh secara mulus tanpa kedip (*optimistic update*).
+- [x] **Optimasi Rendering Daftar Indikator Panjang:**
+  - [x] Optimasi komponen tabel indikator pada pilar dengan jumlah pertanyaan banyak (misal Pilar 3 & Pilar 5) agar scroll dan navigasi tetap lancar di laptop/perangkat berspesifikasi rendah.
 
 ### 3. Perbaikan Papan Kanban Tindak Lanjut (`/rebo/kanban`)
 - [ ] **Penanganan Catatan Revisi Berteks Panjang:**

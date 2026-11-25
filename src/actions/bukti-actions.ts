@@ -22,6 +22,9 @@ import { getVerifikatorContacts } from '@/lib/notifications/contacts';
 // 1. Zod Validation Schemas
 // ==============================================================================
 
+export const GOOGLE_DRIVE_URL_REGEX =
+  /^https:\/\/(drive|docs)\.google\.com\/.+/i;
+
 const dokumenItemSchema = z.object({
   id: z.string().optional(),
   nama_dokumen: z.string().trim().min(1, 'Nama berkas dokumen wajib diisi.'),
@@ -30,6 +33,10 @@ const dokumenItemSchema = z.object({
     .trim()
     .url(
       'URL berkas bukti harus berupa tautan yang valid (contoh: https://drive.google.com/...)'
+    )
+    .regex(
+      GOOGLE_DRIVE_URL_REGEX,
+      'URL berkas bukti harus berupa tautan Google Drive atau Google Docs resmi (diawali https://drive.google.com/ atau https://docs.google.com/)'
     ),
   tipe_dokumen: z.string().optional().nullable()
 });

@@ -478,9 +478,18 @@ export function BatchUploadDropzone({
       }
       try {
         const u = new URL(item.file_url.trim());
-        if (!u.protocol.startsWith('http')) {
+        if (!u.protocol.startsWith('https')) {
           setValidationError(
-            `URL "${item.file_url}" tidak valid. Harus diawali http:// atau https://`
+            `URL "${item.file_url}" tidak valid. Tautan Google Drive harus menggunakan protokol https://`
+          );
+          return;
+        }
+        if (
+          !u.hostname.endsWith('google.com') ||
+          (!u.hostname.startsWith('drive.') && !u.hostname.startsWith('docs.'))
+        ) {
+          setValidationError(
+            `Dokumen "${item.nama_dokumen}" memiliki URL yang tidak valid. Tautan harus berupa link resmi Google Drive (diawali https://drive.google.com/ atau https://docs.google.com/).`
           );
           return;
         }

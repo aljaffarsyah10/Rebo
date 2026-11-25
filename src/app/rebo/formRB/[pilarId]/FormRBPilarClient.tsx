@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -17,7 +17,10 @@ import {
   Equal,
   Sparkles,
   ArrowUp,
-  Cloud
+  Cloud,
+  Filter,
+  ChevronsDown,
+  ChevronsUp
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +61,61 @@ export default function FormRBPilarClient({
     Record<string, BuktiDukung>
   >(initialBuktiMap || {});
 
+  // Fast filter by status (All, Belum Diisi: 0, Menunggu Review: 1, Disetujui: 2, Perlu Revisi: 3)
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | '0' | '1' | '2' | '3'
+  >('all');
+
+  // Question expand/collapse states for high-count pillars (Pilar 3 SDM & Pilar 5 Pengawasan)
+  const [expandedQuestions, setExpandedQuestions] = useState<
+    Record<string, boolean>
+  >({});
+
+  // Stable updater callback to optimize re-renders
+  const handleUpdateBukti = useCallback(
+    (idPertanyaan: string, updatedData: Partial<BuktiDukung>) => {
+      setBuktiDukungMap((prev) => {
+        const prevItem = prev[idPertanyaan] || {};
+        return {
+          ...prev,
+          [idPertanyaan]: {
+            ...prevItem,
+            ...updatedData,
+            id_pertanyaan: idPertanyaan
+          }
+        };
+      });
+    },
+    []
+  );
+
+  const handleExpandAll = useCallback(() => {
+    const all: Record<string, boolean> = {};
+    subpilarList.forEach((sub) => {
+      (sub.pertanyaan || []).forEach((q: any) => {
+        all[q.id_pertanyaan] = true;
+      });
+    });
+    setExpandedQuestions(all);
+  }, [subpilarList]);
+
+  const handleCollapseAll = useCallback(() => {
+    const none: Record<string, boolean> = {};
+    subpilarList.forEach((sub) => {
+      (sub.pertanyaan || []).forEach((q: any) => {
+        none[q.id_pertanyaan] = false;
+      });
+    });
+    setExpandedQuestions(none);
+  }, [subpilarList]);
+
+  const handleToggleExpandQuestion = useCallback((id: string) => {
+    setExpandedQuestions((prev) => ({
+      ...prev,
+      [id]: prev[id] === undefined ? false : !prev[id]
+    }));
+  }, []);
+
   // Set first subpilar as initial active tab
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (initialSubpilar && initialSubpilar.length > 0) {
@@ -77,6 +135,9 @@ export default function FormRBPilarClient({
     }
 
     if (targetIndikator && subpilarList.length > 0) {
+      // Pastikan indikator yang ditargetkan otomatis terbuka (expanded)
+      setExpandedQuestions((prev) => ({ ...prev, [targetIndikator!]: true }));
+
       // Find which subpilar contains this indicator
       const parentSubpilar = subpilarList.find((sub) =>
         (sub.pertanyaan || []).some(
@@ -409,63 +470,127 @@ export default function FormRBPilarClient({
         </div>
       )}
 
-      {/* 4. STATS SUMMARY BADGES */}
+      {/* 4. STATS SUMMARY BADGES (INTERACTIVE FILTERS) */}
       <div className='grid grid-cols-2 gap-3 sm:grid-cols-4'>
-        <div className='flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3.5 shadow-xs dark:border-gray-800 dark:bg-gray-900'>
+        <button
+          type='button'
+          onClick={() =>
+            setStatusFilter((curr) => (curr === '0' ? 'all' : '0'))
+          }
+          className={`flex items-center gap-3 rounded-xl border bg-white p-3.5 text-left shadow-xs transition-all hover:shadow-sm focus:outline-none dark:bg-gray-900 ${
+            statusFilter === '0'
+              ? 'border-gray-700 bg-gray-50/80 ring-2 ring-gray-600 dark:border-gray-300 dark:ring-gray-300'
+              : 'border-gray-200 hover:border-gray-300 dark:border-gray-800'
+          }`}
+          title='Klik untuk filter indikator Belum Diisi'
+        >
           <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'>
             <AlertCircle className='h-5 w-5' />
           </div>
           <div>
-            <div className='text-xs text-gray-500 dark:text-gray-400'>
-              Belum Diisi
+            <div className='flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400'>
+              <span>Belum Diisi</span>
+              {statusFilter === '0' && (
+                <span className='text-3xs font-bold text-blue-600 dark:text-blue-400'>
+                  • Aktif
+                </span>
+              )}
             </div>
             <div className='text-lg font-bold text-gray-900 dark:text-gray-100'>
               {stats.belumDiisi}
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className='flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3.5 shadow-xs dark:border-gray-800 dark:bg-gray-900'>
+        <button
+          type='button'
+          onClick={() =>
+            setStatusFilter((curr) => (curr === '1' ? 'all' : '1'))
+          }
+          className={`flex items-center gap-3 rounded-xl border bg-white p-3.5 text-left shadow-xs transition-all hover:shadow-sm focus:outline-none dark:bg-gray-900 ${
+            statusFilter === '1'
+              ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500 dark:border-amber-400 dark:ring-amber-400'
+              : 'border-gray-200 hover:border-amber-300 dark:border-gray-800'
+          }`}
+          title='Klik untuk filter indikator Menunggu Review'
+        >
           <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400'>
             <Clock className='h-5 w-5' />
           </div>
           <div>
-            <div className='text-xs font-medium text-amber-700 dark:text-amber-400'>
-              Menunggu Review
+            <div className='flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400'>
+              <span>Menunggu Review</span>
+              {statusFilter === '1' && (
+                <span className='text-3xs font-bold text-amber-700 dark:text-amber-300'>
+                  • Aktif
+                </span>
+              )}
             </div>
             <div className='text-lg font-bold text-amber-900 dark:text-amber-200'>
               {stats.menungguReview}
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className='flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3.5 shadow-xs dark:border-gray-800 dark:bg-gray-900'>
+        <button
+          type='button'
+          onClick={() =>
+            setStatusFilter((curr) => (curr === '2' ? 'all' : '2'))
+          }
+          className={`flex items-center gap-3 rounded-xl border bg-white p-3.5 text-left shadow-xs transition-all hover:shadow-sm focus:outline-none dark:bg-gray-900 ${
+            statusFilter === '2'
+              ? 'border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500 dark:border-emerald-400 dark:ring-emerald-400'
+              : 'border-gray-200 hover:border-emerald-300 dark:border-gray-800'
+          }`}
+          title='Klik untuk filter indikator Disetujui'
+        >
           <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400'>
             <CheckCircle2 className='h-5 w-5' />
           </div>
           <div>
-            <div className='text-xs font-medium text-emerald-700 dark:text-emerald-400'>
-              Disetujui
+            <div className='flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400'>
+              <span>Disetujui</span>
+              {statusFilter === '2' && (
+                <span className='text-3xs font-bold text-emerald-700 dark:text-emerald-300'>
+                  • Aktif
+                </span>
+              )}
             </div>
             <div className='text-lg font-bold text-emerald-900 dark:text-emerald-200'>
               {stats.disetujui}
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className='flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3.5 shadow-xs dark:border-gray-800 dark:bg-gray-900'>
+        <button
+          type='button'
+          onClick={() =>
+            setStatusFilter((curr) => (curr === '3' ? 'all' : '3'))
+          }
+          className={`flex items-center gap-3 rounded-xl border bg-white p-3.5 text-left shadow-xs transition-all hover:shadow-sm focus:outline-none dark:bg-gray-900 ${
+            statusFilter === '3'
+              ? 'border-rose-500 bg-rose-50/60 ring-2 ring-rose-500 dark:border-rose-400 dark:ring-rose-400'
+              : 'border-gray-200 hover:border-rose-300 dark:border-gray-800'
+          }`}
+          title='Klik untuk filter indikator Perlu Revisi'
+        >
           <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400'>
             <XCircle className='h-5 w-5' />
           </div>
           <div>
-            <div className='text-xs font-medium text-rose-700 dark:text-rose-400'>
-              Perlu Revisi
+            <div className='flex items-center gap-1.5 text-xs font-medium text-rose-700 dark:text-rose-400'>
+              <span>Perlu Revisi</span>
+              {statusFilter === '3' && (
+                <span className='text-3xs font-bold text-rose-700 dark:text-rose-300'>
+                  • Aktif
+                </span>
+              )}
             </div>
             <div className='text-lg font-bold text-rose-900 dark:text-rose-200'>
               {stats.perluRevisi}
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* 5. SUBPILAR TABS & PERTANYAAN ITEMS */}
@@ -527,33 +652,222 @@ export default function FormRBPilarClient({
                 </div>
               </div>
 
-              {/* Questions List */}
-              {subpilar.pertanyaan && subpilar.pertanyaan.length > 0 ? (
-                <div className='space-y-6'>
-                  {subpilar.pertanyaan.map((pertanyaan: any, index: number) => (
-                    <PertanyaanItem
-                      key={pertanyaan.id_pertanyaan}
-                      pertanyaan={pertanyaan}
-                      index={index}
-                      bukti={buktiDukungMap[pertanyaan.id_pertanyaan]}
-                      buktiDukungMap={buktiDukungMap}
-                      setBuktiDukungMap={setBuktiDukungMap}
-                      canEdit={canEdit}
-                      canVerify={canVerify}
-                      activePeriodeId={activePeriode?.id}
-                      activePeriodeYear={activePeriode?.tahun}
-                      targetPilarId={pilarId}
-                    />
-                  ))}
+              {/* Quick Filter & Expand/Collapse Toolbar for High-Count Pillars */}
+              <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 shadow-xs dark:border-gray-800 dark:bg-gray-900'>
+                <div className='flex flex-wrap items-center gap-1.5'>
+                  <div className='mr-1 flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300'>
+                    <Filter className='h-3.5 w-3.5 text-blue-600 dark:text-blue-400' />
+                    <span>Filter:</span>
+                  </div>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={statusFilter === 'all' ? 'default' : 'outline'}
+                    onClick={() => setStatusFilter('all')}
+                    className={`h-7 rounded-lg px-2.5 text-xs font-semibold ${
+                      statusFilter === 'all'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    Semua ({subpilar.pertanyaan?.length || 0})
+                  </Button>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={statusFilter === '0' ? 'default' : 'outline'}
+                    onClick={() => setStatusFilter('0')}
+                    className={`h-7 rounded-lg px-2.5 text-xs font-semibold ${
+                      statusFilter === '0'
+                        ? 'bg-gray-700 text-white'
+                        : 'text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    Belum Diisi (
+                    {
+                      (subpilar.pertanyaan || []).filter(
+                        (q: any) =>
+                          Number(
+                            buktiDukungMap[q.id_pertanyaan]
+                              ?.status_kelengkapan ?? 0
+                          ) === 0
+                      ).length
+                    }
+                    )
+                  </Button>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={statusFilter === '1' ? 'default' : 'outline'}
+                    onClick={() => setStatusFilter('1')}
+                    className={`h-7 rounded-lg px-2.5 text-xs font-semibold ${
+                      statusFilter === '1'
+                        ? 'bg-amber-600 text-white'
+                        : 'text-amber-700 dark:text-amber-400'
+                    }`}
+                  >
+                    Menunggu Review (
+                    {
+                      (subpilar.pertanyaan || []).filter(
+                        (q: any) =>
+                          Number(
+                            buktiDukungMap[q.id_pertanyaan]
+                              ?.status_kelengkapan ?? 0
+                          ) === 1
+                      ).length
+                    }
+                    )
+                  </Button>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={statusFilter === '2' ? 'default' : 'outline'}
+                    onClick={() => setStatusFilter('2')}
+                    className={`h-7 rounded-lg px-2.5 text-xs font-semibold ${
+                      statusFilter === '2'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-emerald-700 dark:text-emerald-400'
+                    }`}
+                  >
+                    Disetujui (
+                    {
+                      (subpilar.pertanyaan || []).filter(
+                        (q: any) =>
+                          Number(
+                            buktiDukungMap[q.id_pertanyaan]
+                              ?.status_kelengkapan ?? 0
+                          ) === 2
+                      ).length
+                    }
+                    )
+                  </Button>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant={statusFilter === '3' ? 'default' : 'outline'}
+                    onClick={() => setStatusFilter('3')}
+                    className={`h-7 rounded-lg px-2.5 text-xs font-semibold ${
+                      statusFilter === '3'
+                        ? 'bg-rose-600 text-white'
+                        : 'text-rose-700 dark:text-rose-400'
+                    }`}
+                  >
+                    Perlu Revisi (
+                    {
+                      (subpilar.pertanyaan || []).filter(
+                        (q: any) =>
+                          Number(
+                            buktiDukungMap[q.id_pertanyaan]
+                              ?.status_kelengkapan ?? 0
+                          ) === 3
+                      ).length
+                    }
+                    )
+                  </Button>
                 </div>
-              ) : (
-                <div className='rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-900'>
-                  <p className='text-sm text-gray-500 dark:text-gray-400'>
-                    Belum ada indikator pertanyaan yang terdaftar pada subpilar
-                    ini.
-                  </p>
+
+                <div className='flex items-center gap-2'>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant='ghost'
+                    onClick={handleExpandAll}
+                    className='h-7 text-xs font-medium text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400'
+                  >
+                    <ChevronsDown className='mr-1 h-3.5 w-3.5' />
+                    Buka Semua
+                  </Button>
+                  <span className='text-gray-300 dark:text-gray-700'>|</span>
+                  <Button
+                    type='button'
+                    size='sm'
+                    variant='ghost'
+                    onClick={handleCollapseAll}
+                    className='h-7 text-xs font-medium text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400'
+                  >
+                    <ChevronsUp className='mr-1 h-3.5 w-3.5' />
+                    Tutup Semua
+                  </Button>
                 </div>
-              )}
+              </div>
+
+              {/* Questions List (Optimized with Status Filtering & Memoized Items) */}
+              {(() => {
+                const allQuestions = subpilar.pertanyaan || [];
+                const filteredQuestions = allQuestions.filter(
+                  (pertanyaan: any) => {
+                    if (statusFilter === 'all') return true;
+                    const b = buktiDukungMap[pertanyaan.id_pertanyaan];
+                    const statusCode = String(
+                      Number(b?.status_kelengkapan ?? 0)
+                    );
+                    return statusCode === statusFilter;
+                  }
+                );
+
+                if (allQuestions.length === 0) {
+                  return (
+                    <div className='rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-900'>
+                      <p className='text-sm text-gray-500 dark:text-gray-400'>
+                        Belum ada indikator pertanyaan yang terdaftar pada
+                        subpilar ini.
+                      </p>
+                    </div>
+                  );
+                }
+
+                if (filteredQuestions.length === 0) {
+                  return (
+                    <div className='rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center shadow-xs dark:border-gray-700 dark:bg-gray-900'>
+                      <Filter className='mx-auto mb-2 h-7 w-7 text-gray-400' />
+                      <p className='text-sm font-semibold text-gray-800 dark:text-gray-200'>
+                        Tidak ada indikator dengan status ini pada{' '}
+                        {subpilar.nama_subpilar}.
+                      </p>
+                      <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+                        Silakan pilih status lain atau tampilkan semua
+                        indikator.
+                      </p>
+                      <Button
+                        type='button'
+                        size='sm'
+                        variant='outline'
+                        onClick={() => setStatusFilter('all')}
+                        className='mt-4 h-8 text-xs font-semibold'
+                      >
+                        Tampilkan Semua Indikator
+                      </Button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className='space-y-6'>
+                    {filteredQuestions.map((pertanyaan: any, index: number) => (
+                      <PertanyaanItem
+                        key={pertanyaan.id_pertanyaan}
+                        pertanyaan={pertanyaan}
+                        index={index}
+                        bukti={buktiDukungMap[pertanyaan.id_pertanyaan]}
+                        buktiDukungMap={buktiDukungMap}
+                        setBuktiDukungMap={setBuktiDukungMap}
+                        onUpdateBukti={handleUpdateBukti}
+                        canEdit={canEdit}
+                        canVerify={canVerify}
+                        activePeriodeId={activePeriode?.id}
+                        activePeriodeYear={activePeriode?.tahun}
+                        targetPilarId={pilarId}
+                        isExpanded={
+                          expandedQuestions[pertanyaan.id_pertanyaan] !== false
+                        }
+                        onToggleExpand={() =>
+                          handleToggleExpandQuestion(pertanyaan.id_pertanyaan)
+                        }
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
             </TabsContent>
           ))}
         </Tabs>
