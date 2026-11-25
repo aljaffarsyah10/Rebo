@@ -250,8 +250,8 @@
 ### 20. Keamanan Lanjutan, Watermarking & Perlindungan Privasi (Data Shield)
 - [x] **Watermarking Otomatis Berkas Bukti Dukung:**
   - [x] Penambahan watermark otomatis (*"HANYA UNTUK PENILAIAN ZI BPS SITARO - TAHUN [YYYY] • RAHASIA KEDINASAN"*) pada pratinjau dokumen PDF untuk mencegah kebocoran atau penyalahgunaan berkas kedinasan.
-- [ ] **Session Auto-Timeout & Suspicious Login Alert:**
-  - [ ] Penguncian sesi otomatis setelah inaktivitas 30 menit saat diakses dari komputer bersama (*shared PC kantor*), serta notifikasi peringatan jika ada login dari perangkat asing.
+- [x] **Session Auto-Timeout & Suspicious Login Alert:**
+  - [x] Penguncian sesi otomatis setelah inaktivitas 30 menit saat diakses dari komputer bersama (*shared PC kantor*), serta notifikasi peringatan jika ada login dari perangkat asing.
 - [ ] **Enkripsi File Sensitif (Doc Shield):**
   - [ ] Enkripsi berkas dokumen pemeriksaan internal dan laporan keuangan sebelum disimpan ke cloud storage.
 
