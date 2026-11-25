@@ -45,6 +45,7 @@ type Props = {
   canEdit?: boolean;
   canVerify?: boolean;
   activePeriodeId?: string;
+  activePeriodeYear?: number;
   targetPilarId?: string;
   onUpsert?: (
     payload: Partial<BuktiDukung>,
@@ -65,6 +66,7 @@ export default function PertanyaanItem({
   canEdit = true,
   canVerify = false,
   activePeriodeId,
+  activePeriodeYear,
   targetPilarId,
   onUpsert
 }: Props) {
@@ -496,6 +498,7 @@ export default function PertanyaanItem({
         canEdit={canEdit}
         canVerify={canVerify}
         activePeriodeId={activePeriodeId}
+        activePeriodeYear={activePeriodeYear}
         targetPilarId={targetPilarId}
         onUpsert={onUpsert}
       />

@@ -539,6 +539,7 @@ export default function FormRBPilarClient({
                       canEdit={canEdit}
                       canVerify={canVerify}
                       activePeriodeId={activePeriode?.id}
+                      activePeriodeYear={activePeriode?.tahun}
                       targetPilarId={pilarId}
                     />
                   ))}
