@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { PengumumanBanner } from '@/components/rebo/pengumuman-banner';
+import { LeaderboardSummaryWidget } from '@/components/rebo/leaderboard-summary-widget';
 
 export default function Overview() {
   const currentTime = new Date().getHours();
@@ -495,6 +496,9 @@ export default function Overview() {
           </a>
         </div>
       </div>
+
+      {/* Papan Apresiasi & Klasemen 6 Pilar (Leaderboard Hub) */}
+      <LeaderboardSummaryWidget />
 
       {/* Fitur Terbaru REBO (Compact Cards dengan Pembeda Khusus Admin) */}
       <div className='space-y-3.5'>

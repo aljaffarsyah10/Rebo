@@ -19,6 +19,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Leaderboard & Apresiasi',
+    url: '/rebo/leaderboard',
+    icon: 'trophy',
+    isActive: false,
+    shortcut: ['l', 'b'],
+    items: []
+  },
+  {
     title: 'Admin',
     url: '/rebo/admin',
     icon: 'settings',

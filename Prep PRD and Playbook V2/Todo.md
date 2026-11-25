@@ -209,8 +209,8 @@
   - [x] Tombol pintas saat ikon aplikasi REBO ditekan lama di layar beranda ponsel: *"Upload Bukti Cepat"*, *"Cek Status Indikator Saya"*, dan *"Buka Kanban"*.
 
 ### 15. Gamifikasi, Motivasi & Papan Apresiasi Tim Kerja (Recognition Hub)
-- [ ] **Leaderboard Progresivitas & Kepatuhan 6 Pilar:**
-  - [ ] Papan peringkat sehat antar-pilar yang menampilkan pilar tercepat dalam menyelesaikan verifikasi berkas 100% dan pilar dengan tingkat revisi terendah.
+- [x] **Leaderboard Progresivitas & Kepatuhan 6 Pilar:**
+  - [x] Papan peringkat sehat antar-pilar yang menampilkan pilar tercepat dalam menyelesaikan verifikasi berkas 100% dan pilar dengan tingkat revisi terendah.
 - [ ] **Lencana Penghargaan Digital (Achievement Badges):**
   - [ ] Pemberian badge apresiasi otomatis di profil tim kerja (contoh: *"Pilar Terdisiplin"*, *"Zero Revision Champion"*, *"Dokumen Terlengkap"*).
   - [ ] Notifikasi apresiasi dari Kepala BPS Sitaro ke grup tim kerja atas pencapaian milestone penting.
