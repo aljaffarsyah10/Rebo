@@ -228,8 +228,8 @@
   - [x] Pengingat otomatis via WhatsApp (H-30, H-14, H-7) kepada pegawai yang belum mengunggah bukti lapor LHKPN/LHKASN.
 - [x] **Matriks Kepatuhan Disiplin & Kode Etik ASN:**
   - [x] Perekaman bukti dukung nihil penjatuhan hukuman disiplin tingkat sedang/berat (syarat mutlak kelolosan predikat WBK).
-- [ ] **Unit Pengendalian Gratifikasi (UPG) & Rekonsiliasi KPK:**
-  - [ ] Formulir online pelaporan penolakan / penerimaan gratifikasi pegawai yang terhubung langsung dengan alur verifikasi Tim Kepatuhan Internal BPS Sitaro.
+- [x] **Unit Pengendalian Gratifikasi (UPG) & Rekonsiliasi KPK:**
+  - [x] Formulir online pelaporan penolakan / penerimaan gratifikasi pegawai yang terhubung langsung dengan alur verifikasi Tim Kepatuhan Internal BPS Sitaro.
 
 ### 18. Aksesibilitas, Disabilitas & Ramah Difabel pada PST (Pilar 6 Pelayanan Publik)
 - [ ] **Katalog Fasilitas Ramah Kelompok Rentan & Difabel:**

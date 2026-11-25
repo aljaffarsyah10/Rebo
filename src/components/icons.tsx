@@ -42,7 +42,8 @@ import {
   IconTrophy,
   IconAward,
   IconMedal,
-  IconDatabase
+  IconDatabase,
+  IconShieldCheck
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -90,5 +91,6 @@ export const Icons = {
   trophy: IconTrophy,
   award: IconAward,
   medal: IconMedal,
-  database: IconDatabase
+  database: IconDatabase,
+  shield: IconShieldCheck
 };

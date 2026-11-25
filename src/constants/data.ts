@@ -98,6 +98,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/compliance/disiplin',
         icon: 'check',
         shortcut: ['d', 'k']
+      },
+      {
+        title: 'Pengendalian Gratifikasi (UPG)',
+        url: '/rebo/compliance/upg',
+        icon: 'shield',
+        shortcut: ['u', 'p']
       }
     ]
   },
@@ -252,6 +258,14 @@ export const navItems: NavItem[] = [
     url: '/rebo/compliance/disiplin',
     icon: 'check',
     shortcut: ['d', 'k'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Pengendalian Gratifikasi (UPG)',
+    url: '/rebo/compliance/upg',
+    icon: 'shield',
+    shortcut: ['u', 'p'],
     isActive: false,
     items: []
   }
