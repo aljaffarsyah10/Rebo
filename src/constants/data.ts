@@ -116,6 +116,14 @@ export const navItems: NavItem[] = [
     ]
   },
   {
+    title: 'Agenda & Rencana Kerja',
+    url: '/rebo/agenda',
+    icon: 'calendar',
+    isActive: false,
+    shortcut: ['a', 'g'],
+    items: []
+  },
+  {
     title: 'Kanban Tindak Lanjut',
     url: '/rebo/kanban',
     icon: 'kanban',

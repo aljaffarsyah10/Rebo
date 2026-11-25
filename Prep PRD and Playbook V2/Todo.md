@@ -182,9 +182,9 @@
   - [x] Rekomendasi otomatis contoh dokumen bukti dukung berkualitas tinggi dari indikator serupa di tahun-tahun sebelumnya yang telah terbukti disetujui tanpa revisi oleh TPI.
 
 ### 12. Kolaborasi Tim, Jadwal Aksi & Notulen Digital (Collaboration Hub)
-- [ ] **Kalender Jadwal Aksi & Rencana Kerja Tim ZI/RB:**
-  - [ ] Kalender interaktif terpadu untuk memantau jadwal rapat koordinasi pilar, jadwal sosialisasi internal, dan batas waktu pengumpulan bukti.
-  - [ ] Integrasi pengingat otomatis ke WhatsApp peserta rapat H-1 sebelum agenda dimulai.
+- [x] **Kalender Jadwal Aksi & Rencana Kerja Tim ZI/RB:**
+  - [x] Kalender interaktif terpadu untuk memantau jadwal rapat koordinasi pilar, jadwal sosialisasi internal, dan batas waktu pengumpulan bukti.
+  - [x] Integrasi pengingat otomatis ke WhatsApp peserta rapat H-1 sebelum agenda dimulai (termasuk 1-klik Instant WA Dispatcher).
 - [ ] **Notulen Rapat Digital & Auto-Task Assignment:**
   - [ ] Formulir pencatatan notulen rapat berkala tim ZI/RB di dalam aplikasi.
   - [ ] Pembuatan butir kesepakatan rapat yang otomatis berubah menjadi tugas tindak lanjut di papan Kanban dan mengirim rincian tugas ke nomor WA pegawai yang ditugaskan.

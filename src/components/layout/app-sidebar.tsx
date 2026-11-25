@@ -150,6 +150,12 @@ export default function AppSidebar() {
                           <Icon className='size-4 shrink-0' />
                           <span>{item.title}</span>
                         </div>
+                        {item.title === 'Agenda & Rencana Kerja' && (
+                          <span className='relative mr-1 flex h-2 w-2'>
+                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75'></span>
+                            <span className='relative inline-flex h-2 w-2 rounded-full bg-blue-500'></span>
+                          </span>
+                        )}
                         {item.title === 'Kanban Tindak Lanjut' && (
                           <span className='relative mr-1 flex h-2 w-2'>
                             <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75'></span>

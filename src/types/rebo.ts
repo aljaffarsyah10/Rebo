@@ -759,3 +759,14 @@ export interface MatriksRisikoSummary {
   dalam_proses: number;
   monitoring: number;
 }
+
+// ==============================================================================
+// REBO V2: Kalender Jadwal Aksi & Rencana Kerja Tim ZI/RB (Seksi 12)
+// ==============================================================================
+
+export type {
+  AgendaKategori,
+  AgendaStatus,
+  AgendaAksiZI,
+  AgendaKategoriConfig
+} from '@/lib/agenda/agenda-types';
