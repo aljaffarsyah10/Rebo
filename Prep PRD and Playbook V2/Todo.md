@@ -248,8 +248,8 @@
   - [x] Grafik komparasi perkembangan skor LKE antar-periode (2024, 2025, 2026) untuk membuktikan adanya perbaikan berkelanjutan (*continuous improvement*).
 
 ### 20. Keamanan Lanjutan, Watermarking & Perlindungan Privasi (Data Shield)
-- [ ] **Watermarking Otomatis Berkas Bukti Dukung:**
-  - [ ] Penambahan watermark otomatis (*"HANYA UNTUK PENILAIAN ZI BPS SITARO - TAHUN [YYYY]"*) pada pratinjau dokumen PDF untuk mencegah kebocoran atau penyalahgunaan berkas kedinasan.
+- [x] **Watermarking Otomatis Berkas Bukti Dukung:**
+  - [x] Penambahan watermark otomatis (*"HANYA UNTUK PENILAIAN ZI BPS SITARO - TAHUN [YYYY] • RAHASIA KEDINASAN"*) pada pratinjau dokumen PDF untuk mencegah kebocoran atau penyalahgunaan berkas kedinasan.
 - [ ] **Session Auto-Timeout & Suspicious Login Alert:**
   - [ ] Penguncian sesi otomatis setelah inaktivitas 30 menit saat diakses dari komputer bersama (*shared PC kantor*), serta notifikasi peringatan jika ada login dari perangkat asing.
 - [ ] **Enkripsi File Sensitif (Doc Shield):**

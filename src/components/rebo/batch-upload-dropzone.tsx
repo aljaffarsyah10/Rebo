@@ -18,7 +18,9 @@ import {
   FileCheck2,
   Tag,
   Zap,
-  Leaf
+  Leaf,
+  Eye,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +32,7 @@ import {
   type CompressionResult
 } from '@/lib/compression/client-compressor';
 import { FileCompressionBadge } from '@/components/rebo/file-compression-badge';
+import { DocumentPreviewModal } from '@/components/rebo/document-preview-modal';
 
 export const TIPE_DOKUMEN_OPTIONS = [
   'Undangan',
@@ -167,6 +170,11 @@ export function BatchUploadDropzone({
   const [isCompressing, setIsCompressing] = useState(false);
   const [autoCompress, setAutoCompress] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{
+    url: string;
+    title: string;
+    type?: string;
+  } | null>(null);
 
   // Animasi progress bar saat pemrosesan batch
   const runProgressSimulation = (callback: () => void) => {
@@ -533,6 +541,14 @@ export function BatchUploadDropzone({
                 <Sparkles className='mr-1 h-3 w-3 text-indigo-600 dark:text-indigo-400' />
                 Auto-Tagging AI / Rule
               </Badge>
+              <Badge
+                variant='outline'
+                className='text-3xs hidden items-center gap-1 border-emerald-300 bg-emerald-50/80 px-2 py-0.5 font-semibold text-emerald-800 sm:inline-flex dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                title='Pratinjau dokumen dilindungi watermark anti-kebocoran sesuai ISO 27001'
+              >
+                <ShieldCheck className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
+                Watermark DRM (ISO 27001)
+              </Badge>
             </div>
             <p className='text-xs text-gray-500 dark:text-gray-400'>
               Tarik beberapa file sekaligus atau tempel banyak tautan Google
@@ -804,6 +820,14 @@ export function BatchUploadDropzone({
                         Auto-Tagged
                       </Badge>
                     )}
+                    <Badge
+                      variant='outline'
+                      className='py-0.2 text-3xs inline-flex items-center gap-1 border-emerald-200 bg-emerald-50/80 px-1.5 font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                      title='Pratinjau berkas dilindungi watermark kedinasan resmi BPS Sitaro'
+                    >
+                      <ShieldCheck className='h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400' />
+                      Watermarked
+                    </Badge>
                     <span className='text-2xs text-gray-400 dark:text-gray-500'>
                       Sumber:{' '}
                       {item.sourceType === 'file'
@@ -812,16 +836,40 @@ export function BatchUploadDropzone({
                     </span>
                   </div>
 
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    onClick={() => handleRemoveStagedItem(item.id)}
-                    className='h-6 w-6 text-gray-400 hover:text-rose-600 dark:text-gray-500 dark:hover:text-rose-400'
-                    title='Hapus Dokumen'
-                  >
-                    <Trash2 className='h-3.5 w-3.5' />
-                  </Button>
+                  <div className='flex items-center gap-1.5'>
+                    {item.file_url && (
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        onClick={() =>
+                          setPreviewDoc({
+                            url: item.file_url,
+                            title: item.nama_dokumen || 'Dokumen Bukti Dukung',
+                            type: item.tipe_dokumen
+                          })
+                        }
+                        className='h-6 gap-1 px-1.5 text-xs text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950/50'
+                        title='Pratinjau Berkas dengan Watermark Resmi ISO 27001'
+                      >
+                        <Eye className='h-3 w-3' />
+                        <ShieldCheck className='h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400' />
+                        <span className='text-3xs hidden font-semibold sm:inline'>
+                          Pratinjau DRM
+                        </span>
+                      </Button>
+                    )}
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      onClick={() => handleRemoveStagedItem(item.id)}
+                      className='h-6 w-6 text-gray-400 hover:text-rose-600 dark:text-gray-500 dark:hover:text-rose-400'
+                      title='Hapus Dokumen'
+                    >
+                      <Trash2 className='h-3.5 w-3.5' />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Badge Kompresi Gambar jika berkas berhasil dikompresi */}
@@ -937,6 +985,16 @@ export function BatchUploadDropzone({
           </div>
         </div>
       )}
+
+      {/* Modal Pratinjau Dokumen Ber-Watermark */}
+      <DocumentPreviewModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        url={previewDoc?.url}
+        title={previewDoc?.title}
+        fileType={previewDoc?.type}
+        enableWatermark={true}
+      />
     </div>
   );
 }

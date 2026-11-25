@@ -26,8 +26,16 @@ import {
   AlertCircle,
   Loader2,
   FileQuestion,
-  Layers
+  Layers,
+  ShieldCheck,
+  ShieldAlert,
+  Lock
 } from 'lucide-react';
+import {
+  getWatermarkStyle,
+  formatAccessTimestamp,
+  type WatermarkOptions
+} from '@/lib/security/watermark-utils';
 
 export type DocumentCategory =
   | 'image'
@@ -243,6 +251,14 @@ export interface DocumentPreviewModalProps {
   url?: string | null;
   title?: string | null;
   fileType?: string | null;
+  /** Status awal watermark (Default: true) */
+  enableWatermark?: boolean;
+  /** Tahun periode penilaian ZI (Default: tahun saat ini) */
+  watermarkYear?: number | string;
+  /** Izinkan tombol toggle watermark ON/OFF (Default: true) */
+  allowWatermarkToggle?: boolean;
+  /** Identitas pengguna/role yang mengakses (Default: Verifikator ZI) */
+  userRole?: string;
 }
 
 export function DocumentPreviewModal({
@@ -250,12 +266,17 @@ export function DocumentPreviewModal({
   onClose,
   url,
   title,
-  fileType
+  fileType,
+  enableWatermark = true,
+  watermarkYear,
+  allowWatermarkToggle = true,
+  userRole
 }: DocumentPreviewModalProps) {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isWatermarkActive, setIsWatermarkActive] = useState(enableWatermark);
 
   // Reset controls whenever URL changes or modal opens
   useEffect(() => {
@@ -264,13 +285,24 @@ export function DocumentPreviewModal({
       setRotation(0);
       setIsLoading(true);
       setHasError(false);
+      setIsWatermarkActive(enableWatermark);
     }
-  }, [isOpen, url]);
+  }, [isOpen, url, enableWatermark]);
 
   const previewInfo = useMemo(() => {
     if (!url) return null;
     return resolveDocumentPreview(url, title, fileType);
   }, [url, title, fileType]);
+
+  // Siapkan CSS Watermark Style
+  const watermarkStyle = useMemo(() => {
+    if (!isWatermarkActive) return {};
+    return getWatermarkStyle({
+      tahun: watermarkYear,
+      userIdentifier: userRole || 'Akses Verifikator ZI BPS Sitaro',
+      opacity: 0.14
+    });
+  }, [isWatermarkActive, watermarkYear, userRole]);
 
   if (!url || !previewInfo) return null;
 
@@ -351,7 +383,7 @@ export function DocumentPreviewModal({
               {renderCategoryIcon()}
             </div>
             <div className='min-w-0 flex-1'>
-              <div className='flex items-center gap-2'>
+              <div className='flex flex-wrap items-center gap-2'>
                 <DialogTitle className='truncate text-sm font-bold text-slate-900 sm:text-base dark:text-slate-100'>
                   {title || 'Pratinjau Dokumen'}
                 </DialogTitle>
@@ -360,6 +392,17 @@ export function DocumentPreviewModal({
                 >
                   {previewInfo.displayType}
                 </span>
+
+                {/* Badge Pengaman Watermark ISO 27001 */}
+                {isWatermarkActive && (
+                  <span
+                    className='text-3xs hidden items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-800 shadow-2xs md:inline-flex dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    title='Dokumen dilindungi watermark kedinasan resmi anti-kebocoran sesuai ISO 27001'
+                  >
+                    <ShieldCheck className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
+                    Dilindungi Watermark Kedinasan (ISO 27001)
+                  </span>
+                )}
               </div>
               <DialogDescription className='text-2xs mt-0.5 truncate text-slate-500 dark:text-slate-400'>
                 {previewInfo.originalUrl}
@@ -368,6 +411,44 @@ export function DocumentPreviewModal({
           </div>
 
           <div className='flex items-center gap-2 pr-8'>
+            {/* Toggle Watermark ON/OFF */}
+            {allowWatermarkToggle && (
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => setIsWatermarkActive((prev) => !prev)}
+                className={`inline-flex min-h-[36px] touch-manipulation items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors sm:min-h-[30px] ${
+                  isWatermarkActive
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-900/60'
+                    : 'border-slate-300 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+                }`}
+                title={
+                  isWatermarkActive
+                    ? 'Klik untuk nonaktifkan Watermark (Mode Verifikator/Admin)'
+                    : 'Klik untuk aktifkan Watermark Kedinasan'
+                }
+              >
+                {isWatermarkActive ? (
+                  <>
+                    <ShieldCheck className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+                    <span className='hidden sm:inline'>Watermark</span>
+                    <span className='text-3xs py-0.2 rounded bg-emerald-200/80 px-1 font-bold text-emerald-900 dark:bg-emerald-900/80 dark:text-emerald-200'>
+                      ON
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldAlert className='h-3.5 w-3.5 text-slate-400' />
+                    <span className='hidden sm:inline'>Watermark</span>
+                    <span className='text-3xs py-0.2 rounded bg-slate-200 px-1 font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-300'>
+                      OFF
+                    </span>
+                  </>
+                )}
+              </Button>
+            )}
+
             <a
               href={previewInfo.originalUrl}
               target='_blank'
@@ -508,6 +589,25 @@ export function DocumentPreviewModal({
               allowFullScreen
             />
           )}
+
+          {/* Overlay Watermark Kedinasan Semi-Transparan (DRM ISO 27001) */}
+          {isWatermarkActive && !hasError && (
+            <div
+              className='pointer-events-none absolute inset-0 z-20 select-none'
+              style={watermarkStyle}
+              aria-hidden='true'
+            />
+          )}
+
+          {/* Stempel Pengaman DRM di Sudut Bawah */}
+          {isWatermarkActive && !hasError && (
+            <div className='pointer-events-none absolute right-3 bottom-3 z-30 select-none'>
+              <div className='text-3xs flex items-center gap-1.5 rounded-md border border-slate-300/80 bg-white/90 px-2.5 py-1 font-medium text-slate-700 shadow-xs backdrop-blur-xs dark:border-slate-700/80 dark:bg-slate-900/90 dark:text-slate-300'>
+                <Lock className='h-2.5 w-2.5 text-amber-600 dark:text-amber-400' />
+                <span>REBO DRM SHIELD • ISO 27001 BPS SITARO</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer / Fallback Banner Informatif */}
@@ -515,8 +615,8 @@ export function DocumentPreviewModal({
           <div className='flex items-center gap-1.5'>
             <AlertCircle className='h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500' />
             <span>
-              Jika dokumen kosong atau menolak koneksi, buka langsung via tombol
-              tab baru.
+              Pratinjau diberi watermark otomatis kedinasan (ISO 27001) untuk
+              mencegah kebocoran berkas. Jika dokumen kosong, buka via tab baru.
             </span>
           </div>
 
