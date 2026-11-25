@@ -220,6 +220,14 @@ export const navItems: NavItem[] = [
     items: []
   },
   {
+    title: 'Pelacak Anggaran ZI/RB',
+    url: '/rebo/budget',
+    icon: 'billing',
+    isActive: false,
+    shortcut: ['b', 'g'],
+    items: []
+  },
+  {
     title: 'Inovasi Layanan',
     url: '/rebo/inovasi',
     icon: 'sparkles',

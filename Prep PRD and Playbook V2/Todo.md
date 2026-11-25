@@ -256,8 +256,8 @@
   - [x] Enkripsi berkas dokumen pemeriksaan internal dan laporan keuangan sebelum disimpan ke cloud storage.
 
 ### 21. Manajemen Anggaran & Rencana Aksi ZI (Resource & Efficiency Tracking)
-- [ ] **Pelacak Anggaran & Realisasi Kegiatan ZI/RB:**
-  - [ ] Monitoring penyerapan anggaran pendukung reformasi birokrasi (sosialisasi internal, survei kepuasan, pengadaan sarana PST, pakaian tim kerja).
+- [x] **Pelacak Anggaran & Realisasi Kegiatan ZI/RB:**
+  - [x] Monitoring penyerapan anggaran pendukung reformasi birokrasi (sosialisasi internal, survei kepuasan, pengadaan sarana PST, pakaian tim kerja).
 - [ ] **Indikator Efisiensi & Dampak Paperless (Paperless Metric):**
   - [ ] Metrik penghitungan estimasi penghematan lembar kertas dan biaya cetak (*paperless cost savings*) berkat digitalisasi penuh dokumen bukti dukung pada aplikasi REBO V2.
 
