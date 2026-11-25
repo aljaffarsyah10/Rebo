@@ -528,6 +528,13 @@ export async function submitBuktiAction(
   }
 }
 
+/** Alias untuk submitBuktiAction agar kompatibel dengan penamaan saveBuktiAction */
+export async function saveBuktiAction(
+  input: SubmitBuktiInput
+): Promise<SubmitBuktiResult> {
+  return submitBuktiAction(input);
+}
+
 // ==============================================================================
 // 3. Server Action: Hapus Dokumen Bukti Spesifik
 // ==============================================================================
