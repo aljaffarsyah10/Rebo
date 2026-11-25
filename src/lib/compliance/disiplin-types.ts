@@ -93,10 +93,10 @@ export const DEFAULT_MOCK_DISIPLIN_SUMMARY: DisiplinASNSummary = {
   persentase_kepatuhan_presensi: 99.6,
   nomor_surat_keterangan_nihil: 'B-089/71090/KP.320/01/2026',
   tanggal_surat_keterangan: '2026-01-15',
-  pejabat_penandatangan: 'Ir. Pimpinan BPS Sitaro, M.Si',
+  pejabat_penandatangan: 'Inke Margareth Tambeo, SST., M.Ec.Dev.',
   jabatan_penandatangan:
     'Kepala Badan Pusat Statistik Kabupaten Kepulauan Sitaro',
-  nip_penandatangan: '197501012000031001',
+  nip_penandatangan: '198403232007012003',
   file_sk_nihil_url:
     'https://sitarokab.bps.go.id/docs/sk-nihil-hukdis-2026.pdf',
   catatan_audit:

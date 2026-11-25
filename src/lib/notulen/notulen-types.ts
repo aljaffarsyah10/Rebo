@@ -105,7 +105,7 @@ export const STATUS_KESEPAKATAN_CONFIG: Record<
  */
 export const DAFTAR_PEGAWAI_SITARO = [
   {
-    nama: 'Ir. Stella Mandagi',
+    nama: 'Inke Margareth Tambeo, SST., M.Ec.Dev.',
     jabatan: 'Kepala BPS Kabupaten Kepulauan Sitaro',
     phone: '082190010000',
     pilarDefault: 'SEMUA'
@@ -180,10 +180,10 @@ export const DEFAULT_NOTULEN_LIST: NotulenRapat[] = [
     agenda_id: 'agenda-2026-01-kickoff',
     pilar_id: 'SEMUA',
     pimpinan_rapat:
-      'Ir. Stella Mandagi (Kepala BPS Kabupaten Kepulauan Sitaro)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
     notulis: 'Gloria Pangemanan, S.Tr.Stat.',
     peserta_hadir: [
-      'Ir. Stella Mandagi (Kepala BPS)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS)',
       'Marselus Tatengkeng, S.E. (Pilar 1)',
       'Steven Luntungan, S.Si. (Pilar 2)',
       'Novita Derek, S.E. (Pilar 3)',
@@ -193,7 +193,7 @@ export const DEFAULT_NOTULEN_LIST: NotulenRapat[] = [
       'Gloria Pangemanan, S.Tr.Stat. (Notulis)',
       'Hendra Manopo (Subbagian Umum)'
     ],
-    ringkasan_pembahasan: `Rapat dibuka pukul 09.00 WITA oleh Kepala BPS Kabupaten Kepulauan Sitaro, Ir. Stella Mandagi. Dalam arahannya, beliau menegaskan komitmen seluruh jajaran untuk meraih predikat Wilayah Bebas dari Korupsi (WBK) pada evaluasi tahun 2026.
+    ringkasan_pembahasan: `Rapat dibuka pukul 09.00 WITA oleh Kepala BPS Kabupaten Kepulauan Sitaro, Inke Margareth Tambeo, SST., M.Ec.Dev. Dalam arahannya, beliau menegaskan komitmen seluruh jajaran untuk meraih predikat Wilayah Bebas dari Korupsi (WBK) pada evaluasi tahun 2026.
 
 Poin-poin utama pembahasan:
 1. Evaluasi catatan penilaian TPI tahun sebelumnya mengenai kelengkapan dokumen pendukung dan ketepatan waktu pengumpulan eviden.
@@ -262,10 +262,10 @@ Poin-poin utama pembahasan:
     agenda_id: 'agenda-2026-03-sosialisasi-etik-wbs',
     pilar_id: '5',
     pimpinan_rapat:
-      'Ir. Stella Mandagi (Kepala BPS Kabupaten Kepulauan Sitaro)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
     notulis: 'Feiby Salindeho, S.Stat.',
     peserta_hadir: [
-      'Ir. Stella Mandagi (Kepala BPS)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS)',
       'Feiby Salindeho, S.Stat. (Koordinator Pilar 5)',
       'Marselus Tatengkeng, S.E.',
       'Steven Luntungan, S.Si.',
@@ -325,10 +325,10 @@ Poin penting pembahasan:
     agenda_id: 'agenda-2026-04-monev-tw1',
     pilar_id: 'SEMUA',
     pimpinan_rapat:
-      'Ir. Stella Mandagi (Kepala BPS Kabupaten Kepulauan Sitaro)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
     notulis: 'Gloria Pangemanan, S.Tr.Stat.',
     peserta_hadir: [
-      'Ir. Stella Mandagi (Kepala BPS)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS)',
       'Marselus Tatengkeng, S.E. (Pilar 1)',
       'Steven Luntungan, S.Si. (Pilar 2)',
       'Novita Derek, S.E. (Pilar 3)',
@@ -388,10 +388,10 @@ Hasil evaluasi per area:
     agenda_id: undefined,
     pilar_id: 'SEMUA',
     pimpinan_rapat:
-      'Ir. Stella Mandagi (Kepala BPS Kabupaten Kepulauan Sitaro)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
     notulis: 'Gloria Pangemanan, S.Tr.Stat.',
     peserta_hadir: [
-      'Ir. Stella Mandagi (Kepala BPS)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS)',
       'Marselus Tatengkeng, S.E. (Pilar 1)',
       'Steven Luntungan, S.Si. (Pilar 2)',
       'Novita Derek, S.E. (Pilar 3)',

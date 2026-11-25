@@ -626,7 +626,7 @@ export default function SatkerManagerClient({
                           onChange={(e) =>
                             handleFieldChange('nip_kepala', e.target.value)
                           }
-                          placeholder='197501012000031001'
+                          placeholder='198403232007012003'
                           className='h-9 text-sm'
                         />
                       </div>

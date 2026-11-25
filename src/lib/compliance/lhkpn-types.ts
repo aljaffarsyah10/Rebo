@@ -198,8 +198,8 @@ export const DEFAULT_MOCK_LHKPN_REPORTS: LHKPNReport[] = [
   {
     id: 'lhkpn-01',
     user_id: 'user-01',
-    nama_pegawai: 'Ir. Pimpinan BPS Sitaro, M.Si',
-    nip: '197501012000031001',
+    nama_pegawai: 'Inke Margareth Tambeo, SST., M.Ec.Dev.',
+    nip: '198403232007012003',
     jabatan: 'Kepala BPS Kabupaten Kepulauan Sitaro',
     tipe_laporan: 'LHKPN',
     tahun_pelaporan: 2026,

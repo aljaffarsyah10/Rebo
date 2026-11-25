@@ -1364,9 +1364,9 @@ export default function LHKPNComplianceClient({
                 </p>
                 <div>
                   <p className='font-bold underline'>
-                    Ir. Pimpinan BPS Sitaro, M.Si
+                    Inke Margareth Tambeo, SST., M.Ec.Dev.
                   </p>
-                  <p className='text-slate-600'>NIP. 197501012000031001</p>
+                  <p className='text-slate-600'>NIP. 198403232007012003</p>
                 </div>
               </div>
 

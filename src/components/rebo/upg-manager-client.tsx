@@ -1585,9 +1585,9 @@ export default function UPGManagerClient({
                 <div className='font-bold'>Kepala Badan Pusat Statistik</div>
                 <div className='font-bold'>Kabupaten Kepulauan Sitaro</div>
                 <div className='mt-16 font-bold underline'>
-                  Ir. Pimpinan BPS Sitaro, M.Si
+                  Inke Margareth Tambeo, SST., M.Ec.Dev.
                 </div>
-                <div className='text-[9.5px]'>NIP. 197501012000031001</div>
+                <div className='text-[9.5px]'>NIP. 198403232007012003</div>
               </div>
             </div>
           </div>

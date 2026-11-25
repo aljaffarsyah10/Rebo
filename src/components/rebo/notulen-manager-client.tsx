@@ -123,7 +123,7 @@ export default function NotulenManagerClient({
     tempat: 'Aula Sasahara BPS Sitaro (Lt. 2)',
     pilar_id: 'SEMUA',
     pimpinan_rapat:
-      'Ir. Stella Mandagi (Kepala BPS Kabupaten Kepulauan Sitaro)',
+      'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
     notulis: 'Gloria Pangemanan, S.Tr.Stat.',
     peserta_hadir: [],
     ringkasan_pembahasan: '',
@@ -238,10 +238,10 @@ export default function NotulenManagerClient({
       agenda_id: defaults?.agenda_id || undefined,
       pilar_id: defaults?.pilar_id || 'SEMUA',
       pimpinan_rapat:
-        'Ir. Stella Mandagi (Kepala BPS Kabupaten Kepulauan Sitaro)',
+        'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
       notulis: 'Gloria Pangemanan, S.Tr.Stat.',
       peserta_hadir: [
-        'Ir. Stella Mandagi',
+        'Inke Margareth Tambeo, SST., M.Ec.Dev.',
         'Marselus Tatengkeng, S.E.',
         'Steven Luntungan, S.Si.',
         'Novita Derek, S.E.',

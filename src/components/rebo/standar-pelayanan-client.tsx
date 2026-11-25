@@ -499,7 +499,7 @@ export default function StandarPelayananClient({
                   <div className='relative my-3 flex h-24 items-center justify-center'>
                     {/* Simulated Digital Signature */}
                     <div className='z-10 font-serif text-2xl font-bold tracking-widest text-slate-800 italic opacity-85 select-none dark:text-slate-200'>
-                      Stella Mandagi
+                      Inke M. Tambeo
                     </div>
 
                     {/* Simulated BPS Stamp */}
@@ -1523,7 +1523,7 @@ export default function StandarPelayananClient({
                       KABUPATEN KEPULAUAN SITARO
                     </p>
                     <div className='my-6 font-serif text-xl font-bold text-slate-800 italic'>
-                      Stella Mandagi
+                      Inke M. Tambeo
                     </div>
                     <p className='font-serif font-bold underline'>
                       {maklumat.pejabat_penandatangan}
@@ -1828,7 +1828,7 @@ export default function StandarPelayananClient({
                     KABUPATEN KEPULAUAN SITARO
                   </p>
                   <div className='my-6 font-serif text-xl font-bold text-slate-800 italic'>
-                    Stella Mandagi
+                    Inke M. Tambeo
                   </div>
                   <p className='font-serif font-bold underline'>
                     {maklumat.pejabat_penandatangan}

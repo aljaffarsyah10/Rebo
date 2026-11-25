@@ -205,7 +205,7 @@ export async function saveNotulenAction(
       pilar_id: data.pilar_id || 'SEMUA',
       pimpinan_rapat:
         data.pimpinan_rapat ||
-        'Ir. Stella Mandagi (Kepala BPS Kabupaten Kepulauan Sitaro)',
+        'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
       notulis: data.notulis || 'Gloria Pangemanan, S.Tr.Stat.',
       peserta_hadir: data.peserta_hadir || [],
       ringkasan_pembahasan: data.ringkasan_pembahasan || '',

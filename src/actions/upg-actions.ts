@@ -237,8 +237,8 @@ export async function generateRekonsiliasiKPKAction(
       summary,
       items: globalLaporanList,
       pejabat_penandatangan: {
-        nama: 'Ir. Pimpinan BPS Sitaro, M.Si',
-        nip: '197501012000031001',
+        nama: 'Inke Margareth Tambeo, SST., M.Ec.Dev.',
+        nip: '198403232007012003',
         jabatan: 'Kepala Badan Pusat Statistik Kabupaten Kepulauan Sitaro'
       }
     };
