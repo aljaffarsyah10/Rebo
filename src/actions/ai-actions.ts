@@ -11,6 +11,11 @@ import {
   type DocumentMetadataInput,
   type DocumentMetadataResult
 } from '@/lib/ai/metadata-extractor';
+import {
+  getSmartSuggestion,
+  type SmartSuggestionParams,
+  type SmartSuggestionMatchResult
+} from '@/lib/ai/smart-suggestions';
 
 /**
  * Server Action: Cek kelengkapan & konsistensi narasi bukti dukung LKE
@@ -198,6 +203,48 @@ export async function extractDocumentMetadataAction(
     return {
       success: false,
       error: err?.message || 'Gagal mengekstrak metadata dokumen.'
+    };
+  }
+}
+
+/**
+ * Server Action: Dapatkan rekomendasi cerdas bukti dukung serupa (Zero Revision TPI BPS RI)
+ * Mencocokkan indikator LKE dengan bank referensi praktik terbaik 6 Pilar ZI
+ */
+export async function getSmartSuggestionAction(params: {
+  id_pertanyaan: string;
+  pilar_id?: string;
+  judul_pertanyaan: string;
+  penjelasan?: string;
+}): Promise<{
+  success: boolean;
+  data?: SmartSuggestionMatchResult;
+  error?: string;
+}> {
+  try {
+    if (!params || !params.judul_pertanyaan) {
+      return {
+        success: false,
+        error:
+          'Judul pertanyaan wajib disertakan untuk pencocokan bukti dukung.'
+      };
+    }
+
+    const matchResult = getSmartSuggestion({
+      id_pertanyaan: params.id_pertanyaan,
+      pilar_id: params.pilar_id,
+      judul_pertanyaan: params.judul_pertanyaan,
+      penjelasan: params.penjelasan
+    });
+
+    return {
+      success: true,
+      data: matchResult
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || 'Gagal mengambil rekomendasi bukti dukung serupa.'
     };
   }
 }

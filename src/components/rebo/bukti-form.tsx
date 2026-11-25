@@ -35,6 +35,7 @@ import { DocumentPreviewModal } from '@/components/rebo/document-preview-modal';
 import { BatchUploadDropzone } from '@/components/rebo/batch-upload-dropzone';
 import { AICompletenessChecker } from '@/components/rebo/ai-completeness-checker';
 import { AIMetadataBadge } from '@/components/rebo/ai-metadata-badge';
+import { SmartSuggestionCard } from '@/components/rebo/smart-suggestion-card';
 import type { Pertanyaan, BuktiDukung, DokumenBukti } from '@/types/rebo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -785,6 +786,24 @@ export default function BuktiForm({
           </div>
         </div>
       )}
+
+      {/* SMART SUGGESTION BUKTI DUKUNG SERUPA (TPI BPS RI BEST PRACTICE) */}
+      <SmartSuggestionCard
+        pertanyaan={{
+          id_pertanyaan: pertanyaan.id_pertanyaan,
+          nomor_pertanyaan: pertanyaan.nomor_pertanyaan,
+          uraian_pertanyaan: pertanyaan.uraian_pertanyaan,
+          deskripsi_pertanyaan: pertanyaan.deskripsi_pertanyaan
+        }}
+        pilarId={
+          targetPilarId ||
+          (pertanyaan as any).pilar_id ||
+          (pertanyaan as any).id_pilar
+        }
+        catatan={catatanOperator}
+        onApplyNarration={(narration) => setCatatanOperator(narration)}
+        disabled={!canEdit}
+      />
 
       {/* 1. SECTION: PENILAIAN MANDIRI (SELF-ASSESSMENT) */}
       {pertanyaan.kategoriPenilaian &&

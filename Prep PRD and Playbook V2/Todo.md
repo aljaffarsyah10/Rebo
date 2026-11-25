@@ -178,8 +178,8 @@
 - [x] **AI Metadata Extractor Dokumen Bukti:**
   - [x] Ekstraksi otomatis nomor surat, tanggal kegiatan, dan penandatangan dari berkas PDF/foto bukti dukung.
   - [x] Validasi otomatis untuk memastikan tanggal berkas berada dalam rentang tahun periode evaluasi yang aktif (mencegah salah unggah dokumen kadaluarsa).
-- [ ] **Smart Suggestion Bukti Dukung Serupa:**
-  - [ ] Rekomendasi otomatis contoh dokumen bukti dukung berkualitas tinggi dari indikator serupa di tahun-tahun sebelumnya yang telah terbukti disetujui tanpa revisi oleh TPI.
+- [x] **Smart Suggestion Bukti Dukung Serupa:**
+  - [x] Rekomendasi otomatis contoh dokumen bukti dukung berkualitas tinggi dari indikator serupa di tahun-tahun sebelumnya yang telah terbukti disetujui tanpa revisi oleh TPI.
 
 ### 12. Kolaborasi Tim, Jadwal Aksi & Notulen Digital (Collaboration Hub)
 - [ ] **Kalender Jadwal Aksi & Rencana Kerja Tim ZI/RB:**
