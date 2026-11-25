@@ -188,8 +188,8 @@
 - [x] **Notulen Rapat Digital & Auto-Task Assignment:**
   - [x] Formulir pencatatan notulen rapat berkala tim ZI/RB di dalam aplikasi.
   - [x] Pembuatan butir kesepakatan rapat yang otomatis berubah menjadi tugas tindak lanjut di papan Kanban dan mengirim rincian tugas ke nomor WA pegawai yang ditugaskan.
-- [ ] **Broadcast Pengumuman Internal Satu-Arah:**
-  - [ ] Fitur kirim pengumuman penting / arahan pimpinan BPS Sitaro secara serentak ke seluruh koordinator pilar via WhatsApp bot dan banner dinamis pada Beranda REBO.
+- [x] **Broadcast Pengumuman Internal Satu-Arah:**
+  - [x] Fitur kirim pengumuman penting / arahan pimpinan BPS Sitaro secara serentak ke seluruh koordinator pilar via WhatsApp bot dan banner dinamis pada Beranda REBO.
 
 ### 13. Manajemen Pelayanan Publik, Suara Konsumen & Pengaduan (Voice of Customer)
 - [ ] **Generator QR Code Meja Layanan PST (Pelayanan Statistik Terpadu):**

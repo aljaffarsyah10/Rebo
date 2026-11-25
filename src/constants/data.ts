@@ -54,6 +54,12 @@ export const navItems: NavItem[] = [
         url: '/rebo/admin/kontak',
         icon: 'billing',
         shortcut: ['w', 'a']
+      },
+      {
+        title: 'Broadcast Pengumuman',
+        url: '/rebo/admin/broadcast',
+        icon: 'whatsapp',
+        shortcut: ['b', 'c']
       }
     ]
   },

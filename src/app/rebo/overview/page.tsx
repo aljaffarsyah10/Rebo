@@ -24,6 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
+import { PengumumanBanner } from '@/components/rebo/pengumuman-banner';
 
 export default function Overview() {
   const currentTime = new Date().getHours();
@@ -122,6 +123,9 @@ export default function Overview() {
 
   return (
     <div className='mx-auto max-w-7xl space-y-6 p-4 md:p-6'>
+      {/* Banner Pengumuman & Arahan Pimpinan Dinamis */}
+      <PengumumanBanner />
+
       {/* Hero Section Asli yang Elegan & Soft dengan Live Ambient Orbs */}
       <div className='dark:via-slate-850/80 relative overflow-hidden rounded-3xl border border-blue-200/60 bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-purple-50/50 p-6 shadow-sm md:p-8 dark:border-slate-800 dark:from-slate-900/90 dark:to-slate-800/70'>
         {/* Live Ambient Lighting Orbs */}
