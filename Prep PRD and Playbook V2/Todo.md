@@ -334,6 +334,61 @@
   - [ ] *Temuan Pengujian:* Tabel indikator pertanyaan dengan opsi skor di Form RB berisiko menyebabkan geser layar (*horizontal scroll shift*) pada smartphone layar kecil (< 375px).
   - [ ] *Rencana Perbaikan:* Pasang kelas `w-full max-w-full overflow-x-auto` dengan pembungkus card responsif agar hanya tabel yang bergulir dan layout navigasi tetap terkunci rapi.
 
+### 8. Arsitektur Otomasi Penuh Berbasis Redis (Redis Message Queue, Background Worker & Automated Notification Engine)
+*Tujuan: Menghilangkan ketergantungan pada pembukaan manual `wa.me` peramban. Seluruh notifikasi (Uji Coba WA, Revisi Berkas, Persetujuan Bukti, Peringatan Tenggat Waktu, Notulen, dan Pesan Sistem Lainnya) dialihkan melalui antrean pesan Redis dan dieksekusi secara otomatis oleh background worker di latar belakang.*
+
+- [ ] **Pondasi Klien Redis Terpadu (Dual-Mode Serverless & Long-Running Worker):**
+  - [ ] *Setup Konfigurasi Environment:* Daftarkan variabel `REDIS_URL` (koneksi TCP ioredis standar) dan `UPSTASH_REDIS_REST_URL` serta `UPSTASH_REDIS_REST_TOKEN` (koneksi HTTP REST Upstash untuk Next.js serverless Vercel) pada `env.example.txt` dan `.env.local`.
+  - [ ] *Modul Singleton Redis (`src/lib/redis/client.ts`):* Bangun koneksi Redis terisolasi yang adaptif. Gunakan HTTP REST client saat berjalan di Vercel Serverless Functions (menghindari kehabisan *connection pool*), dan TCP ioredis saat dijalankan oleh Background Worker di VM/Render/lokal.
+  - [ ] *Fungsi Cek Kesehatan Redis (`getRedisHealthStatus`):* Buat utilitas pengecekan ping, latensi (ms), dan status aktif (*Connected / Disconnected*) untuk validasi koneksi secara real-time.
+
+- [ ] **Desain Skema & Producer Antrean Pesan (`src/lib/redis/queue.ts` & `types.ts`):**
+  - [ ] *Struktur Payload Antrean:* Definisikan tipe payload terstandar: `id` (UUID), `type` (`TEST_WA`, `REVISI_BUKTI`, `APPROVAL_BUKTI`, `DEADLINE_ALERT`, `AGENDA_REMINDER`, `WBS_STATUS`), `targetPhone` (format internasional `628xxx`), `message` (teks terformat), `metadata` (userId, senderName, pilarId, dll.), `status` (`pending`, `processing`, `delivered`, `failed`), `attempts` (default 0, max 5), dan `createdAt`.
+  - [ ] *Manajemen Key & Data Structure Redis:*
+    - `wa_queue:pending`: Redis List (`LPUSH` / `RPOP`) untuk antrean pesan yang siap dieksekusi.
+    - `wa_queue:delayed`: Redis Sorted Set (`ZADD` berdasarkan unix timestamp) untuk penjadwalan pesan bertenggat waktu (Early Warning).
+    - `wa_queue:dlq`: Dead Letter Queue untuk pesan yang gagal setelah 5x percobaan ulang.
+    - `wa_job:{id}`: Redis Hash dengan TTL 24 jam untuk pelacakan status pekerjaan (*job tracking*) secara instan oleh UI.
+  - [ ] *Producer Non-Blocking (`enqueueWhatsAppNotification`):* Fungsi Server Action / library untuk memasukkan pesan ke antrean dalam hitungan milidetik (< 20ms) tanpa memblokir alur utama pengguna.
+
+- [ ] **Background Worker & Auto-Dispatcher (`services/wa-gateway/worker.js` & Route Handler):**
+  - [ ] *Consumer Loop Otomatis:* Bangun script worker otomatis yang mendengarkan `wa_queue:pending` dan langsung meneruskan pengiriman pesan ke WhatsApp Gateway (Baileys socket) tanpa intervensi peramban manusia.
+  - [ ] *Mekanisme Auto-Retry dengan Exponential Backoff:* Jika WhatsApp Gateway sedang cold start (17,6 detik) atau sleep pada Render, pesan secara otomatis dijadwalkan ulang (Retry 1: 5s, Retry 2: 15s, Retry 3: 30s) sehingga pesan tidak pernah hilang dan tidak perlu fallback manual ke `wa.me`.
+  - [ ] *Throttling & Pacing Anti-Spam:* Pasang jeda waktu aman (2-4 detik antar pesan) saat memproses antrean massal agar nomor bot WhatsApp aman dari deteksi spam Meta.
+  - [ ] *Fallback Serverless Processor (`/api/queue/process`):* Sediakan Route Handler terproteksi (`CRON_SECRET`) yang dapat dipicu oleh Vercel Cron atau Supabase Webhook untuk menguras antrean jika worker standalone sedang idle.
+
+- [ ] **Otomasi Total Pengujian Notifikasi WhatsApp (Eliminasi Manual `wa.me`):**
+  - [ ] *Refactor `sendTestNotificationToSelfAction` (`src/actions/profile-actions.ts`):*
+    - Hapus keharusan membuka jendela popup peramban `window.open(wa.me)`.
+    - Daftarkan pengujian notifikasi sebagai job `TEST_WA` langsung ke Redis Queue.
+    - Kembalikan respons instan berstatus `queued` beserta `jobId`.
+  - [ ] *Refactor `sendTestNotificationAction` Admin Kontak (`src/actions/kontak-actions.ts`):*
+    - Alihkan pengujian nomor kontak dinas dan koordinator pilar langsung ke Redis Queue otomatis tanpa dialog manual.
+  - [ ] *Penyempurnaan UI Pengguna (`user-profile-client.tsx` & `KontakManagerClient.tsx`):*
+    - Ganti tombol/badge "Kirim Mandiri (wa.me)" dengan visual status stepper cerdas: `Mengantre di Redis` ➔ `Sedang Diproses Worker` ➔ `Berhasil Terkirim ke WhatsApp`.
+    - Sediakan polling status job singkat (interval 2 detik) yang mengabarkan pengguna begitu pesan mendarat di WhatsApp ponsel mereka.
+
+- [ ] **Migrasi Seluruh Notifikasi Sistem ke Antrean Redis:**
+  - [ ] *Notifikasi Verifikasi & Revisi Bukti Dukung (`src/actions/verifikasi-actions.ts`):*
+    - Saat verifikator menyetujui atau meminta perbaikan berkas, panggil `enqueueWhatsAppNotification` di latar belakang. Waktu tunggu submit verifikasi di browser berkurang drastis dari 3-10 detik menjadi < 150 ms.
+  - [ ] *Notifikasi Early Warning Deadline (`src/actions/deadline-actions.ts`):*
+    - Jadwalkan pengingat batas waktu H-30, H-14, H-7, H-3, H-1 ke dalam Redis Sorted Set (`wa_queue:delayed`) untuk dieksekusi otomatis tepat pada tanggal dan jam kerja yang ditentukan.
+  - [ ] *Notifikasi Undangan Rapat & Notulen (`src/actions/agenda-actions.ts` & `notulen-actions.ts`):*
+    - Integrasikan pengiriman tautan resume dan notula rapat ke antrean Redis tanpa membebani browser sekretaris rapat.
+  - [ ] *Notifikasi Laporan Whistleblowing System (`src/actions/wbs-actions.ts`):*
+    - Teruskan pembaruan status laporan anonim ke nomor kontak pelapor melalui Redis Queue terenkripsi.
+
+- [ ] **Dasbor Pemantauan Antrean & Status Redis Admin (`/rebo/admin/antrean`):**
+  - [ ] *Metrik Real-Time Redis:* Tampilkan widget status koneksi Redis (🟢 Connected / 🔴 Disconnected, Latensi Ping ms, Memori Terpakai).
+  - [ ] *Statistik Antrean:* Tampilkan hitungan dinamis pesan `Menunggu (Pending)`, `Diproses (Processing)`, `Terkirim (Completed)`, dan `Gagal (DLQ)`.
+  - [ ] *Tabel Riwayat & Detail Job:* Sediakan tabel pemantau 20 aktivitas terakhir dengan filter tipe pesan dan status kirim.
+  - [ ] *Tindakan Perbaikan 1-Klik:* Tombol "Kirim Ulang Antrean Gagal" (*Retry DLQ*) dan "Bersihkan Antrean Kedaluwarsa" (*Purge Completed*).
+
+- [ ] **Pemanfaatan Ekstra Redis untuk Peningkatan Performa Aplikasi REBO:**
+  - [ ] *Cache Agregasi Skor 6 Pilar & Monitoring:* Simpan kalkulasi skor total LKE, progres per pilar, dan status WBK ke dalam Redis Cache (TTL 5-10 menit) dengan mekanisme *smart invalidation* saat ada aksi verifikasi baru, memangkas 80% beban kueri ke Supabase.
+  - [ ] *Sliding-Window Rate Limiting:* Batasi pengiriman formulir dan uji coba WA (maksimal 5 kali per menit per user) menggunakan Redis atomic increment untuk mencegah serangan DoS atau penyalahgunaan kuota WhatsApp.
+
+
 
 
 
