@@ -5,7 +5,11 @@ const isAdminRoute = createRouteMatcher(['/rebo/admin(.*)']);
 const isProtectedRoute = createRouteMatcher(['/rebo(.*)']);
 const isAuthRoute = createRouteMatcher(['/auth/sign-in(.*)']);
 const isApiRoute = createRouteMatcher(['/(api|trpc)(.*)']);
-const isPublicApiRoute = createRouteMatcher(['/api/webhooks(.*)']);
+const isPublicApiRoute = createRouteMatcher([
+  '/api/webhooks(.*)',
+  '/api/cron(.*)',
+  '/api/queue/process(.*)'
+]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
@@ -39,9 +43,6 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Protect all routes starting with `/rebo` (require login)
   if (isProtectedRoute(req) && !userId) {
-    if (req.headers.get('x-screenshot-key') === 'local-docs-capture') {
-      return NextResponse.next();
-    }
     const url = new URL('/auth/sign-in', req.url);
     return NextResponse.redirect(url);
   }

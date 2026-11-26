@@ -300,24 +300,6 @@ export const navItems: NavItem[] = [
         url: '/rebo/admin/doc-shield',
         icon: 'shield',
         shortcut: ['d', 's']
-      },
-      {
-        title: 'Kepatuhan LHKPN/LHKASN',
-        url: '/rebo/compliance/lhkpn',
-        icon: 'award',
-        shortcut: ['l', 'h']
-      },
-      {
-        title: 'Disiplin & Kode Etik',
-        url: '/rebo/compliance/disiplin',
-        icon: 'check',
-        shortcut: ['d', 'k']
-      },
-      {
-        title: 'Pengendalian Gratifikasi (UPG)',
-        url: '/rebo/compliance/upg',
-        icon: 'shield',
-        shortcut: ['u', 'p']
       }
     ]
   },
