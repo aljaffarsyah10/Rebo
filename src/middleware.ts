@@ -3,11 +3,18 @@ import { NextResponse } from 'next/server';
 
 const isAdminRoute = createRouteMatcher(['/rebo/admin(.*)']);
 const isProtectedRoute = createRouteMatcher(['/rebo(.*)']);
+const isAuthRoute = createRouteMatcher(['/auth/sign-in(.*)']);
 const isApiRoute = createRouteMatcher(['/(api|trpc)(.*)']);
 const isPublicApiRoute = createRouteMatcher(['/api/webhooks(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
+
+  // If already authenticated and visiting sign-in page, redirect seamlessly to overview
+  if (isAuthRoute(req) && userId) {
+    const url = new URL('/rebo/overview', req.url);
+    return NextResponse.redirect(url);
+  }
 
   // Protect API routes: if request to API has no userId, return 401 Unauthorized
   if (isApiRoute(req) && !isPublicApiRoute(req)) {
@@ -16,7 +23,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
-  // Protect admin routes: must be logged in and have admin role
+  // Protect admin routes: must be logged in and have admin or tpi role
   if (isAdminRoute(req)) {
     if (!userId) {
       const url = new URL('/auth/sign-in', req.url);
@@ -24,7 +31,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
     const role = (sessionClaims?.metadata as { role?: string } | undefined)
       ?.role;
-    if (role !== 'admin') {
+    if (role !== 'admin' && role !== 'tpi') {
       const url = new URL('/rebo/overview', req.url);
       return NextResponse.redirect(url);
     }

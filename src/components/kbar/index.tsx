@@ -17,6 +17,9 @@ export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user } = useUser();
 
+  const userRole = user?.publicMetadata?.role as string | undefined;
+  const canAccessAdmin = !!user && (userRole === 'admin' || userRole === 'tpi');
+
   // These action are for the navigation
   const actions = useMemo(() => {
     // Define navigateTo inside the useMemo callback to avoid dependency array issues
@@ -24,9 +27,17 @@ export default function KBar({ children }: { children: React.ReactNode }) {
       router.push(url);
     };
 
+    const isAdminUrl = (url: string) =>
+      url.startsWith('/rebo/admin') || url.includes('/admin');
+
     const visibleNavItems = navItems.filter((navItem) => {
-      if (navItem.title === 'Admin Dashboard') {
-        return !!user && user.publicMetadata?.role === 'admin';
+      const isTitleAdmin =
+        navItem.title === 'Admin' || navItem.title === 'Admin Dashboard';
+      const isUrlAdmin = isAdminUrl(navItem.url);
+      const hasAdminSub = navItem.items?.some((sub) => isAdminUrl(sub.url));
+
+      if (isTitleAdmin || isUrlAdmin || hasAdminSub) {
+        return canAccessAdmin;
       }
       return true;
     });
@@ -34,7 +45,7 @@ export default function KBar({ children }: { children: React.ReactNode }) {
     return visibleNavItems.flatMap((navItem) => {
       // Only include base action if the navItem has a real URL and is not just a container
       const baseAction =
-        navItem.url !== '#'
+        navItem.url !== '#' && (!isAdminUrl(navItem.url) || canAccessAdmin)
           ? {
               id: `${navItem.title.toLowerCase()}Action`,
               name: navItem.title,
@@ -46,22 +57,29 @@ export default function KBar({ children }: { children: React.ReactNode }) {
             }
           : null;
 
-      // Map child items into actions
-      const childActions =
-        navItem.items?.map((childItem) => ({
-          id: `${childItem.title.toLowerCase()}Action`,
-          name: childItem.title,
-          shortcut: childItem.shortcut,
-          keywords: childItem.title.toLowerCase(),
-          section: navItem.title,
-          subtitle: `Go to ${childItem.title}`,
-          perform: () => navigateTo(childItem.url)
-        })) ?? [];
+      // Filter and map child items into actions
+      const visibleChildren =
+        navItem.items?.filter((childItem) => {
+          if (isAdminUrl(childItem.url)) {
+            return canAccessAdmin;
+          }
+          return true;
+        }) ?? [];
+
+      const childActions = visibleChildren.map((childItem) => ({
+        id: `${childItem.title.toLowerCase()}Action`,
+        name: childItem.title,
+        shortcut: childItem.shortcut,
+        keywords: childItem.title.toLowerCase(),
+        section: navItem.title,
+        subtitle: `Go to ${childItem.title}`,
+        perform: () => navigateTo(childItem.url)
+      }));
 
       // Return only valid actions (ignoring null base actions for containers)
       return baseAction ? [baseAction, ...childActions] : childActions;
     });
-  }, [router]);
+  }, [router, canAccessAdmin]);
 
   return (
     <KBarProvider actions={actions}>

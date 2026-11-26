@@ -66,6 +66,39 @@ export default function AppSidebar() {
 
   const activeTenant = tenants[0];
 
+  const userRole = user?.publicMetadata?.role as string | undefined;
+  const canAccessAdmin = !!user && (userRole === 'admin' || userRole === 'tpi');
+
+  const isAdminUrl = (url: string) =>
+    url.startsWith('/rebo/admin') || url.includes('/admin');
+
+  const filteredNavItems = React.useMemo(() => {
+    return navItems
+      .filter((item) => {
+        const isTitleAdmin =
+          item.title === 'Admin' || item.title === 'Admin Dashboard';
+        const isUrlAdmin = isAdminUrl(item.url);
+        const hasAdminSub = item.items?.some((sub) => isAdminUrl(sub.url));
+        if (isTitleAdmin || isUrlAdmin || hasAdminSub) {
+          return canAccessAdmin;
+        }
+        return true;
+      })
+      .map((item) => {
+        if (!item.items || item.items.length === 0) return item;
+        const visibleSubItems = item.items.filter((sub) => {
+          if (isAdminUrl(sub.url)) {
+            return canAccessAdmin;
+          }
+          return true;
+        });
+        return {
+          ...item,
+          items: visibleSubItems
+        };
+      });
+  }, [canAccessAdmin]);
+
   React.useEffect(() => {
     // Side effects based on sidebar state changes
   }, [isOpen]);
@@ -83,121 +116,107 @@ export default function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Overview</SidebarGroupLabel>
           <SidebarMenu>
-            {navItems
-              .filter((item) => {
-                // Hide Admin items unless user is admin
-                if (
-                  item.title === 'Admin' ||
-                  item.title === 'Admin Dashboard' ||
-                  item.url.includes('/admin') ||
-                  item.items?.some((sub) => sub.url.includes('/admin'))
-                ) {
-                  const userRole = user?.publicMetadata?.role;
-                  return !!user && (userRole === 'admin' || userRole === 'tpi');
-                }
-                return true;
-              })
-              .map((item) => {
-                const Icon = item.icon ? Icons[item.icon] : Icons.logo;
-                const isChildActive = item.items?.some(
-                  (sub) =>
-                    pathname === sub.url ||
-                    (sub.url !== '#' && pathname.startsWith(sub.url))
-                );
-                return item?.items && item?.items?.length > 0 ? (
-                  <Collapsible
-                    key={item.title}
-                    asChild
-                    defaultOpen={item.isActive || isChildActive}
-                    className='group/collapsible'
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                          tooltip={item.title}
-                          isActive={pathname === item.url || isChildActive}
-                        >
-                          {item.icon && <Icon className='size-4 shrink-0' />}
-                          <span>{item.title}</span>
-                          <IconChevronRight className='ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.items?.map((subItem) => {
-                            const SubIcon = subItem.icon
-                              ? Icons[subItem.icon]
-                              : null;
-                            return (
-                              <SidebarMenuSubItem key={subItem.title}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={pathname === subItem.url}
-                                >
-                                  <Link href={subItem.url}>
-                                    {SubIcon && (
-                                      <SubIcon className='size-4 shrink-0' />
-                                    )}
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            );
-                          })}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
-                ) : (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={item.title}
-                      isActive={pathname === item.url}
-                    >
-                      <Link
-                        href={item.url}
-                        className='flex w-full items-center justify-between'
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+              const isChildActive = item.items?.some(
+                (sub) =>
+                  pathname === sub.url ||
+                  (sub.url !== '#' && pathname.startsWith(sub.url))
+              );
+              return item?.items && item?.items?.length > 0 ? (
+                <Collapsible
+                  key={item.title}
+                  asChild
+                  defaultOpen={item.isActive || isChildActive}
+                  className='group/collapsible'
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        isActive={pathname === item.url || isChildActive}
                       >
-                        <div className='flex items-center gap-2'>
-                          <Icon className='size-4 shrink-0' />
-                          <span>{item.title}</span>
-                        </div>
-                        {item.title === 'Agenda & Rencana Kerja' && (
-                          <span className='relative mr-1 flex h-2 w-2'>
-                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75'></span>
-                            <span className='relative inline-flex h-2 w-2 rounded-full bg-blue-500'></span>
-                          </span>
-                        )}
-                        {item.title === 'Notulen Rapat Digital' && (
-                          <span className='relative mr-1 flex h-2 w-2'>
-                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75'></span>
-                            <span className='relative inline-flex h-2 w-2 rounded-full bg-cyan-500'></span>
-                          </span>
-                        )}
-                        {item.title === 'Kanban Tindak Lanjut' && (
-                          <span className='relative mr-1 flex h-2 w-2'>
-                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75'></span>
-                            <span className='relative inline-flex h-2 w-2 rounded-full bg-amber-500'></span>
-                          </span>
-                        )}
-                        {item.title === 'Monitoring' && (
-                          <span className='relative mr-1 flex h-2 w-2'>
-                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60'></span>
-                            <span className='relative inline-flex h-2 w-2 rounded-full bg-emerald-500'></span>
-                          </span>
-                        )}
-                        {item.title === 'Inovasi Layanan' && (
-                          <span className='relative mr-1 flex h-2 w-2'>
-                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75'></span>
-                            <span className='relative inline-flex h-2 w-2 rounded-full bg-purple-500'></span>
-                          </span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
+                        {item.icon && <Icon className='size-4 shrink-0' />}
+                        <span>{item.title}</span>
+                        <IconChevronRight className='ml-auto size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.items?.map((subItem) => {
+                          const SubIcon = subItem.icon
+                            ? Icons[subItem.icon]
+                            : null;
+                          return (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === subItem.url}
+                              >
+                                <Link href={subItem.url}>
+                                  {SubIcon && (
+                                    <SubIcon className='size-4 shrink-0' />
+                                  )}
+                                  <span>{subItem.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
                   </SidebarMenuItem>
-                );
-              })}
+                </Collapsible>
+              ) : (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={pathname === item.url}
+                  >
+                    <Link
+                      href={item.url}
+                      className='flex w-full items-center justify-between'
+                    >
+                      <div className='flex items-center gap-2'>
+                        <Icon className='size-4 shrink-0' />
+                        <span>{item.title}</span>
+                      </div>
+                      {item.title === 'Agenda & Rencana Kerja' && (
+                        <span className='relative mr-1 flex h-2 w-2'>
+                          <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75'></span>
+                          <span className='relative inline-flex h-2 w-2 rounded-full bg-blue-500'></span>
+                        </span>
+                      )}
+                      {item.title === 'Notulen Rapat Digital' && (
+                        <span className='relative mr-1 flex h-2 w-2'>
+                          <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75'></span>
+                          <span className='relative inline-flex h-2 w-2 rounded-full bg-cyan-500'></span>
+                        </span>
+                      )}
+                      {item.title === 'Kanban Tindak Lanjut' && (
+                        <span className='relative mr-1 flex h-2 w-2'>
+                          <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75'></span>
+                          <span className='relative inline-flex h-2 w-2 rounded-full bg-amber-500'></span>
+                        </span>
+                      )}
+                      {item.title === 'Monitoring' && (
+                        <span className='relative mr-1 flex h-2 w-2'>
+                          <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60'></span>
+                          <span className='relative inline-flex h-2 w-2 rounded-full bg-emerald-500'></span>
+                        </span>
+                      )}
+                      {item.title === 'Inovasi Layanan' && (
+                        <span className='relative mr-1 flex h-2 w-2'>
+                          <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75'></span>
+                          <span className='relative inline-flex h-2 w-2 rounded-full bg-purple-500'></span>
+                        </span>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

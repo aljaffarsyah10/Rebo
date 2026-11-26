@@ -13,12 +13,12 @@ export default function SubmitModal({
 }: SubmitModalProps) {
   if (!open) return null;
   return (
-    <div className='pointer-events-none fixed inset-0 z-50 flex items-start justify-center pt-24'>
-      <div className='animate-fade-in pointer-events-auto max-w-sm min-w-[320px] rounded-xl border border-blue-100 bg-white p-7 shadow-2xl'>
-        <div className='flex flex-col items-center'>
-          <div className='mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100'>
+    <div className='pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs'>
+      <div className='animate-fade-in pointer-events-auto w-[92vw] max-w-sm rounded-2xl border border-slate-200/80 bg-white/95 p-5 shadow-2xl backdrop-blur-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900/95'>
+        <div className='flex flex-col items-center text-center'>
+          <div className='mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'>
             <svg
-              className='h-7 w-7 text-blue-600'
+              className='h-6 w-6'
               fill='none'
               viewBox='0 0 24 24'
               stroke='currentColor'
@@ -27,11 +27,11 @@ export default function SubmitModal({
                 strokeLinecap='round'
                 strokeLinejoin='round'
                 strokeWidth={2}
-                d='M9 12l2 2 4-4'
+                d='M5 13l4 4L19 7'
               />
             </svg>
           </div>
-          <div className='mb-4 text-center text-lg font-semibold text-gray-800'>
+          <div className='mb-4 text-base font-semibold text-slate-900 sm:text-lg dark:text-slate-100'>
             {message}
           </div>
         </div>
@@ -39,27 +39,14 @@ export default function SubmitModal({
           onClick={onClose}
           aria-label='Tutup'
           type='button'
-          className='mt-2 inline-flex w-full transform items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 px-4 py-2 font-semibold text-white shadow-md transition duration-150 hover:scale-[1.02] hover:from-blue-600 hover:to-blue-800 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95'
+          className='inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#023047] px-4 py-2.5 text-xs font-semibold text-white shadow-md transition duration-150 hover:bg-[#034469] active:scale-95 sm:text-sm dark:bg-[#fb8500] dark:text-slate-900 dark:hover:bg-[#ffb703]'
         >
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            className='h-4 w-4'
-            viewBox='0 0 20 20'
-            fill='currentColor'
-            aria-hidden='true'
-          >
-            <path
-              fillRule='evenodd'
-              d='M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9V6a1 1 0 112 0v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3z'
-              clipRule='evenodd'
-            />
-          </svg>
           <span>Tutup</span>
         </button>
       </div>
       <style>{`
-        @keyframes fade-in { from { opacity: 0; transform: translateY(-20px);} to { opacity: 1; transform: translateY(0);} }
-        .animate-fade-in { animation: fade-in 0.3s ease; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: translateY(0);} }
+        .animate-fade-in { animation: fade-in 0.25s ease-out; }
       `}</style>
     </div>
   );

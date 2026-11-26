@@ -1,9 +1,42 @@
 'use client';
 
 import Link from 'next/link';
-import { SignIn as ClerkSignInForm } from '@clerk/nextjs';
+import {
+  ClerkLoaded,
+  ClerkLoading,
+  SignIn as ClerkSignInForm,
+  useAuth
+} from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function SignInViewPage() {
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace('/rebo/overview');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  if (isLoaded && isSignedIn) {
+    return (
+      <div className='flex h-screen w-full flex-col items-center justify-center bg-slate-50 px-4 text-center dark:bg-slate-950'>
+        <div className='relative mb-4 flex items-center justify-center'>
+          <div className='h-12 w-12 animate-spin rounded-full border-4 border-[#023047]/20 border-t-[#fb8500] dark:border-[#ffb703]/20 dark:border-t-[#fb8500]' />
+          <div className='absolute h-6 w-6 animate-pulse rounded-full bg-[#023047] opacity-25 dark:bg-[#ffb703]' />
+        </div>
+        <h2 className='text-base font-bold text-slate-800 dark:text-slate-100'>
+          Mengarahkan ke Dashboard REBO...
+        </h2>
+        <p className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
+          Sesi Anda telah aktif. Membuka ikhtisar capaian Zona Integritas.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className='bg-background relative flex h-screen w-full flex-col overflow-hidden lg:grid lg:grid-cols-12'>
       {/* Kolom Kiri: Hero & Quote Card (Sesuai Desain Asli, Minimalis, Bernyawa/Live, Tanpa Logo Gambar) */}
@@ -132,28 +165,49 @@ export default function SignInViewPage() {
 
           {/* Form Autentikasi Clerk Resmi dengan Penataan Khusus (Proporsional & Pas 1 Halaman) */}
           <div className='flex w-full justify-center'>
-            <ClerkSignInForm
-              appearance={{
-                elements: {
-                  rootBox: 'w-full',
-                  card: 'shadow-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 w-full',
-                  headerTitle:
-                    'text-lg font-bold text-slate-800 dark:text-slate-100',
-                  headerSubtitle: 'text-xs text-slate-500 dark:text-slate-400',
-                  socialButtonsBlockButton:
-                    'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium py-2',
-                  formButtonPrimary:
-                    'bg-[#023047] hover:bg-[#034469] text-white text-xs font-semibold py-2.5 shadow-sm transition-all duration-200',
-                  footerActionLink:
-                    'text-[#023047] hover:text-[#fb8500] dark:text-[#ffb703] font-semibold text-xs',
-                  formFieldInput:
-                    'rounded-lg border-slate-200 dark:border-slate-700 text-xs py-2 focus:border-[#023047] focus:ring-1 focus:ring-[#023047]',
-                  formFieldLabel:
-                    'text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1',
-                  footer: 'bg-transparent pt-3 mt-1'
-                }
-              }}
-            />
+            <ClerkLoading>
+              <div className='flex min-h-[320px] w-full flex-col items-center justify-center space-y-4 rounded-2xl border border-slate-200/80 bg-white/95 p-6 shadow-lg backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95'>
+                <div className='relative flex items-center justify-center'>
+                  <div className='h-11 w-11 animate-spin rounded-full border-3 border-[#023047]/20 border-t-[#fb8500] dark:border-[#ffb703]/20 dark:border-t-[#fb8500]' />
+                  <div className='absolute h-5 w-5 animate-ping rounded-full bg-[#023047] opacity-20 dark:bg-[#ffb703]' />
+                </div>
+                <div className='space-y-1 text-center'>
+                  <p className='text-sm font-semibold text-slate-800 dark:text-slate-100'>
+                    Menyiapkan Formulir Masuk...
+                  </p>
+                  <p className='text-xs text-slate-500 dark:text-slate-400'>
+                    Sistem Informasi ZI-RB BPS Sitaro
+                  </p>
+                </div>
+              </div>
+            </ClerkLoading>
+            <ClerkLoaded>
+              <ClerkSignInForm
+                fallbackRedirectUrl='/rebo/overview'
+                signUpFallbackRedirectUrl='/rebo/overview'
+                appearance={{
+                  elements: {
+                    rootBox: 'w-full',
+                    card: 'shadow-lg border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 w-full',
+                    headerTitle:
+                      'text-lg font-bold text-slate-800 dark:text-slate-100',
+                    headerSubtitle:
+                      'text-xs text-slate-500 dark:text-slate-400',
+                    socialButtonsBlockButton:
+                      'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium py-2',
+                    formButtonPrimary:
+                      'bg-[#023047] hover:bg-[#034469] text-white text-xs font-semibold py-2.5 shadow-sm transition-all duration-200',
+                    footerActionLink:
+                      'text-[#023047] hover:text-[#fb8500] dark:text-[#ffb703] font-semibold text-xs',
+                    formFieldInput:
+                      'rounded-lg border-slate-200 dark:border-slate-700 text-xs py-2 focus:border-[#023047] focus:ring-1 focus:ring-[#023047]',
+                    formFieldLabel:
+                      'text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1',
+                    footer: 'bg-transparent pt-3 mt-1'
+                  }
+                }}
+              />
+            </ClerkLoaded>
           </div>
 
           {/* Footer Legalitas & Hak Cipta Ringkas */}

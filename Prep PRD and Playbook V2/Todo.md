@@ -310,12 +310,12 @@
   - [x] Pastikan filter kategori (SK, SOP, Laporan, Paparan) berjalan secara instan di sisi klien (*client-side fast filter*) tanpa membuat browser me-reload halaman dari awal.
 
 ### 6. Perbaikan Autentikasi, Keamanan Sesi & Konsistensi UI
-- [ ] **Kelancaran Redirect Pasca Login (Clerk):**
-  - [ ] Pastikan alur setelah sign-in dari `/auth/sign-in` selalu mendarat langsung di `/rebo/overview` tanpa jeda layar kosong (*white flash*).
-- [ ] **Perlindungan Akses Menu Admin (RBAC View):**
-  - [ ] Sembunyikan navigasi menu administratif (Manajemen Pengguna, Manajemen Periode, Generator GDrive, Audit Log, Notifikasi WA) untuk akun dengan peran non-admin/tamu agar menu samping tetap ringkas dan tidak memicu akses tidak berizin.
-- [ ] **Penyelarasan Warna & Tipografi Mobile:**
-  - [ ] Terapkan palet warna lembut (*calm-soft neutral palette*) yang konsisten pada seluruh dialog konfirmasi dan modal formulir, serta sesuaikan padding kartu pada layar ponsel agar teks tidak terpotong di tepi layar.
+- [x] **Kelancaran Redirect Pasca Login (Clerk):**
+  - [x] Pastikan alur setelah sign-in dari `/auth/sign-in` selalu mendarat langsung di `/rebo/overview` tanpa jeda layar kosong (*white flash*).
+- [x] **Perlindungan Akses Menu Admin (RBAC View):**
+  - [x] Sembunyikan navigasi menu administratif (Manajemen Pengguna, Manajemen Periode, Generator GDrive, Audit Log, Notifikasi WA) untuk akun dengan peran non-admin/tamu agar menu samping tetap ringkas dan tidak memicu akses tidak berizin.
+- [x] **Penyelarasan Warna & Tipografi Mobile:**
+  - [x] Terapkan palet warna lembut (*calm-soft neutral palette*) yang konsisten pada seluruh dialog konfirmasi dan modal formulir, serta sesuaikan padding kartu pada layar ponsel agar teks tidak terpotong di tepi layar.
 
 
 
