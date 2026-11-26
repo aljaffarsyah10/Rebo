@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState, useTransition, useMemo } from 'react';
-import Link from 'next/link';
 import {
-  Trophy,
   Award,
   Medal,
   Zap,
@@ -16,27 +14,16 @@ import {
   Lock,
   Share2,
   Copy,
-  ExternalLink,
   Send,
   Check,
   Filter,
   Search,
   RefreshCw,
   Info,
-  ChevronRight,
   ShieldAlert,
-  Calendar,
-  User,
-  Layers,
-  ArrowRight
+  Layers
 } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,7 +46,6 @@ import {
 import { toast } from 'sonner';
 import {
   type AchievementBadge,
-  type BadgeCategory,
   type BadgeTier,
   BADGE_TIER_CONFIGS,
   formatBadgeMilestoneWAMessage

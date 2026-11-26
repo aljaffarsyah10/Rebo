@@ -19,7 +19,6 @@ export default async function AreaPage() {
     .order('id_pilar', { ascending: true });
 
   if (error) {
-    console.error('Error fetching pilars:', error.message);
     return (
       <div className='container mx-auto max-w-4xl p-6'>
         <div className='rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20'>
@@ -121,7 +120,7 @@ export default async function AreaPage() {
 
             {/* Features - Dynamic from database */}
             <div className='mb-8 space-y-3'>
-              {pilarsArea1.map((pilar: any, index: number) => (
+              {pilarsArea1.map((pilar: any) => (
                 <div
                   key={pilar.id_pilar}
                   className='flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400'
@@ -179,7 +178,7 @@ export default async function AreaPage() {
 
             {/* Features - Dynamic from database */}
             <div className='mb-8 space-y-3'>
-              {pilarsArea2.map((pilar: any, index: number) => (
+              {pilarsArea2.map((pilar: any) => (
                 <div
                   key={pilar.id_pilar}
                   className='flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400'

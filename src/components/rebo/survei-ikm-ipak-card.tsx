@@ -19,7 +19,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
@@ -31,15 +30,11 @@ import {
   TrendingUp,
   CheckCircle2,
   AlertCircle,
-  HelpCircle,
   Users,
-  Info,
   Calendar,
   Layers,
-  ChevronRight,
   Check,
-  FileCheck2,
-  DollarSign
+  FileCheck2
 } from 'lucide-react';
 import type { SurveiSummaryData, HasilSurveiPelayanan } from '@/types/rebo';
 import {
@@ -86,14 +81,11 @@ export default function SurveiIkmIpakCard({
     summaryData.surveiList.find((s) => s.id === selectedSemesterId) ||
     summaryData.surveiTerbaru;
 
-  const { syaratWBK, syaratWBBM, trenPerkembangan } = summaryData;
+  const { trenPerkembangan } = summaryData;
 
   // Cek apakah survei aktif memenuhi syarat mutlak
   const isIkmLolosWBK =
     activeSurvei.nilai_ikm >= THRESHOLD_SYARAT_MUTLAK.WBK.IKM_MINIMAL;
-  const isIpakLolosWBK =
-    activeSurvei.nilai_ipak >= THRESHOLD_SYARAT_MUTLAK.WBK.IPAK_MINIMAL;
-  const isLolosSemuaWBK = isIkmLolosWBK && isIpakLolosWBK;
 
   const isIkmLolosWBBM =
     activeSurvei.nilai_ikm >= THRESHOLD_SYARAT_MUTLAK.WBBM.IKM_MINIMAL;

@@ -8,10 +8,7 @@ import {
   DEFAULT_PILAR_CONTACTS,
   getDefaultNotificationReceiver
 } from '@/lib/notifications/contacts';
-import {
-  sendWhatsAppMessage,
-  formatPhoneNumber
-} from '@/lib/notifications/whatsapp';
+import { formatPhoneNumber } from '@/lib/notifications/whatsapp';
 import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
 import {
   LaporanPengaduanWBS,

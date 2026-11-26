@@ -11,7 +11,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    console.error('[API /api] POST body:', body);
     const {
       link_bukti,
       id_kategori,
@@ -55,7 +54,6 @@ export async function POST(request: Request) {
       insertData.catatan_koordinator = catatan_koordinator;
     }
 
-    console.error('[API /api] POST insertData (will upsert):', insertData);
     // Use upsert to avoid duplicate primary key errors when a record for
     // the given id_pertanyaan already exists. onConflict set to id_pertanyaan.
     const { data, error } = await supabase
@@ -65,14 +63,11 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('[API /api] Supabase UPSERT error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.error('[API /api] UPSERT result:', data);
     return NextResponse.json({ success: true, data });
   } catch (err: any) {
-    console.error('[API /api] POST exception:', err);
     return NextResponse.json(
       { error: err.message || 'Unknown error' },
       { status: 500 }
@@ -90,7 +85,6 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    console.error('[API /api] PUT body:', body);
     const {
       link_bukti,
       id_kategori,
@@ -123,7 +117,6 @@ export async function PUT(request: Request) {
       );
     }
 
-    console.error('[API /api] PUT updateData:', updateData);
     const supabase = await createClient();
     const { error } = await supabase
       .from('buktiDukung')
@@ -131,13 +124,11 @@ export async function PUT(request: Request) {
       .eq('id_pertanyaan', id_pertanyaan);
 
     if (error) {
-      console.error('[API /api] Supabase UPDATE error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    console.error('[API /api] PUT exception:', err);
     return NextResponse.json(
       { error: err.message || 'Unknown error' },
       { status: 500 }

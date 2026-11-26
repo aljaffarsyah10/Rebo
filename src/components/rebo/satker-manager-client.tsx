@@ -12,9 +12,6 @@ import {
   ShieldCheck,
   Award,
   Phone,
-  Mail,
-  Globe,
-  MapPin,
   UserCheck,
   Sparkles,
   ArrowRightLeft,
@@ -24,7 +21,6 @@ import {
 
 import {
   SatkerConfig,
-  TargetPredikat,
   DEFAULT_SATKER_CONFIG,
   PRESET_SATKER_LIST
 } from '@/lib/satker/satker-types';

@@ -49,7 +49,6 @@ import {
   DEFAULT_MASTER_PASSPHRASE,
   type DocShieldStats,
   type DocShieldMetadata,
-  type EncryptedDocumentRecord,
   type SensitiveDetectionResult
 } from '@/lib/security/doc-shield';
 
@@ -173,7 +172,7 @@ export default function DocShieldClient({
       });
 
       // Simpan riwayat audit ke sistem
-      const auditRes = await registerEncryptedDocumentAction({
+      await registerEncryptedDocumentAction({
         id: `enc-${Date.now()}`,
         fileName: res.downloadFileName,
         originalName: res.metadata.fileName,
@@ -213,7 +212,6 @@ export default function DocShieldClient({
         }
       });
     } catch (err: any) {
-      console.error(err);
       toast.error(
         `Enkripsi gagal: ${err.message || 'Terjadi kesalahan sistem'}`,
         {
@@ -308,7 +306,6 @@ export default function DocShieldClient({
         { id: toastId }
       );
     } catch (err: any) {
-      console.error(err);
       toast.error(
         `Dekripsi Gagal: ${err.message || 'Kata sandi salah atau berkas telah diubah'}`,
         { id: toastId }

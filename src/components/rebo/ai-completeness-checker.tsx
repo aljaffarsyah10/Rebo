@@ -15,7 +15,6 @@ import {
   Calendar,
   Layers,
   Wand2,
-  Copy,
   Check
 } from 'lucide-react';
 import { toast } from 'sonner';

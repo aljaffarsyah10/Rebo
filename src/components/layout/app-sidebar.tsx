@@ -60,7 +60,7 @@ export default function AppSidebar() {
   const { isOpen } = useMediaQuery();
   const { user } = useUser();
   const router = useRouter();
-  const handleSwitchTenant = (_tenantId: string) => {
+  const handleSwitchTenant = () => {
     // Tenant switching functionality would be implemented here
   };
 

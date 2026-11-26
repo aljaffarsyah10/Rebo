@@ -60,8 +60,7 @@ function calculateStats(snapshots: BackupSnapshot[]): BackupReadinessStats {
  */
 function generateSnapshotPayload(
   snapshotId: string,
-  destination: StorageDestination,
-  notes?: string
+  destination: StorageDestination
 ): {
   payload: BackupPayloadData;
   rawJson: string;
@@ -370,8 +369,7 @@ export async function createBackupSnapshotAction(options: {
 
     const { rawJson, sha256, sizeBytes } = generateSnapshotPayload(
       snapshotId,
-      options.destination,
-      options.notes
+      options.destination
     );
 
     let storagePath = `local://encrypted-downloads/${filename}`;

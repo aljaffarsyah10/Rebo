@@ -11,8 +11,6 @@ import {
   Check,
   Search,
   ShieldCheck,
-  Sparkles,
-  Layers,
   FolderGit2,
   FileCheck2,
   Info,

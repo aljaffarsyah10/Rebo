@@ -6,10 +6,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Loader2,
-  ShieldCheck,
-  RefreshCw,
-  Lock,
-  Unlock
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { checkGDriveHealthAction } from '@/actions/gdrive-actions';
@@ -30,7 +27,6 @@ interface GDriveHealthBadgeProps {
 export function GDriveHealthBadge({
   status,
   message,
-  statusCode,
   compact = false,
   className = ''
 }: GDriveHealthBadgeProps) {

@@ -15,14 +15,7 @@ import {
   RefreshCw,
   Sparkles,
   CheckCircle2,
-  Calendar,
-  Layers,
-  ArrowUpRight,
-  TrendingDown,
-  Building2,
-  QrCode,
-  ExternalLink,
-  ChevronRight
+  Layers
 } from 'lucide-react';
 import {
   Card,
@@ -37,7 +30,6 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
@@ -50,13 +42,11 @@ import {
   Tooltip as RechartsTooltip,
   Cell,
   PieChart,
-  Pie,
-  Legend
+  Pie
 } from 'recharts';
 import {
   PaperlessImpactStats,
   calculatePaperlessImpact,
-  PAPERLESS_CONSTANTS,
   DEFAULT_PILAR_DOCUMENTS_COUNT
 } from '@/lib/paperless/paperless-types';
 
@@ -66,11 +56,10 @@ interface PaperlessImpactClientProps {
 }
 
 export function PaperlessImpactClient({
-  initialStats,
-  initialSource = 'benchmark'
+  initialStats
 }: PaperlessImpactClientProps) {
   const [stats, setStats] = useState<PaperlessImpactStats>(initialStats);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [isSimulating, setIsSimulating] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
@@ -91,7 +80,7 @@ export function PaperlessImpactClient({
 
   // Dataset Bar Chart Kontribusi Lembar per Pilar
   const barChartData = useMemo(() => {
-    return Object.entries(stats.breakdown_per_pilar).map(([key, item]) => ({
+    return Object.values(stats.breakdown_per_pilar).map((item) => ({
       name: `Pilar ${item.pilar_id}`,
       fullName: item.pilar_nama,
       lembar: item.lembar,

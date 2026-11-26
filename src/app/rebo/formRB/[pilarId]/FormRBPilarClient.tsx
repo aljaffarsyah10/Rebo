@@ -17,7 +17,6 @@ import {
   Equal,
   Sparkles,
   ArrowUp,
-  Cloud,
   Filter,
   ChevronsDown,
   ChevronsUp

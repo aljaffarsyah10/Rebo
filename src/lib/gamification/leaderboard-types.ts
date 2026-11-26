@@ -334,7 +334,6 @@ export function generateWhatsAppLeaderboardMessage(
     dateStyle: 'full'
   }).format(new Date());
 
-  const top3 = summary.items.slice(0, 3);
   const podiumIcons = ['🥇', '🥈', '🥉'];
 
   const rankingText = summary.items

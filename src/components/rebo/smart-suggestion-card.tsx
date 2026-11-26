@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useTransition } from 'react';
 import {
   Lightbulb,
   Sparkles,
@@ -13,9 +13,6 @@ import {
   ShieldCheck,
   BookmarkCheck,
   FileText,
-  ExternalLink,
-  ArrowRight,
-  Info,
   Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';

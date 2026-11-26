@@ -61,7 +61,6 @@ import {
   IconClock,
   IconMapPin,
   IconUser,
-  IconUsers,
   IconBrandWhatsapp,
   IconLayoutKanban,
   IconPrinter,
@@ -70,11 +69,9 @@ import {
   IconCheck,
   IconArrowRight,
   IconExternalLink,
-  IconSparkles,
   IconLayoutGrid,
   IconList,
   IconCopy,
-  IconAlertCircle,
   IconClipboardCheck,
   IconSend,
   IconLoader2,
@@ -93,8 +90,7 @@ interface NotulenManagerClientProps {
 }
 
 export default function NotulenManagerClient({
-  initialNotulenList,
-  initialStats
+  initialNotulenList
 }: NotulenManagerClientProps) {
   const searchParams = useSearchParams();
   const [notulenList, setNotulenList] =
@@ -133,18 +129,6 @@ export default function NotulenManagerClient({
   const [pesertaInputText, setPesertaInputText] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [convertingId, setConvertingId] = React.useState<string | null>(null);
-
-  // Handle auto-open form if URL params exist (e.g. from Agenda Calendar)
-  React.useEffect(() => {
-    const agendaId = searchParams.get('agendaId');
-    const title = searchParams.get('title');
-    if (agendaId || title) {
-      handleOpenCreateNew({
-        agenda_id: agendaId || undefined,
-        judul_rapat: title ? `Notula: ${title}` : undefined
-      });
-    }
-  }, [searchParams]);
 
   // Compute live stats
   const stats = React.useMemo(() => {
@@ -223,52 +207,67 @@ export default function NotulenManagerClient({
   }, [notulenList, filterPilar, filterTahun, searchQuery]);
 
   // Form Handlers
-  const handleOpenCreateNew = (defaults?: Partial<NotulenRapat>) => {
-    const nextNomor = generateNomorNotula(
-      notulenList.length + 1,
-      new Date().toISOString()
-    );
-    setFormData({
-      judul_rapat: defaults?.judul_rapat || '',
-      nomor_notula: nextNomor,
-      tanggal: new Date().toISOString().split('T')[0],
-      waktu_mulai: '09:00',
-      waktu_selesai: '11:30',
-      tempat: 'Aula Sasahara BPS Sitaro (Lt. 2)',
-      agenda_id: defaults?.agenda_id || undefined,
-      pilar_id: defaults?.pilar_id || 'SEMUA',
-      pimpinan_rapat:
-        'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
-      notulis: 'Gloria Pangemanan, S.Tr.Stat.',
-      peserta_hadir: [
-        'Inke Margareth Tambeo, SST., M.Ec.Dev.',
-        'Marselus Tatengkeng, S.E.',
-        'Steven Luntungan, S.Si.',
-        'Novita Derek, S.E.',
-        'Christian Makauntung, S.Tr.Stat.',
-        'Feiby Salindeho, S.Stat.',
-        'Anggreiny Kalalo, S.Si.',
-        'Gloria Pangemanan, S.Tr.Stat.'
-      ],
-      ringkasan_pembahasan: '',
-      kesepakatan_items: [
-        {
-          id: `item-${Date.now()}-1`,
-          poin_kesepakatan: '',
-          pilar_id: 'SEMUA',
-          pic_name: 'Marselus Tatengkeng, S.E.',
-          pic_phone: '082190010001',
-          tenggat_waktu: new Date(Date.now() + 7 * 86400000)
-            .toISOString()
-            .split('T')[0],
-          status: 'BELUM_DIKERJAKAN',
-          wa_sent: false
-        }
-      ]
-    });
-    setPesertaInputText('');
-    setIsFormDialogOpen(true);
-  };
+  const handleOpenCreateNew = React.useCallback(
+    (defaults?: Partial<NotulenRapat>) => {
+      const nextNomor = generateNomorNotula(
+        notulenList.length + 1,
+        new Date().toISOString()
+      );
+      setFormData({
+        judul_rapat: defaults?.judul_rapat || '',
+        nomor_notula: nextNomor,
+        tanggal: new Date().toISOString().split('T')[0],
+        waktu_mulai: '09:00',
+        waktu_selesai: '11:30',
+        tempat: 'Aula Sasahara BPS Sitaro (Lt. 2)',
+        agenda_id: defaults?.agenda_id || undefined,
+        pilar_id: defaults?.pilar_id || 'SEMUA',
+        pimpinan_rapat:
+          'Inke Margareth Tambeo, SST., M.Ec.Dev. (Kepala BPS Kabupaten Kepulauan Sitaro)',
+        notulis: 'Gloria Pangemanan, S.Tr.Stat.',
+        peserta_hadir: [
+          'Inke Margareth Tambeo, SST., M.Ec.Dev.',
+          'Marselus Tatengkeng, S.E.',
+          'Steven Luntungan, S.Si.',
+          'Novita Derek, S.E.',
+          'Christian Makauntung, S.Tr.Stat.',
+          'Feiby Salindeho, S.Stat.',
+          'Anggreiny Kalalo, S.Si.',
+          'Gloria Pangemanan, S.Tr.Stat.'
+        ],
+        ringkasan_pembahasan: '',
+        kesepakatan_items: [
+          {
+            id: `item-${Date.now()}-1`,
+            poin_kesepakatan: '',
+            pilar_id: 'SEMUA',
+            pic_name: 'Marselus Tatengkeng, S.E.',
+            pic_phone: '082190010001',
+            tenggat_waktu: new Date(Date.now() + 7 * 86400000)
+              .toISOString()
+              .split('T')[0],
+            status: 'BELUM_DIKERJAKAN',
+            wa_sent: false
+          }
+        ]
+      });
+      setPesertaInputText('');
+      setIsFormDialogOpen(true);
+    },
+    [notulenList.length]
+  );
+
+  // Handle auto-open form if URL params exist (e.g. from Agenda Calendar)
+  React.useEffect(() => {
+    const agendaId = searchParams.get('agendaId');
+    const title = searchParams.get('title');
+    if (agendaId || title) {
+      handleOpenCreateNew({
+        agenda_id: agendaId || undefined,
+        judul_rapat: title ? `Notula: ${title}` : undefined
+      });
+    }
+  }, [searchParams, handleOpenCreateNew]);
 
   const handleOpenEdit = (notulen: NotulenRapat) => {
     setFormData({ ...notulen });

@@ -12,19 +12,10 @@ import {
   Copy,
   Check,
   ExternalLink,
-  AlertTriangle,
-  FileText,
   Clock,
-  Sparkles,
-  ChevronRight,
   Info,
-  Calendar,
-  MapPin,
-  Building,
   CheckCircle2,
   XCircle,
-  HelpCircle,
-  MessageSquare,
   ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

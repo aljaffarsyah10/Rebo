@@ -43,7 +43,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import {
   IconCalendar,
@@ -62,7 +61,6 @@ import {
   IconInfoCircle,
   IconCheck,
   IconAlertTriangle,
-  IconSend,
   IconSparkles,
   IconLayoutGrid,
   IconList,
@@ -87,8 +85,7 @@ interface AgendaCalendarClientProps {
 
 export default function AgendaCalendarClient({
   initialAgendaList,
-  initialStats,
-  isAdmin = true
+  initialStats
 }: AgendaCalendarClientProps) {
   const [agendaList, setAgendaList] =
     React.useState<AgendaAksiZI[]>(initialAgendaList);
@@ -139,7 +136,7 @@ export default function AgendaCalendarClient({
   const [isDetailDialogOpen, setIsDetailDialogOpen] = React.useState(false);
   const [selectedAgenda, setSelectedAgenda] =
     React.useState<AgendaAksiZI | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [, setIsDeleting] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [sendingWaId, setSendingWaId] = React.useState<string | null>(null);
 
@@ -248,20 +245,28 @@ export default function AgendaCalendarClient({
   };
 
   // Agenda per tanggal untuk tampilan kalender bulan
-  const getAgendasForDate = (dateStr: string) => {
-    return filteredAgendaList.filter((item) => {
-      if (item.tanggal_selesai && item.tanggal_selesai !== item.tanggal_mulai) {
-        return dateStr >= item.tanggal_mulai && dateStr <= item.tanggal_selesai;
-      }
-      return item.tanggal_mulai === dateStr;
-    });
-  };
+  const getAgendasForDate = React.useCallback(
+    (dateStr: string) => {
+      return filteredAgendaList.filter((item) => {
+        if (
+          item.tanggal_selesai &&
+          item.tanggal_selesai !== item.tanggal_mulai
+        ) {
+          return (
+            dateStr >= item.tanggal_mulai && dateStr <= item.tanggal_selesai
+          );
+        }
+        return item.tanggal_mulai === dateStr;
+      });
+    },
+    [filteredAgendaList]
+  );
 
   // Agenda pada tanggal yang sedang dipilih
   const agendasOnSelectedDate = React.useMemo(() => {
     if (!selectedDate) return [];
     return getAgendasForDate(selectedDate);
-  }, [selectedDate, filteredAgendaList]);
+  }, [selectedDate, getAgendasForDate]);
 
   // Handlers
   const handleOpenAdd = (defaultDate?: string) => {

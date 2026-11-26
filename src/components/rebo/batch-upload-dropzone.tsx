@@ -16,7 +16,6 @@ import {
   RefreshCw,
   X,
   FileCheck2,
-  Tag,
   Zap,
   Leaf,
   Eye,
@@ -167,7 +166,7 @@ export function BatchUploadDropzone({
   const [pasteText, setPasteText] = useState('');
   const [progress, setProgress] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
+  const [, setIsCompressing] = useState(false);
   const [autoCompress, setAutoCompress] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<{

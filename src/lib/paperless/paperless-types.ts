@@ -116,9 +116,6 @@ export function calculatePaperlessImpact(
 ): PaperlessImpactStats {
   let totalDokumen = 0;
   let totalLembar = 0;
-  let totalBiayaKertas = 0;
-  let totalBiayaTinta = 0;
-  let totalBiayaLogistik = 0;
 
   const breakdown: Record<string, PilarBreakdownItem> = {};
 
@@ -170,9 +167,6 @@ export function calculatePaperlessImpact(
 
     totalDokumen += docCount;
     totalLembar += lembar;
-    totalBiayaKertas += biayaKertas;
-    totalBiayaTinta += biayaTinta;
-    totalBiayaLogistik += biayaLogistik;
   }
 
   // Normalisasi baseline agar presisi sesuai metrik agregat benchmark BPS Sitaro

@@ -9,7 +9,6 @@ import {
   Zap,
   ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
   Share2,
   Copy,
   ExternalLink,
@@ -19,10 +18,7 @@ import {
   Phone,
   Flame,
   Check,
-  TrendingUp,
-  FileCheck,
-  ArrowUpRight,
-  Filter
+  ArrowUpRight
 } from 'lucide-react';
 import {
   Card,
@@ -53,7 +49,6 @@ import {
 import { toast } from 'sonner';
 import {
   type LeaderboardSummary,
-  type PilarLeaderboardItem,
   generateWhatsAppLeaderboardMessage
 } from '@/lib/gamification/leaderboard-types';
 import { getLeaderboardPilarAction } from '@/actions/leaderboard-actions';

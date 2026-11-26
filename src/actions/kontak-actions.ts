@@ -12,7 +12,6 @@ import {
   type KontakPilarRecord
 } from '@/lib/notifications/contacts';
 import {
-  sendWhatsAppMessage,
   formatPhoneNumber,
   createWhatsAppDeepLink
 } from '@/lib/notifications/whatsapp';

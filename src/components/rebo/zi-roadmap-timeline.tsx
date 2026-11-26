@@ -10,20 +10,8 @@ import {
   ArrowRight,
   FileText,
   Sparkles,
-  ShieldCheck,
-  Award,
-  TrendingUp,
   Users,
-  BarChart3,
-  Kanban,
-  FileSpreadsheet,
   ExternalLink,
-  FileDown,
-  Compass,
-  Building2,
-  AlertCircle,
-  HelpCircle,
-  Check,
   ChevronRight,
   RotateCcw,
   SlidersHorizontal,
@@ -32,7 +20,6 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 
 export interface RoadmapDokumen {
@@ -574,7 +561,6 @@ interface ZiRoadmapTimelineProps {
 
 export default function ZiRoadmapTimeline({
   onNavigateTab,
-  gdriveLink = 'https://drive.google.com/drive/folders/1GgIbNOoKb98xNtBXZcqyYahFAdd4ZtF_?usp=sharing',
   className = ''
 }: ZiRoadmapTimelineProps) {
   // Current real month (0-11)

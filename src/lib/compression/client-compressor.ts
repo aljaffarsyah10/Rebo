@@ -126,7 +126,7 @@ function loadImageElement(file: File): Promise<{
       resolve({ img, objectUrl });
     };
 
-    img.onerror = (err) => {
+    img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
       reject(new Error(`Gagal memuat berkas gambar: ${file.name}`));
     };

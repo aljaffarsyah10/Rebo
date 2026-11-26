@@ -6,7 +6,7 @@ import { LeaderboardPilarClient } from '@/components/rebo/leaderboard-pilar-clie
 import { AchievementBadgesClient } from '@/components/rebo/achievement-badges-client';
 import { type LeaderboardSummary } from '@/lib/gamification/leaderboard-types';
 import { type AchievementBadge } from '@/lib/gamification/badge-types';
-import { Trophy, Award, Sparkles, Layers } from 'lucide-react';
+import { Trophy, Award } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface LeaderboardTabsWrapperProps {

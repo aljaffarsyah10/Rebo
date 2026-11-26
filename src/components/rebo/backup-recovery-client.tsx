@@ -19,13 +19,9 @@ import {
   FileCheck,
   Layers,
   Calendar,
-  Lock,
-  ArrowRight,
-  ExternalLink,
   Search,
   Server,
-  CloudLightning,
-  Sparkles
+  CloudLightning
 } from 'lucide-react';
 
 import {

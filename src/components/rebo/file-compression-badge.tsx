@@ -8,11 +8,7 @@ import {
   ArrowRight,
   Eye,
   CheckCircle2,
-  Image as ImageIcon,
-  HardDrive,
-  Clock,
-  Layers,
-  FileCheck
+  Image as ImageIcon
 } from 'lucide-react';
 import {
   Dialog,
@@ -45,8 +41,7 @@ export function FileCompressionBadge({
   compressedSize: propCompressedSize,
   showPreviewButton = true,
   variant = 'full',
-  className = '',
-  fileName
+  className = ''
 }: FileCompressionBadgeProps) {
   const [openComparison, setOpenComparison] = useState(false);
 

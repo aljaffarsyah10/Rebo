@@ -17,13 +17,7 @@ import {
   deleteBroadcastAction,
   dispatchWABroadcastAction
 } from '@/actions/broadcast-actions';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,11 +44,8 @@ import {
   Send,
   Plus,
   Search,
-  Filter,
   CheckCircle2,
-  AlertTriangle,
   Clock,
-  Info,
   ExternalLink,
   Trash2,
   Edit,
@@ -62,7 +53,6 @@ import {
   RefreshCw,
   Users,
   Smartphone,
-  Sparkles,
   LayoutTemplate,
   Loader2
 } from 'lucide-react';
@@ -79,8 +69,7 @@ interface BroadcastManagerClientProps {
 }
 
 export function BroadcastManagerClient({
-  initialBroadcasts,
-  initialStats
+  initialBroadcasts
 }: BroadcastManagerClientProps) {
   const [broadcasts, setBroadcasts] =
     useState<PengumumanBroadcast[]>(initialBroadcasts);

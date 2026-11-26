@@ -17,7 +17,6 @@ import {
   BarChart3,
   Award,
   FileSpreadsheet,
-  Layers,
   ChevronRight,
   FileCheck,
   ShieldAlert,
@@ -26,8 +25,7 @@ import {
   Copy,
   Check,
   X,
-  HelpCircle,
-  Tag
+  HelpCircle
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';

@@ -1,30 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
 import {
   Presentation,
   Download,
-  Maximize2,
   Minimize2,
   ChevronLeft,
   ChevronRight,
   Play,
   Pause,
   FileText,
-  Sparkles,
   CheckCircle2,
-  Clock,
   Tv,
-  ArrowLeft,
-  ExternalLink,
   Layers,
   MessageSquare,
   Award,
-  ShieldCheck,
   Building2,
-  RefreshCw,
-  Info
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -632,8 +624,7 @@ export default function PresentationDeckClient({
  */
 function SlideCanvasView({
   slide,
-  deckData,
-  isThumbnail = false
+  deckData
 }: {
   slide: SlideData;
   deckData: PresentationDeckData;

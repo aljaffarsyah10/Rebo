@@ -18,24 +18,17 @@ import {
   Accessibility,
   X,
   Volume2,
-  VolumeX,
   Type,
   Sun,
   BookOpen,
   MousePointer,
   RotateCcw,
-  Sparkles,
   MoveHorizontal,
   Play,
   Square,
-  HelpCircle,
-  Eye,
-  Check
+  Eye
 } from 'lucide-react';
-import {
-  useAccessibilityStore,
-  type FontSize
-} from '@/lib/accessibility/accessibility-store';
+import { useAccessibilityStore } from '@/lib/accessibility/accessibility-store';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 
@@ -61,8 +54,6 @@ export function AccessibilityWidget() {
     resetAccessibility,
     setWidgetOpen,
     toggleWidget,
-    speakText,
-    stopSpeaking,
     speakSelectedText,
     speakActivePage,
     applyDomEffects

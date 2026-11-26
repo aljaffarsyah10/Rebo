@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useMemo } from 'react';
+import React, { useState, useTransition, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Card,
@@ -19,7 +19,6 @@ import {
   Search,
   ExternalLink,
   RefreshCw,
-  FileText,
   User,
   ArrowRight,
   Filter,
@@ -323,19 +322,22 @@ export default function KanbanBoardClient({
   const activeUserId = currentUserId || currentUserProfile?.id || null;
 
   // Helper pemeriksa apakah kartu relevan dengan pengguna login
-  const isMyTaskCard = (card: KanbanIndicatorCard) => {
-    const matchPilar =
-      userPilar !== null &&
-      userPilar !== undefined &&
-      String(card.pilar_id) === String(userPilar);
+  const isMyTaskCard = useCallback(
+    (card: KanbanIndicatorCard) => {
+      const matchPilar =
+        userPilar !== null &&
+        userPilar !== undefined &&
+        String(card.pilar_id) === String(userPilar);
 
-    const matchSubmitted =
-      Boolean(activeUserId) &&
-      Boolean(card.submitted_by_user_id) &&
-      card.submitted_by_user_id === activeUserId;
+      const matchSubmitted =
+        Boolean(activeUserId) &&
+        Boolean(card.submitted_by_user_id) &&
+        card.submitted_by_user_id === activeUserId;
 
-    return Boolean(matchPilar || matchSubmitted);
-  };
+      return Boolean(matchPilar || matchSubmitted);
+    },
+    [userPilar, activeUserId]
+  );
 
   // Hitung total kartu "Tugas Saya"
   const myTasksCount = useMemo(() => {
@@ -345,7 +347,7 @@ export default function KanbanBoardClient({
       ...data.cards.disetujui
     ];
     return allCards.filter(isMyTaskCard).length;
-  }, [data.cards, userPilar, activeUserId]);
+  }, [data.cards, isMyTaskCard]);
 
   const handleFetch = (overridePilar?: string, overridePeriode?: string) => {
     startTransition(async () => {
@@ -461,7 +463,7 @@ export default function KanbanBoardClient({
       menungguReview: data.cards.menungguReview.filter(filterFn),
       disetujui: data.cards.disetujui.filter(filterFn)
     };
-  }, [data.cards, searchQuery, isMyTasksOnly, userPilar, activeUserId]);
+  }, [data.cards, searchQuery, isMyTasksOnly, isMyTaskCard]);
 
   const totalFilteredCount =
     filteredCards.perluRevisi.length +

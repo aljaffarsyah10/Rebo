@@ -15,11 +15,9 @@ import {
   ChevronUp,
   Loader2,
   Info,
-  ShieldCheck,
   CornerDownRight
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   extractDocumentMetadata,
@@ -42,8 +40,7 @@ export function AIMetadataBadge({
   fileUrl,
   tipeDokumen,
   activeYear = 2026,
-  onInsertNarration,
-  compact = false
+  onInsertNarration
 }: AIMetadataBadgeProps) {
   const [result, setResult] = useState<DocumentMetadataResult | null>(null);
   const [isOpen, setIsOpen] = useState(false);

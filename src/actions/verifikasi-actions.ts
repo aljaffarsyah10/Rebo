@@ -12,7 +12,6 @@ import {
   type StatusKelengkapan
 } from '@/types/rebo';
 import {
-  sendWhatsAppMessage,
   formatBuktiRevisionNotification,
   formatBuktiApprovedNotification,
   createWhatsAppDeepLink,

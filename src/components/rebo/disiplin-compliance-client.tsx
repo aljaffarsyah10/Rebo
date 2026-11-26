@@ -6,7 +6,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   CheckCircle2,
-  AlertTriangle,
   FileText,
   Printer,
   Plus,
@@ -16,13 +15,9 @@ import {
   Award,
   UserCheck,
   Calendar,
-  Clock,
-  Sparkles,
   Edit,
-  Building2,
   BookOpen,
   Check,
-  Download,
   AlertCircle
 } from 'lucide-react';
 

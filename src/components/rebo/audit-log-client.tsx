@@ -27,7 +27,6 @@ import {
   ChevronDown,
   ChevronRight,
   MessageSquare,
-  Download,
   FileSpreadsheet,
   RotateCcw,
   Calendar,
@@ -426,8 +425,7 @@ export default function AuditLogClient({
       toast.success(
         `Ekspor CSV Audit Log (${logs.length} catatan) berhasil diunduh!`
       );
-    } catch (err: any) {
-      console.error('Gagal mengekspor CSV:', err);
+    } catch {
       toast.error('Gagal mengekspor data audit log ke format CSV.');
     }
   };

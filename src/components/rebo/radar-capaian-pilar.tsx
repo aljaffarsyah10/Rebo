@@ -8,8 +8,7 @@ import {
   PolarRadiusAxis,
   Radar,
   ResponsiveContainer,
-  Tooltip,
-  Legend
+  Tooltip
 } from 'recharts';
 import {
   Card,
@@ -19,15 +18,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Compass,
-  TrendingUp,
-  Award,
-  AlertCircle,
-  Info,
-  CheckCircle2,
-  Sparkles
-} from 'lucide-react';
+import { Compass, AlertCircle, Sparkles } from 'lucide-react';
 
 export interface RadarPilarInput {
   name?: string;
@@ -66,7 +57,7 @@ interface RadarDataPoint {
   gapPersen: number;
 }
 
-import { cn, safeDivide, safePercentage, safeNumberFormat } from '@/lib/utils';
+import { safeDivide, safePercentage, safeNumberFormat } from '@/lib/utils';
 function CustomRadarTooltip({ active, payload }: any) {
   if (active && payload && payload.length) {
     const item: RadarDataPoint = payload[0].payload;

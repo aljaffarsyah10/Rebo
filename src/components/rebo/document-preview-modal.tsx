@@ -4,21 +4,17 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Eye,
   ExternalLink,
   FileText,
   Image as ImageIcon,
   Folder,
   FileSpreadsheet,
   Presentation,
-  FileCode,
   ZoomIn,
   ZoomOut,
   RotateCw,
@@ -31,11 +27,7 @@ import {
   ShieldAlert,
   Lock
 } from 'lucide-react';
-import {
-  getWatermarkStyle,
-  formatAccessTimestamp,
-  type WatermarkOptions
-} from '@/lib/security/watermark-utils';
+import { getWatermarkStyle } from '@/lib/security/watermark-utils';
 
 export type DocumentCategory =
   | 'image'

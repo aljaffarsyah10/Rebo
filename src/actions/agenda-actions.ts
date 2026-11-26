@@ -12,10 +12,7 @@ import {
   getAllContacts,
   DEFAULT_PILAR_CONTACTS
 } from '@/lib/notifications/contacts';
-import {
-  sendWhatsAppMessage,
-  createWhatsAppDeepLink
-} from '@/lib/notifications/whatsapp';
+import { createWhatsAppDeepLink } from '@/lib/notifications/whatsapp';
 import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
 
 // Server-side in-memory cache untuk fallback jika tabel Supabase belum ada / offline

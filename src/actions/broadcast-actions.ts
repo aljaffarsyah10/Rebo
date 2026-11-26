@@ -416,7 +416,6 @@ export async function dispatchWABroadcastAction(
     }
 
     let successCount = 0;
-    let failCount = 0;
 
     // Kirim pesan WhatsApp ke setiap penerima
     for (const contact of targetContacts) {
@@ -428,8 +427,6 @@ export async function dispatchWABroadcastAction(
 
       if (res.success) {
         successCount++;
-      } else {
-        failCount++;
       }
     }
 

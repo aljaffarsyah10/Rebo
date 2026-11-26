@@ -16,7 +16,6 @@ import {
   getDefaultNotificationReceiver
 } from './contacts';
 import {
-  sendWhatsAppMessage,
   formatDeadlineReminderMessage,
   formatWeeklyRecapMessage
 } from './whatsapp';

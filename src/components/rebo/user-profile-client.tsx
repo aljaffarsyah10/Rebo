@@ -57,14 +57,8 @@ import {
   Loader2,
   Sparkles,
   Info,
-  Trophy,
   Award,
-  Medal,
-  Zap,
   ShieldCheck,
-  Crown,
-  Flame,
-  FileCheck,
   Lock,
   ArrowUpRight,
   MessageSquare,
@@ -267,8 +261,8 @@ export default function UserProfileClient({
         );
         return job.status;
       }
-    } catch (err) {
-      console.warn('[WA-TEST] Manual check job status error:', err);
+    } catch {
+      // Ignore manual job status check errors
     }
     return null;
   };
@@ -403,8 +397,8 @@ export default function UserProfileClient({
       await navigator.clipboard.writeText(testResult.messageText);
       setCopiedMessage(true);
       setTimeout(() => setCopiedMessage(false), 2500);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+    } catch {
+      // Ignore clipboard copy error
     }
   };
 

@@ -21,8 +21,6 @@ import {
   UploadCloud,
   Check,
   RotateCcw,
-  Cloud,
-  WifiOff,
   HardDrive,
   Sparkles
 } from 'lucide-react';
@@ -172,7 +170,6 @@ export default function BuktiForm({
   const [isCheckingAll, setIsCheckingAll] = useState(false);
 
   // Auto-save draft states (IndexedDB / Local-First)
-  const draftStorageKey = `rebo_draft_p${pertanyaan.id_pertanyaan}`;
   const [autoSaveStatus, setAutoSaveStatus] = useState<
     'idle' | 'saving' | 'saved'
   >('idle');

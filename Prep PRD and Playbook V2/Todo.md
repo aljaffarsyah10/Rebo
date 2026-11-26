@@ -318,21 +318,21 @@
   - [x] Terapkan palet warna lembut (*calm-soft neutral palette*) yang konsisten pada seluruh dialog konfirmasi dan modal formulir, serta sesuaikan padding kartu pada layar ponsel agar teks tidak terpotong di tepi layar.
 
 ### 7. Hasil Pengujian Nyata & Temuan Hardening (Live Testing Findings)
-- [ ] **Sesi WhatsApp Baileys Persisten di Database (Supabase Session Store):**
-  - [ ] *Temuan Pengujian:* Render free-tier memiliki sistem berkas sementara (*ephemeral*), sehingga saat instance restart atau cold start, kredensial lokal di folder `auth_info/` dapat terhapus dan mengembalikan status `connected: false`.
-  - [ ] *Rencana Perbaikan:* Buat adaptor penyimpanan sesi Baileys langsung ke tabel Supabase (`public.wa_auth_session`), sehingga sekali QR code dipindai, status login WhatsApp akan **abadi dan tersimpan permanen di cloud**, tidak pernah hilang walau Render restart atau di-redeploy.
-- [ ] **Toleransi Latensi Cold-Start Render (Uji Latensi 17.6 Detik):**
-  - [ ] *Temuan Pengujian:* Pengujian *keep-alive* langsung mencatat latensi cold-start Render mencapai 17.590 ms (17,6 detik) saat pertama kali dibangunkan dari status *sleep*.
-  - [ ] *Rencana Perbaikan:* Tingkatkan timeout fetch gateway pada server actions menjadi 25 detik, dan sediakan teks status progresif di antarmuka web (*"Menghubungkan ke WhatsApp Gateway... Harap tunggu sebentar"*).
-- [ ] **Deklarasi Eksplisit Dynamic Rendering (`force-dynamic`):**
-  - [ ] *Temuan Pengujian:* Build Next.js mencatat peringatan `Dynamic server usage: Route couldn't be rendered statically because it used cookies` pada halaman yang membaca sesi Clerk.
-  - [ ] *Rencana Perbaikan:* Deklarasikan `export const dynamic = 'force-dynamic'` secara eksplisit pada rute yang menggunakan sesi Clerk untuk mencegah build fallback warnings.
-- [ ] **Pembersihan ESLint Warnings & React Hook Dependencies:**
-  - [ ] *Temuan Pengujian:* Terdeteksi beberapa warning variabel tidak terpakai dan missing dependency array di `GdriveGeneratorClient.tsx` (`loadStorageStats`) dan `KontakManagerClient.tsx` (`formattedWa`).
-  - [ ] *Rencana Perbaikan:* Perbaiki dependency array pada `useEffect` dan bersihkan import/variabel yang tidak terpakai agar konsol peramban bersih tanpa noise.
-- [ ] **Proteksi Horizontal Overflow pada Tabel Mobile:**
-  - [ ] *Temuan Pengujian:* Tabel indikator pertanyaan dengan opsi skor di Form RB berisiko menyebabkan geser layar (*horizontal scroll shift*) pada smartphone layar kecil (< 375px).
-  - [ ] *Rencana Perbaikan:* Pasang kelas `w-full max-w-full overflow-x-auto` dengan pembungkus card responsif agar hanya tabel yang bergulir dan layout navigasi tetap terkunci rapi.
+- [x] **Sesi WhatsApp Baileys Persisten di Database (Supabase Session Store):**
+  - [x] *Temuan Pengujian:* Render free-tier memiliki sistem berkas sementara (*ephemeral*), sehingga saat instance restart atau cold start, kredensial lokal di folder `auth_info/` dapat terhapus dan mengembalikan status `connected: false`.
+  - [x] *Rencana Perbaikan:* Buat adaptor penyimpanan sesi Baileys langsung ke tabel Supabase (`public.wa_auth_session`), sehingga sekali QR code dipindai, status login WhatsApp akan **abadi dan tersimpan permanen di cloud**, tidak pernah hilang walau Render restart atau di-redeploy. *(Kode & migrasi sudah diimplementasikan; pastikan env var `SUPABASE_URL` & `SUPABASE_SERVICE_ROLE_KEY` diset di dashboard Render).*
+- [x] **Toleransi Latensi Cold-Start Render (Uji Latensi 17.6 Detik):**
+  - [x] *Temuan Pengujian:* Pengujian *keep-alive* langsung mencatat latensi cold-start Render mencapai 17.590 ms (17,6 detik) saat pertama kali dibangunkan dari status *sleep*.
+  - [x] *Rencana Perbaikan:* Tingkatkan timeout fetch gateway pada server actions menjadi 25 detik, dan sediakan teks status progresif di antarmuka web (*"Menghubungkan ke WhatsApp Gateway... Harap tunggu sebentar"*).
+- [x] **Deklarasi Eksplisit Dynamic Rendering (`force-dynamic`):**
+  - [x] *Temuan Pengujian:* Build Next.js mencatat peringatan `Dynamic server usage: Route couldn't be rendered statically because it used cookies` pada halaman yang membaca sesi Clerk.
+  - [x] *Rencana Perbaikan:* Deklarasikan `export const dynamic = 'force-dynamic'` secara eksplisit pada rute yang menggunakan sesi Clerk untuk mencegah build fallback warnings.
+- [x] **Pembersihan ESLint Warnings & React Hook Dependencies:**
+  - [x] *Temuan Pengujian:* Terdeteksi beberapa warning variabel tidak terpakai dan missing dependency array di `GdriveGeneratorClient.tsx` (`loadStorageStats`) dan `KontakManagerClient.tsx` (`formattedWa`).
+  - [x] *Rencana Perbaikan:* Perbaiki dependency array pada `useEffect` dan bersihkan import/variabel yang tidak terpakai agar konsol peramban bersih tanpa noise.
+- [x] **Proteksi Horizontal Overflow pada Tabel Mobile:**
+  - [x] *Temuan Pengujian:* Tabel indikator pertanyaan dengan opsi skor di Form RB berisiko menyebabkan geser layar (*horizontal scroll shift*) pada smartphone layar kecil (< 375px).
+  - [x] *Rencana Perbaikan:* Pasang kelas `w-full max-w-full overflow-x-auto` dengan pembungkus card responsif agar hanya tabel yang bergulir dan layout navigasi tetap terkunci rapi.
 
 ### 8. Arsitektur Otomasi Penuh Berbasis Redis (Redis Message Queue, Background Worker & Automated Notification Engine)
 *Tujuan: Menghilangkan ketergantungan pada pembukaan manual `wa.me` peramban. Seluruh notifikasi (Uji Coba WA, Revisi Berkas, Persetujuan Bukti, Peringatan Tenggat Waktu, Notulen, dan Pesan Sistem Lainnya) dialihkan melalui antrean pesan Redis dan dieksekusi secara otomatis oleh background worker di latar belakang.*
@@ -389,10 +389,34 @@
   - [x] *Cache Agregasi Skor 6 Pilar & Monitoring:* Simpan kalkulasi skor total LKE, progres per pilar, dan status WBK ke dalam Redis Cache (TTL 5-10 menit) dengan mekanisme *smart invalidation* saat ada aksi verifikasi baru, memangkas 80% beban kueri ke Supabase.
   - [x] *Sliding-Window Rate Limiting:* Batasi pengiriman formulir dan uji coba WA (maksimal 5 kali per menit per user) menggunakan Redis atomic increment untuk mencegah serangan DoS atau penyalahgunaan kuota WhatsApp.
 
+### 9. Temuan Pengujian Terbaru & Rencana Perbaikan (Regression & System Audit)
+*Catatan: Seluruh item di bawah ini merupakan temuan langsung dari pengujian build, lint, probe endpoint/route, dan integrasi layanan (tanpa menambah menu baru).*
 
-
-
-
-
-
+- [x] **Perbaikan Middleware Otorisasi API Cron & Queue (`src/middleware.ts`):**
+  - [x] *Temuan Pengujian:* Request ke `/api/cron/keep-alive`, `/api/cron/wa-reminders`, dan `/api/queue/process` mengembalikan `401 Unauthorized` dari Clerk middleware karena `isPublicApiRoute` hanya mengecualikan `/api/webhooks(.*)`. Akibatnya Vercel Cron, GitHub Actions, dan webhook eksternal tidak dapat memicu cron/queue meski membawa `CRON_SECRET`.
+  - [x] *Rencana Perbaikan:* Tambahkan `/api/cron(.*)` dan `/api/queue/process(.*)` ke `isPublicApiRoute` di `src/middleware.ts`, karena masing-masing route handler sudah memvalidasi `CRON_SECRET` secara mandiri.
+- [x] **Penghapusan Celah Auth Bypass Header di Middleware (`src/middleware.ts`):**
+  - [x] *Temuan Pengujian:* Terdapat header bypass hardcoded (`x-screenshot-key: local-docs-capture`) pada proteksi rute `/rebo(.*)` yang dapat melewati login Clerk jika dikirim ke server production.
+  - [x] *Rencana Perbaikan:* Hapus bypass tersebut atau batasi ketat hanya aktif ketika `NODE_ENV === 'development'` dan menggunakan secret environment khusus lokal.
+- [ ] **Pemulihan & Stabilisasi WhatsApp Gateway Render (`https://rebo-wa-gateway.onrender.com`):**
+  - [ ] *Temuan Pengujian:* Pengujian `node scripts/keep_alive.js` mencatat endpoint `/health` WA Gateway di Render mengembalikan **`502 Bad Gateway`** (layanan down/gagal boot), dan `services/wa-gateway/index.js` masih memakai `useMultiFileAuthState(AUTH_DIR)` lokal.
+  - [ ] *Rencana Perbaikan:* Periksa log deployment Render untuk mengatasi error 502, dan selesaikan implementasi Supabase Session Store (`wa_auth_session`) agar sesi login WA tidak hilang saat restart.
+- [ ] **Konfigurasi Environment Produksi Redis, Service Role & Cron Secret (`.env.local` & Vercel):**
+  - [ ] *Temuan Pengujian:* `REDIS_URL`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, dan `CRON_SECRET` masih kosong di `.env.local`, sehingga `getRedisHealthStatus()` jatuh ke mode `in-memory (mock)` yang tidak persisten di serverless Vercel dan tidak terhubung ke worker standalone.
+  - [ ] *Rencana Perbaikan:* Isi kredensial Upstash Redis / Redis TCP, `SUPABASE_SERVICE_ROLE_KEY`, dan `CRON_SECRET` pada environment lokal & Vercel agar antrean Redis, cache skor, dan cron berjalan nyata.
+- [ ] **Pembaruan Data Nomor WhatsApp Nyata di Tabel `kontak_pilar`:**
+  - [ ] *Temuan Pengujian:* Pengujian `scripts/test_contacts.ts` berhasil membaca 8 kontak dari Supabase, tetapi seluruh nomor (`082190010000` s.d. `082190010008`) masih berupa nomor dummy.
+  - [ ] *Rencana Perbaikan:* Ganti seluruh nomor dummy pada menu `/rebo/admin/kontak` dengan nomor WhatsApp aktif PIC masing-masing pilar dan Tim Verifikator BPS Sitaro.
+- [x] **Optimasi Performa SSR Halaman Berat (`> 2,5 detik`):**
+  - [x] *Temuan Pengujian:* Pengukuran respon halaman di `next start` menunjukkan latensi tinggi pada `/rebo/overview` (`~6,8 detik`), `/rebo/monitoring` (`~4,6 detik`), `/rebo/leaderboard` (`~4,2 detik`), `/rebo/command-center` (`~3,3 detik`), `/rebo/formRB/pemenuhan` (`~3,1 detik`), `/rebo/presentation` (`~2,7 detik`), dan `/rebo/kanban` (`~2,6 detik`).
+  - [x] *Rencana Perbaikan:* Aktifkan Redis Cache yang sudah tersedia untuk agregasi skor/leaderboard, paralelkan query Supabase dengan `Promise.all`, dan tambahkan `loading.tsx` / React `Suspense` streaming agar TTFB turun di bawah 1 detik.
+- [x] **Penambahan `export const dynamic = 'force-dynamic'` pada `/rebo/overview/page.tsx`:**
+  - [x] *Temuan Pengujian:* `pnpm build` masih memunculkan error fallback `Dynamic server usage: Route /rebo/overview couldn't be rendered statically because it used cookies`.
+  - [x] *Rencana Perbaikan:* Tambahkan `export const dynamic = 'force-dynamic'` di `src/app/rebo/overview/page.tsx` agar build bersih tanpa fallback warning.
+- [x] **Pembersihan Duplikasi Item Menu Sidebar (`src/constants/data.ts`):**
+  - [x] *Temuan Pengujian:* Menu `Kepatuhan LHKPN/ASN`, `Disiplin & Kode Etik`, dan `Pengendalian Gratifikasi (UPG)` muncul ganda di sidebar: di dalam grup `Integritas & Kepatuhan` dan diulang kembali di grup `Admin`.
+  - [x] *Rencana Perbaikan:* Hapus duplikasi 3 item kepatuhan tersebut dari grup `Admin` sehingga cukup tampil di grup `Integritas & Kepatuhan`.
+- [x] **Pembersihan Seluruh ESLint Warnings (`pnpm lint:strict`):**
+  - [x] *Temuan Pengujian:* `pnpm lint` mencatat banyak warning (`@typescript-eslint/no-unused-vars`, `no-console`, `react-hooks/exhaustive-deps`) di berbagai file seperti `src/actions/*-actions.ts` (`sendWhatsAppMessage` unused), `GdriveGeneratorClient.tsx`, `KontakManagerClient.tsx`, `accessibility-widget.tsx`, `zi-roadmap-timeline.tsx`, dan `src/app/api/*`.
+  - [x] *Rencana Perbaikan:* Bersihkan import/variabel tak terpakai, perbaiki dependency `useEffect`, dan ganti `console.log` sisa debugging agar `pnpm lint:strict` (`--max-warnings=0`) lulus 100%.
 

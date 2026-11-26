@@ -19,7 +19,6 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    console.error('[API /api/pilarHasil] PUT body:', body);
     const { id_pilarHasil, skor_pilarHasil } = body;
     if (!id_pilarHasil) {
       return NextResponse.json(
@@ -37,14 +36,11 @@ export async function PUT(request: Request) {
       .single();
 
     if (error) {
-      console.error('[API /api/pilarHasil] supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.error('[API /api/pilarHasil] updated row:', data);
     return NextResponse.json({ success: true, data });
   } catch (err: any) {
-    console.error('[API /api/pilarHasil] exception:', err);
     return NextResponse.json(
       { error: err.message || 'Unknown' },
       { status: 500 }

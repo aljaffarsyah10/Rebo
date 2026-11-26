@@ -13,7 +13,6 @@ import {
 } from '@/lib/ai/metadata-extractor';
 import {
   getSmartSuggestion,
-  type SmartSuggestionParams,
   type SmartSuggestionMatchResult
 } from '@/lib/ai/smart-suggestions';
 

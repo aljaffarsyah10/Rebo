@@ -11,20 +11,14 @@ import {
   RotateCcw,
   Sparkles,
   ShieldCheck,
-  FileCheck2,
   Phone,
   Mail,
   Globe,
   Palette,
   Layout,
-  ExternalLink,
   Info,
-  Layers,
-  ArrowRight,
-  Eye,
   CheckCircle2,
   AlertCircle,
-  HelpCircle,
   Save,
   Loader2
 } from 'lucide-react';
@@ -57,7 +51,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface PSTQRCodeGeneratorClientProps {
   initialConfig?: PSTQRConfig;
@@ -97,8 +90,8 @@ export default function PSTQRCodeGeneratorClient({
         if (!isCancelled) {
           setQrDataUrl(dataUrl);
         }
-      } catch (err) {
-        console.error('Gagal generate QR Code:', err);
+      } catch {
+        // Ignore QR generation error
       } finally {
         if (!isCancelled) setIsGenerating(false);
       }
@@ -273,8 +266,7 @@ export default function PSTQRCodeGeneratorClient({
         link.click();
         toast.success('Berkas PNG HD berhasil diunduh!');
       };
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error('Gagal mengunduh gambar.');
     }
   };

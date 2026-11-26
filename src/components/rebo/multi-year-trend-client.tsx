@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +20,6 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog';
 import {
-  LineChart,
   Line,
   BarChart,
   Bar,
@@ -37,7 +35,6 @@ import {
 } from 'recharts';
 import {
   TrendingUp,
-  Award,
   ShieldCheck,
   CheckCircle2,
   Copy,
@@ -46,10 +43,8 @@ import {
   ArrowUpRight,
   ChevronLeft,
   Lightbulb,
-  FileText,
   BarChart3,
   Flame,
-  Star,
   Layers,
   ArrowRight
 } from 'lucide-react';

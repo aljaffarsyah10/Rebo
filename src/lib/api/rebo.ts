@@ -115,12 +115,10 @@ export async function fetchPertanyaanPeriode(
 
     const { data, error } = await query;
     if (error) {
-      console.warn('[REBO API] fetchPertanyaanPeriode notice:', error.message);
       return [];
     }
     return (data as PertanyaanPeriode[]) || [];
-  } catch (err: any) {
-    console.warn('[REBO API] fetchPertanyaanPeriode exception:', err?.message);
+  } catch {
     return [];
   }
 }
@@ -140,18 +138,10 @@ export async function fetchDokumenBuktiByPertanyaanPeriode(
       .order('uploaded_at', { ascending: true });
 
     if (error) {
-      console.warn(
-        '[REBO API] fetchDokumenBuktiByPertanyaanPeriode notice:',
-        error.message
-      );
       return [];
     }
     return (data as DokumenBukti[]) || [];
-  } catch (err: any) {
-    console.warn(
-      '[REBO API] fetchDokumenBuktiByPertanyaanPeriode exception:',
-      err?.message
-    );
+  } catch {
     return [];
   }
 }
@@ -171,18 +161,10 @@ export async function fetchAuditLogByPertanyaanPeriode(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.warn(
-        '[REBO API] fetchAuditLogByPertanyaanPeriode notice:',
-        error.message
-      );
       return [];
     }
     return (data as AuditLog[]) || [];
-  } catch (err: any) {
-    console.warn(
-      '[REBO API] fetchAuditLogByPertanyaanPeriode exception:',
-      err?.message
-    );
+  } catch {
     return [];
   }
 }
@@ -250,8 +232,8 @@ export async function fetchBuktiByPertanyaanIds(
         return mappedV2;
       }
     }
-  } catch (err) {
-    console.warn('[REBO API] Fallback to legacy buktiDukung fetch:', err);
+  } catch {
+    // Fallback ke tabel legacy buktiDukung jika skema V2 belum tersedia
   }
 
   // Fallback V1: select related statusBukti.nama_status via relationship `statusBukti`

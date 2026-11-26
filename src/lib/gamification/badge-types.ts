@@ -6,11 +6,7 @@
  * engine evaluasi otomatis capaian pilar, dan template notifikasi WhatsApp resmi Kepala BPS Sitaro.
  */
 
-import {
-  type PilarLeaderboardItem,
-  MOCK_PILAR_LEADERBOARD_RAW,
-  calculateLeaderboardRanks
-} from './leaderboard-types';
+import { type PilarLeaderboardItem } from './leaderboard-types';
 
 export type BadgeCategory =
   | 'INTEGRITAS'

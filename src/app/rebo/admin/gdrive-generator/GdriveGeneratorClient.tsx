@@ -61,15 +61,12 @@ import {
   History,
   Activity,
   ShieldCheck,
-  ShieldAlert,
   AlertTriangle,
   HardDrive,
   Lock,
-  Unlock,
   Play,
   RotateCw,
   XCircle,
-  Database,
   FileText
 } from 'lucide-react';
 import type { PeriodeEvaluasi } from '@/types/rebo';
@@ -153,23 +150,26 @@ export default function GdriveGeneratorClient({
   const [isSavingFix, setIsSavingFix] = useState<boolean>(false);
 
   // Load Cloud Storage Stats
-  const loadStorageStats = async (pId = selectedPeriodeId) => {
-    setIsLoadingStorage(true);
-    try {
-      const stats = await getDriveStorageStatsAction(pId);
-      if (stats.success) {
-        setStorageStats(stats);
+  const loadStorageStats = React.useCallback(
+    async (pId = selectedPeriodeId) => {
+      setIsLoadingStorage(true);
+      try {
+        const stats = await getDriveStorageStatsAction(pId);
+        if (stats.success) {
+          setStorageStats(stats);
+        }
+      } catch {
+        // Ignore storage stats fetch error on initial load
+      } finally {
+        setIsLoadingStorage(false);
       }
-    } catch (err: any) {
-      console.warn('Gagal memuat status penyimpanan:', err);
-    } finally {
-      setIsLoadingStorage(false);
-    }
-  };
+    },
+    [selectedPeriodeId]
+  );
 
   React.useEffect(() => {
     loadStorageStats(selectedPeriodeId);
-  }, [selectedPeriodeId]);
+  }, [selectedPeriodeId, loadStorageStats]);
 
   // Handler: Run Batch Health Audit
   const handleRunAudit = async () => {

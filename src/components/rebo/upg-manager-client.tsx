@@ -4,19 +4,15 @@ import React, { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   ShieldCheck,
-  ShieldAlert,
   CheckCircle2,
-  AlertTriangle,
   FileText,
   Printer,
   Plus,
   RefreshCw,
   Search,
-  ExternalLink,
   Award,
   Calendar,
   Building2,
-  Check,
   Gift,
   Banknote,
   Ticket,
@@ -24,10 +20,7 @@ import {
   Utensils,
   Scale,
   Eye,
-  Filter,
-  ArrowRight,
-  Landmark,
-  BadgeAlert
+  Landmark
 } from 'lucide-react';
 
 import {

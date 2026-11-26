@@ -220,7 +220,7 @@ export function detectSensitiveDocument(
   fileName: string,
   mimeType?: string
 ): SensitiveDetectionResult {
-  const lowerName = fileName.toLowerCase();
+  const lowerName = `${fileName} ${mimeType || ''}`.toLowerCase();
   const matchedKeywords: string[] = [];
 
   // 1. Kategori Pemeriksaan Internal & Eksternal (LHP, BPK, Itjen)

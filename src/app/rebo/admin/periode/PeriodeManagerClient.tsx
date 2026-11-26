@@ -13,7 +13,6 @@ import {
   Trash2,
   Check,
   RefreshCw,
-  Info,
   Clock,
   Edit3,
   Wand2,

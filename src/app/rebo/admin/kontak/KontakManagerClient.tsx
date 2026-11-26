@@ -12,7 +12,6 @@ import {
   RefreshCw,
   Edit,
   User,
-  ShieldCheck,
   Clock,
   BarChart3,
   QrCode,
@@ -20,9 +19,7 @@ import {
   Sparkles,
   Bot,
   Check,
-  X,
   Radio,
-  Share2,
   Server,
   Layers
 } from 'lucide-react';
@@ -1151,7 +1148,6 @@ export default function KontakManagerClient({
                     label: 'Tim Verifikator Internal ZI'
                   };
 
-              const formattedWa = formatPhoneNumber(contact.no_wa);
               const deepLinkUrl = createWhatsAppDeepLink(
                 contact.no_wa,
                 `Halo ${contact.nama_pic}, ini pesan komunikasi koordinasi terkait Zona Integritas REBO V2 BPS Sitaro.`

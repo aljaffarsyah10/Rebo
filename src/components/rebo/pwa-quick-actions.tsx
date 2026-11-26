@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Zap,
@@ -15,8 +14,7 @@ import {
   CheckCircle2,
   Share2,
   ChevronRight,
-  Sparkles,
-  ArrowUpRight
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -201,8 +199,8 @@ export function PWAQuickActions() {
         } else {
           toast.info('Instalasi dibatalkan oleh pengguna.');
         }
-      } catch (err) {
-        console.error('Error saat instalasi PWA:', err);
+      } catch {
+        toast.error('Gagal memproses instalasi PWA.');
       }
     } else if (isIOS) {
       setShowIOSGuide(true);

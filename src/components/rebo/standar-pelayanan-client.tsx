@@ -8,26 +8,19 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
-  Scale,
   Printer,
   Edit3,
   Search,
   RefreshCw,
-  AlertTriangle,
   Gift,
   HeartHandshake,
   Ship,
   Sparkles,
-  Info,
-  BookOpen,
   Users,
   Compass,
   FileCheck,
-  Building2,
-  PhoneCall,
   Check,
   HelpCircle,
-  Eye,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
@@ -37,8 +30,7 @@ import {
   MaklumatPelayananData,
   KategoriLayanan,
   KATEGORI_LAYANAN_LABELS,
-  ALUR_KOMPENSASI_DEFAULT,
-  TahapKompensasiLayanan
+  ALUR_KOMPENSASI_DEFAULT
 } from '@/lib/pelayanan/standar-pelayanan-types';
 
 import {
@@ -49,13 +41,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';

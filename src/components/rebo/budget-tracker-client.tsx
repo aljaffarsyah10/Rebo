@@ -6,23 +6,18 @@ import {
   Wallet,
   CheckCircle2,
   AlertTriangle,
-  Clock,
   Printer,
   Plus,
   Search,
-  Filter,
   RotateCcw,
   FileText,
-  Building2,
   Edit2,
   Trash2,
   PieChart,
   ShieldCheck,
   Receipt,
   ArrowUpRight,
-  BarChart3,
-  Check,
-  Info
+  BarChart3
 } from 'lucide-react';
 
 import {
@@ -36,7 +31,6 @@ import {
 } from '@/lib/budget/budget-types';
 
 import {
-  getBudgetListAction,
   saveBudgetItemAction,
   deleteBudgetItemAction,
   resetBudgetToDefaultAction
@@ -113,26 +107,6 @@ export default function BudgetTrackerClient({
   // Dialog Delete Confirmation State
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ItemAnggaranZI | null>(null);
-
-  // Refresh data function
-  const refreshData = async () => {
-    startTransition(async () => {
-      const res = await getBudgetListAction({
-        pilar_id: filterPilar === 'ALL' ? 'ALL' : Number(filterPilar),
-        status:
-          filterStatus === 'ALL'
-            ? 'ALL'
-            : (filterStatus as StatusPelaksanaanAnggaran),
-        search: searchQuery
-      });
-      if (res.success) {
-        setItems(res.data);
-        setSummary(res.summary);
-      } else {
-        toast.error(res.error || 'Gagal menyegarkan data');
-      }
-    });
-  };
 
   // Filter in client-side for rapid reactivity
   const filteredItems = items.filter((item) => {

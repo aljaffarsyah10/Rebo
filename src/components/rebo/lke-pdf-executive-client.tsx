@@ -6,20 +6,12 @@ import { useRouter } from 'next/navigation';
 import {
   Printer,
   ArrowLeft,
-  Award,
   CheckCircle2,
-  AlertTriangle,
-  Clock,
-  HelpCircle,
   FileSpreadsheet,
-  Building2,
-  Calendar,
-  FileCheck2,
   ShieldCheck,
   Edit3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import type { MonitoringDashboardData, PeriodeEvaluasi } from '@/types/rebo';
 import { calculateWBKSimulation } from '@/lib/simulation/wbk-gap-analysis';
 

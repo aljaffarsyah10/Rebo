@@ -14,19 +14,13 @@ import {
   XCircle,
   TrendingUp,
   Users,
-  Award,
   Search,
   Plus,
   Trash2,
   Edit3,
-  ShieldCheck,
   Building2,
-  Calendar,
   Layers,
-  ArrowRight,
   Eye,
-  Quote,
-  Check,
   Loader2
 } from 'lucide-react';
 import type {
@@ -72,8 +66,6 @@ const PILAR_PRESETS = [
 
 export default function InovasiShowcaseClient({
   initialData,
-  initialStats,
-  availablePilars: _availablePilars,
   isAdmin
 }: InovasiShowcaseClientProps) {
   const [data, setData] = useState<InovasiLayanan[]>(initialData);

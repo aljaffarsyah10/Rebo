@@ -50,7 +50,6 @@ export interface AccessibilityState {
 // Queue & utterance reference untuk mencegah garbage collection pada browser engine
 let speechQueue: string[] = [];
 let currentQueueIndex = 0;
-let activeUtterance: SpeechSynthesisUtterance | null = null;
 
 /** Mengambil suara bahasa Indonesia terbaik yang tersedia di browser */
 function getIndonesianVoice(): SpeechSynthesisVoice | null {
@@ -196,19 +195,15 @@ export const useAccessibilityStore = create<AccessibilityState>()(
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           try {
             window.speechSynthesis.cancel();
-          } catch (e) {
-            console.error('Error saat membatalkan ucapan:', e);
+          } catch {
+            // Ignore speechSynthesis cancel error
           }
         }
-        activeUtterance = null;
         set({ isSpeaking: false, currentSpokenText: null });
       },
 
       speakText: (text: string, lang = 'id-ID') => {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-          console.warn(
-            'Web Speech API tidak didukung di lingkungan browser ini.'
-          );
           return;
         }
 
@@ -255,14 +250,10 @@ export const useAccessibilityStore = create<AccessibilityState>()(
             speakNext();
           };
 
-          utterance.onerror = (e) => {
-            if (e.error !== 'canceled' && e.error !== 'interrupted') {
-              console.warn('TTS utterance error:', e.error);
-            }
+          utterance.onerror = () => {
             set({ isSpeaking: false, currentSpokenText: null });
           };
 
-          activeUtterance = utterance;
           window.speechSynthesis.speak(utterance);
         };
 

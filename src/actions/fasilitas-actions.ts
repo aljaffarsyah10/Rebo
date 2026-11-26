@@ -6,7 +6,6 @@ import {
   FasilitasDifabelItem,
   FasilitasSummary,
   KategoriFasilitas,
-  KondisiFasilitas,
   DEFAULT_MOCK_FASILITAS_DIFABEL,
   calculateFasilitasSummary
 } from '@/lib/accessibility/fasilitas-types';

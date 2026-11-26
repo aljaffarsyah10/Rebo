@@ -11,37 +11,23 @@ import {
   Printer,
   Plus,
   Search,
-  Filter,
   CheckCircle2,
   Clock,
   AlertTriangle,
   QrCode,
   ShieldCheck,
   TrendingUp,
-  BarChart3,
   MessageSquare,
-  HelpCircle,
-  ExternalLink,
-  ChevronRight,
   RotateCcw,
   Tag,
   Building2,
-  User,
-  Calendar,
   X,
-  FileText,
-  ThumbsUp,
-  Lightbulb,
   Award
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
-  type FeedbackKonsumen,
   type SentimentSummaryData,
-  type WordCloudItem,
-  type WordCategory,
-  type SentimentType,
   type TindakLanjutStatus,
   DAFTAR_LAYANAN_PST,
   analyzeFeedbackSentiment
@@ -64,7 +50,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,

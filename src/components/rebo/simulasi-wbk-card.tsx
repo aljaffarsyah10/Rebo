@@ -16,16 +16,13 @@ import {
   Award,
   Target,
   Sparkles,
-  TrendingUp,
   CheckCircle2,
   Clock,
   ExternalLink,
   Flame,
-  AlertCircle,
-  HelpCircle,
-  ChevronRight
+  AlertCircle
 } from 'lucide-react';
-import type { WBKSimulationResult, QuickWinIndicator } from '@/types/rebo';
+import type { WBKSimulationResult } from '@/types/rebo';
 import { TARGET_WBK, TARGET_WBBM } from '@/lib/simulation/wbk-gap-analysis';
 import { safePercentage, safeNumberFormat } from '@/lib/utils';
 
@@ -44,7 +41,6 @@ export default function SimulasiWBKCard({
     totalNilaiMaks,
     gapToWBK,
     gapToWBBM,
-    gapMandiriToWBK,
     status,
     statusLabel,
     statusDescription,
@@ -59,11 +55,6 @@ export default function SimulasiWBKCard({
   const persenKeWBBM = Math.min(
     100,
     Math.max(0, safePercentage(totalSkorVerifikasi, TARGET_WBBM))
-  );
-
-  const persenMandiriKeWBK = Math.min(
-    100,
-    Math.max(0, safePercentage(totalSkorMandiri, TARGET_WBK))
   );
 
   // Ambil top 5 indikator quick-wins

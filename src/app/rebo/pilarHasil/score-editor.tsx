@@ -42,8 +42,7 @@ export default function ScoreEditor({
         // clear saved state after short delay for visual feedback
         setTimeout(() => setSaved(false), 2000);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error('Error saat menyimpan skor');
     } finally {
       setLoading(false);

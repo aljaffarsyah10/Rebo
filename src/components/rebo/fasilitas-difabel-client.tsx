@@ -5,10 +5,8 @@ import { toast } from 'sonner';
 import {
   Accessibility,
   CheckCircle2,
-  AlertTriangle,
   HeartHandshake,
   Ear,
-  Eye,
   BookOpen,
   Users,
   Printer,
@@ -16,21 +14,15 @@ import {
   Search,
   Filter,
   RefreshCw,
-  FileText,
   Check,
   MapPin,
   Calendar,
   ShieldCheck,
   Building2,
-  ExternalLink,
   Edit3,
   Trash2,
   Info,
-  Clock,
-  Sparkles,
-  HelpCircle,
-  Wrench,
-  CheckCircle
+  Sparkles
 } from 'lucide-react';
 
 import {
@@ -44,7 +36,6 @@ import {
 } from '@/lib/accessibility/fasilitas-types';
 
 import {
-  getFasilitasDifabelListAction,
   saveFasilitasDifabelAction,
   toggleFasilitasStatusAction,
   deleteFasilitasDifabelAction,
@@ -53,13 +44,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';

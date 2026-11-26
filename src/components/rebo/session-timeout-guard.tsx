@@ -33,7 +33,6 @@ import {
   SESSION_STORAGE_KEYS,
   generateDeviceFingerprint,
   getRemainingSeconds,
-  getLastActivity,
   updateLastActivity,
   isSessionLocked,
   setSessionLocked,
@@ -108,8 +107,8 @@ export function SessionTimeoutGuard() {
             }
           }
         }
-      } catch (err) {
-        console.warn('[SESSION-GUARD] Device check error:', err);
+      } catch {
+        // Ignore device verification errors
       }
     };
 
@@ -133,8 +132,8 @@ export function SessionTimeoutGuard() {
           reason,
           lastPath: pathname
         });
-      } catch (err) {
-        console.warn('[SESSION-GUARD] Log timeout error:', err);
+      } catch {
+        // Ignore timeout log errors
       }
     },
     [pathname]

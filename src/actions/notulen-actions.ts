@@ -13,10 +13,7 @@ import {
   formatNotulenTaskWAMessage,
   generateNomorNotula
 } from '@/lib/notulen/notulen-types';
-import {
-  sendWhatsAppMessage,
-  createWhatsAppDeepLink
-} from '@/lib/notifications/whatsapp';
+import { createWhatsAppDeepLink } from '@/lib/notifications/whatsapp';
 import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
 
 // Server-side in-memory cache untuk fallback jika tabel Supabase belum ada / offline

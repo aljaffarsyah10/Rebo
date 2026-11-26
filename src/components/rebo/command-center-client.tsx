@@ -33,15 +33,8 @@ import {
   Sparkles,
   FileCheck,
   Award,
-  AlertTriangle,
   Smile,
   HeartHandshake,
-  Smartphone,
-  ExternalLink,
-  Volume2,
-  VolumeX,
-  RefreshCw,
-  Layers,
   Star
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -69,9 +62,6 @@ const SLIDE_DURATION_SECONDS = 15;
 export default function CommandCenterClient({
   monitoringData,
   activePeriode,
-  lhkpnSummary,
-  disiplinSummary,
-  inovasiList,
   pengumumanBroadcast
 }: CommandCenterClientProps) {
   // State Navigasi Slide
@@ -231,9 +221,7 @@ export default function CommandCenterClient({
   }, [monitoringData.pilars]);
 
   // Hitung Skor Total
-  const totalMandiri = monitoringData.kpi?.totalNilaiMandiri || 0;
   const totalVerifikasi = monitoringData.kpi?.totalNilaiVerifikasi || 0;
-  const totalMaksimal = monitoringData.kpi?.totalNilaiMaksimal || 100;
   const isEligibleWBK =
     monitoringData.simulation?.status === 'MEMENUHI_WBK' ||
     monitoringData.simulation?.status === 'MEMENUHI_WBBM' ||

@@ -14,7 +14,6 @@ export default async function PilarHasilPage() {
     .order('id_pilarHasil', { ascending: true });
 
   if (error) {
-    console.error('Error fetching pilarHasil:', error.message);
     return (
       <div className='container mx-auto max-w-4xl p-6'>
         <div className='rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20'>

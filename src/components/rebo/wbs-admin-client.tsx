@@ -5,33 +5,24 @@ import {
   ShieldAlert,
   ShieldCheck,
   Search,
-  Filter,
-  Download,
   Printer,
   ExternalLink,
-  Eye,
   Edit,
   Clock,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   Lock,
   UserCheck,
   RefreshCw,
   Building,
   MapPin,
-  Calendar,
-  Send,
   FileSpreadsheet,
-  FileCheck2,
-  MessageSquare,
-  Sparkles
+  FileCheck2
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -70,8 +61,7 @@ interface WBSAdminClientProps {
 
 export default function WBSAdminClient({
   initialData,
-  initialStats,
-  isAdmin = true
+  initialStats
 }: WBSAdminClientProps) {
   const [items, setItems] = useState<LaporanPengaduanWBS[]>(initialData);
   const [stats, setStats] = useState<WBSStats>(

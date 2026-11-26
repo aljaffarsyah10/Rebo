@@ -4,7 +4,6 @@ import React, { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   ShieldCheck,
-  ShieldAlert,
   Clock,
   CheckCircle2,
   AlertCircle,
@@ -16,13 +15,10 @@ import {
   ExternalLink,
   Copy,
   Check,
-  FileText,
   UserCheck,
   AlertTriangle,
-  Building2,
   Calendar,
   MessageSquare,
-  Sparkles,
   Award
 } from 'lucide-react';
 
@@ -31,7 +27,6 @@ import {
   LHKPNSummary,
   SubmitBuktiLaporInput,
   TipeLaporanHarta,
-  StatusKepatuhanLHKPN,
   calculateLHKPNSummary
 } from '@/lib/compliance/lhkpn-types';
 
@@ -48,8 +43,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent,
-  CardFooter
+  CardContent
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

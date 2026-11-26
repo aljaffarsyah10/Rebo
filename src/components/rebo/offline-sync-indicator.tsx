@@ -1,24 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Wifi,
-  WifiOff,
-  Cloud,
-  CloudOff,
-  RefreshCw,
-  CheckCircle2,
-  AlertTriangle,
-  HardDrive
-} from 'lucide-react';
+import { WifiOff, Cloud, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   isOnline,
   addConnectivityListener,
   subscribeDraftChanges,
   getAllOfflineDrafts,
-  syncAllOfflineDrafts,
-  type OfflineDraftItem
+  syncAllOfflineDrafts
 } from '@/lib/offline/offline-draft-store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

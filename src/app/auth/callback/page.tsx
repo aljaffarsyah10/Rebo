@@ -15,8 +15,8 @@ export default function AuthCallback() {
     const checkAndRedirect = async () => {
       try {
         await supabase.auth.getSession();
-      } catch (err) {
-        console.error(err);
+      } catch {
+        // Ignore session check errors before redirect
       }
       if (isMounted) {
         router.replace('/rebo/overview');
