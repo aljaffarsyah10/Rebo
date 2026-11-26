@@ -342,14 +342,14 @@
   - [x] *Modul Singleton Redis (`src/lib/redis/client.ts`):* Bangun koneksi Redis terisolasi yang adaptif. Gunakan HTTP REST client saat berjalan di Vercel Serverless Functions (menghindari kehabisan *connection pool*), dan TCP ioredis saat dijalankan oleh Background Worker di VM/Render/lokal.
   - [x] *Fungsi Cek Kesehatan Redis (`getRedisHealthStatus`):* Buat utilitas pengecekan ping, latensi (ms), dan status aktif (*Connected / Disconnected*) untuk validasi koneksi secara real-time.
 
-- [ ] **Desain Skema & Producer Antrean Pesan (`src/lib/redis/queue.ts` & `types.ts`):**
-  - [ ] *Struktur Payload Antrean:* Definisikan tipe payload terstandar: `id` (UUID), `type` (`TEST_WA`, `REVISI_BUKTI`, `APPROVAL_BUKTI`, `DEADLINE_ALERT`, `AGENDA_REMINDER`, `WBS_STATUS`), `targetPhone` (format internasional `628xxx`), `message` (teks terformat), `metadata` (userId, senderName, pilarId, dll.), `status` (`pending`, `processing`, `delivered`, `failed`), `attempts` (default 0, max 5), dan `createdAt`.
-  - [ ] *Manajemen Key & Data Structure Redis:*
+- [x] **Desain Skema & Producer Antrean Pesan (`src/lib/redis/queue.ts` & `types.ts`):**
+  - [x] *Struktur Payload Antrean:* Definisikan tipe payload terstandar: `id` (UUID), `type` (`TEST_WA`, `REVISI_BUKTI`, `APPROVAL_BUKTI`, `DEADLINE_ALERT`, `AGENDA_REMINDER`, `WBS_STATUS`), `targetPhone` (format internasional `628xxx`), `message` (teks terformat), `metadata` (userId, senderName, pilarId, dll.), `status` (`pending`, `processing`, `delivered`, `failed`), `attempts` (default 0, max 5), dan `createdAt`.
+  - [x] *Manajemen Key & Data Structure Redis:*
     - `wa_queue:pending`: Redis List (`LPUSH` / `RPOP`) untuk antrean pesan yang siap dieksekusi.
     - `wa_queue:delayed`: Redis Sorted Set (`ZADD` berdasarkan unix timestamp) untuk penjadwalan pesan bertenggat waktu (Early Warning).
     - `wa_queue:dlq`: Dead Letter Queue untuk pesan yang gagal setelah 5x percobaan ulang.
     - `wa_job:{id}`: Redis Hash dengan TTL 24 jam untuk pelacakan status pekerjaan (*job tracking*) secara instan oleh UI.
-  - [ ] *Producer Non-Blocking (`enqueueWhatsAppNotification`):* Fungsi Server Action / library untuk memasukkan pesan ke antrean dalam hitungan milidetik (< 20ms) tanpa memblokir alur utama pengguna.
+  - [x] *Producer Non-Blocking (`enqueueWhatsAppNotification`):* Fungsi Server Action / library untuk memasukkan pesan ke antrean dalam hitungan milidetik (< 20ms) tanpa memblokir alur utama pengguna.
 
 - [ ] **Background Worker & Auto-Dispatcher (`services/wa-gateway/worker.js` & Route Handler):**
   - [ ] *Consumer Loop Otomatis:* Bangun script worker otomatis yang mendengarkan `wa_queue:pending` dan langsung meneruskan pengiriman pesan ke WhatsApp Gateway (Baileys socket) tanpa intervensi peramban manusia.

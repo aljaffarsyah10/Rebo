@@ -25,6 +25,7 @@ export interface WhatsAppQueuePayload {
   updatedAt?: string;
   processedAt?: string;
   deliveredAt?: string;
+  scheduledAt?: string;
   error?: string | null;
 }
 
@@ -54,6 +55,7 @@ export interface IRedisClient {
   rpop(key: string): Promise<string | null>;
   lrange(key: string, start: number, stop: number): Promise<string[]>;
   llen(key: string): Promise<number>;
+  ltrim?(key: string, start: number, stop: number): Promise<'OK' | string>;
   zadd(key: string, score: number, member: string): Promise<number>;
   zrangebyscore(
     key: string,
@@ -61,6 +63,7 @@ export interface IRedisClient {
     max: number | string
   ): Promise<string[]>;
   zrem(key: string, ...members: string[]): Promise<number>;
+  zcard?(key: string): Promise<number>;
   hset(
     key: string,
     objOrField: Record<string, unknown> | string,

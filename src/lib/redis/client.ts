@@ -143,6 +143,13 @@ class InMemoryRedisClient implements IRedisClient {
     return list ? list.length : 0;
   }
 
+  async ltrim(key: string, start: number, stop: number): Promise<'OK'> {
+    const list = this.lists.get(key) || [];
+    const end = stop < 0 ? list.length + stop + 1 : stop + 1;
+    this.lists.set(key, list.slice(start, end));
+    return 'OK';
+  }
+
   async zadd(key: string, score: number, member: string): Promise<number> {
     let zset = this.zsets.get(key);
     if (!zset) {
@@ -184,6 +191,11 @@ class InMemoryRedisClient implements IRedisClient {
       if (zset.delete(member)) count++;
     }
     return count;
+  }
+
+  async zcard(key: string): Promise<number> {
+    const zset = this.zsets.get(key);
+    return zset ? zset.size : 0;
   }
 
   async hset(
@@ -335,6 +347,14 @@ class UpstashRedisWrapper implements IRedisClient {
     return await this.rawClient.llen(key);
   }
 
+  async ltrim(
+    key: string,
+    start: number,
+    stop: number
+  ): Promise<'OK' | string> {
+    return (await this.rawClient.ltrim(key, start, stop)) as 'OK' | string;
+  }
+
   async zadd(key: string, score: number, member: string): Promise<number> {
     const res = await this.rawClient.zadd(key, { score, member });
     return res ?? 0;
@@ -362,6 +382,10 @@ class UpstashRedisWrapper implements IRedisClient {
   async zrem(key: string, ...members: string[]): Promise<number> {
     if (members.length === 0) return 0;
     return await this.rawClient.zrem(key, ...members);
+  }
+
+  async zcard(key: string): Promise<number> {
+    return await this.rawClient.zcard(key);
   }
 
   async hset(
@@ -470,6 +494,14 @@ class IORedisWrapper implements IRedisClient {
     return await this.rawClient.llen(key);
   }
 
+  async ltrim(
+    key: string,
+    start: number,
+    stop: number
+  ): Promise<'OK' | string> {
+    return (await this.rawClient.ltrim(key, start, stop)) as 'OK' | string;
+  }
+
   async zadd(key: string, score: number, member: string): Promise<number> {
     return await this.rawClient.zadd(key, score, member);
   }
@@ -486,6 +518,10 @@ class IORedisWrapper implements IRedisClient {
   async zrem(key: string, ...members: string[]): Promise<number> {
     if (members.length === 0) return 0;
     return await this.rawClient.zrem(key, ...members);
+  }
+
+  async zcard(key: string): Promise<number> {
+    return await this.rawClient.zcard(key);
   }
 
   async hset(
