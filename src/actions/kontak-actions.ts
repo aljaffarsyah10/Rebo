@@ -16,6 +16,7 @@ import {
   formatPhoneNumber,
   createWhatsAppDeepLink
 } from '@/lib/notifications/whatsapp';
+import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
 import {
   executeReminders,
   type ReminderExecutionResult,
@@ -380,7 +381,7 @@ export async function createKontakAction(data: {
 
 /**
  * Mengirimkan pesan WhatsApp pengujian interaktif ke nomor yang dipilih
- * menggunakan sendWhatsAppMessage.
+ * melalui Redis Queue (non-blocking) untuk diproses otomatis oleh Worker.
  */
 export async function sendTestNotificationAction(
   phone: string,
@@ -389,6 +390,8 @@ export async function sendTestNotificationAction(
   success: boolean;
   message: string;
   error?: string;
+  jobId?: string;
+  status?: string;
   waDeepLink?: string;
 }> {
   try {
@@ -427,7 +430,7 @@ Pesan ini merupakan uji coba notifikasi resmi dari sistem *REBO V2 (Reformasi Bi
 
 ━━━━━━━━━━━━━━━━━━━━━
 📋 *Status Pengujian:*
-• Status Koneksi : ✅ Gateway Aktif & Siap Mengirim
+• Status Antrean : 🟡 Masuk Antrean Redis & Diproses Worker
 • Waktu Pengujian : ${timeFormatted} WITA
 • Nomor Tujuan   : ${cleanPhone}
 ━━━━━━━━━━━━━━━━━━━━━
@@ -440,49 +443,76 @@ Nomor WhatsApp Anda telah terdaftar sebagai saluran resmi untuk menerima:
 
 Terima kasih atas dedikasi dan kerja sama dalam pembangunan Zona Integritas BPS Kabupaten Kepulauan Sitaro! 🙏
 
-_Pesan otomatis dikirim oleh Sistem REBO V2 BPS Sitaro_`;
+_Pesan otomatis dikirim oleh Sistem REBO V2 BPS Sitaro via Redis Queue_`;
 
-    const waDeepLink = createWhatsAppDeepLink(cleanPhone, testMessage);
-
-    const sendRes = await sendWhatsAppMessage({
-      phone: cleanPhone,
-      message: testMessage
+    // 1. Daftarkan pekerjaan ke antrean Redis secara non-blocking (< 20ms)
+    const enqueueRes = await enqueueWhatsAppNotification({
+      type: 'TEST_WA',
+      targetPhone: cleanPhone,
+      message: testMessage,
+      metadata: {
+        recipientName,
+        source: 'admin_kontak_test',
+        enqueuedAt: now.toISOString()
+      }
     });
 
-    if (sendRes.success && !sendRes.isSimulated) {
+    if (!enqueueRes.success || !enqueueRes.jobId) {
       return {
-        success: true,
-        message: `Pesan uji coba berhasil dikirim ke ${recipientName} (${cleanPhone})!`,
-        waDeepLink
-      };
-    } else {
-      // Jika gateway offline, gagal kirim, atau dalam mode simulasi: jangan tampilkan blocking error
-      return {
-        success: true,
-        message:
-          'Tautan uji coba WhatsApp telah disiapkan! Anda dapat membuka WhatsApp untuk mengirim pesan pengujian.',
-        waDeepLink
+        success: false,
+        error:
+          enqueueRes.error ||
+          'Gagal mendaftarkan pesan uji coba ke antrean Redis.',
+        message: ''
       };
     }
+
+    // 2. Catat audit log tanpa memblokir alur
+    try {
+      const session = await getCurrentUserSession().catch(() => null);
+      const client = getIndependentSupabaseClient();
+      const supabase = client || (await createServerSupabaseClient());
+      await supabase.from('audit_log').insert({
+        id_pertanyaan_periode: null,
+        action: 'TEST_WA_KONTAK',
+        old_state: null,
+        new_state: {
+          phone: cleanPhone,
+          target_name: recipientName,
+          jobId: enqueueRes.jobId,
+          status: 'queued',
+          queued: true
+        },
+        user_id: session?.userId || null,
+        user_name: session?.fullName || 'Administrator',
+        role: session?.role || 'admin',
+        created_at: new Date().toISOString()
+      });
+    } catch (auditErr: any) {
+      console.warn(
+        '[KONTAK-ACTIONS] Notice recording audit log for test WA:',
+        auditErr?.message
+      );
+    }
+
+    return {
+      success: true,
+      message: `Pesan uji coba untuk ${recipientName} (${cleanPhone}) berhasil didaftarkan ke antrean sistem (Redis Queue) dengan Job ID: ${enqueueRes.jobId}. Worker akan mengirimkannya otomatis ke WhatsApp.`,
+      jobId: enqueueRes.jobId,
+      status: 'queued'
+    };
   } catch (error: unknown) {
     const err = error as Error;
     console.error(
       '[KONTAK-ACTIONS] Error sendTestNotificationAction:',
       err?.message
     );
-    const cleanPhone = phone ? formatPhoneNumber(phone.trim()) : '';
-    const fallbackLink = cleanPhone
-      ? createWhatsAppDeepLink(
-          cleanPhone,
-          'Uji Coba Notifikasi REBO V2 BPS Sitaro'
-        )
-      : undefined;
-
     return {
-      success: true,
-      message:
-        'Tautan uji coba WhatsApp telah disiapkan! Anda dapat membuka WhatsApp untuk mengirim pesan pengujian.',
-      waDeepLink: fallbackLink
+      success: false,
+      message: '',
+      error:
+        err?.message ||
+        'Terjadi kesalahan saat mendaftarkan pengujian WhatsApp ke antrean.'
     };
   }
 }

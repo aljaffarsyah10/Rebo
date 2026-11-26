@@ -34,6 +34,7 @@ import {
 import {
   updateUserProfileAction,
   sendTestNotificationToSelfAction,
+  checkNotificationJobStatusAction,
   type ProfileActionResult
 } from '@/actions/profile-actions';
 import type { UserProfileData } from '@/types/rebo';
@@ -70,7 +71,9 @@ import {
   Copy,
   Check,
   Clock,
-  Smartphone
+  Smartphone,
+  RefreshCw,
+  Bot
 } from 'lucide-react';
 
 interface UserProfileClientProps {
@@ -129,17 +132,29 @@ export default function UserProfileClient({
     deepLink?: string;
   } | null>(null);
 
-  // States modal dialog hasil uji coba WhatsApp
+  // States modal dialog hasil uji coba WhatsApp & Stepper Cerdas
   const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
   const [testResult, setTestResult] = useState<{
+    jobId: string;
     phone: string;
-    deepLink: string;
     messageText: string;
     timestamp: string;
-    gatewaySuccess: boolean;
+    status: 'pending' | 'processing' | 'delivered' | 'failed';
+    attempts: number;
     feedbackText: string;
+    error?: string;
   } | null>(null);
+  const [isPollingStatus, setIsPollingStatus] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
+  const pollTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+      }
+    };
+  }, []);
 
   // Phone Sanitization & Validation:
   // Bersihkan karakter non-digit kecuali '+' agar mendukung format 0821-9001-0001, +62 821 9001 0001, dll.
@@ -230,7 +245,71 @@ export default function UserProfileClient({
     });
   };
 
-  // Handler kirim tes WA (dapat dijalankan langsung bahkan sebelum profil disimpan)
+  // Memeriksa status terkini pekerjaan pengiriman WhatsApp dari Redis Queue
+  const checkJobStatusNow = async (jobId: string) => {
+    try {
+      const res = await checkNotificationJobStatusAction(jobId);
+      if (res.success && res.data) {
+        const job = res.data;
+        setTestResult((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: job.status,
+                attempts: job.attempts,
+                error: job.error || undefined
+              }
+            : null
+        );
+        return job.status;
+      }
+    } catch (err) {
+      console.warn('[WA-TEST] Manual check job status error:', err);
+    }
+    return null;
+  };
+
+  // Mekanisme auto-polling ringan (interval 2 detik, maks 16 detik)
+  const startJobPolling = (jobId: string) => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+    }
+    setIsPollingStatus(true);
+    let count = 0;
+    const maxPolls = 8; // Polling 8 kali x 2 detik = 16 detik
+
+    pollTimerRef.current = setInterval(async () => {
+      count++;
+      const currentStatus = await checkJobStatusNow(jobId);
+
+      if (currentStatus === 'delivered') {
+        if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+        setIsPollingStatus(false);
+        setStatusMessage({
+          type: 'success',
+          text: 'Pesan pengujian WhatsApp telah berhasil terkirim ke ponsel Anda via Worker!'
+        });
+        return;
+      }
+
+      if (currentStatus === 'failed') {
+        if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+        setIsPollingStatus(false);
+        setStatusMessage({
+          type: 'error',
+          text: 'Pesan pengujian gagal dikirimkan ke WhatsApp.'
+        });
+        return;
+      }
+
+      if (count >= maxPolls) {
+        if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+        setIsPollingStatus(false);
+      }
+    }, 2000);
+  };
+
+  // Handler kirim tes WA ke antrean Redis Queue (Eliminasi Manual wa.me)
   const handleTestWa = async () => {
     if (!noWa || !isWaValid) {
       setStatusMessage({
@@ -244,20 +323,20 @@ export default function UserProfileClient({
     setIsTestingWa(true);
     setStatusMessage({
       type: 'info',
-      text: `Menyiapkan pengujian pesan ke nomor ${targetPhone}...`
+      text: `Mendaftarkan pengujian pesan ke antrean Redis untuk nomor ${targetPhone}...`
     });
 
     try {
       const res = await sendTestNotificationToSelfAction(targetPhone);
 
-      if (res.success && res.waDeepLink) {
+      if (res.success && res.data?.jobId) {
         const feedback =
           res.message ||
-          'Pesan uji coba WhatsApp resmi siap dikirim! Klik tombol di bawah atau periksa tab WhatsApp yang terbuka.';
+          'Pesan pengujian WhatsApp berhasil didaftarkan ke antrean sistem (Redis Queue) dan sedang diproses otomatis oleh Worker.';
 
         const resultData = {
+          jobId: res.data.jobId,
           phone: targetPhone,
-          deepLink: res.waDeepLink,
           messageText:
             res.data?.testMessage ||
             `🔔 *[UJI COBA NOTIFIKASI PERSONAL REBO V2]*\n\nHalo *${fullName || 'Rekan Pegawai BPS Sitaro'}*,\n\nIni adalah pesan pengujian koneksi notifikasi WhatsApp personal dari Sistem REBO BPS Sitaro ke nomor ${targetPhone}.`,
@@ -268,34 +347,27 @@ export default function UserProfileClient({
               dateStyle: 'full',
               timeStyle: 'medium'
             })} WITA`,
-          gatewaySuccess: Boolean(res.data?.gatewaySuccess),
+          status: 'pending' as const,
+          attempts: 0,
           feedbackText: feedback
         };
 
         setTestResult(resultData);
         setIsTestDialogOpen(true);
 
-        // Otomatis buka WhatsApp di tab baru
-        try {
-          if (typeof window !== 'undefined') {
-            window.open(res.waDeepLink, '_blank', 'noopener,noreferrer');
-          }
-        } catch (popupErr) {
-          console.warn(
-            '[WA-TEST] Auto popup window.open dibatasi browser:',
-            popupErr
-          );
-        }
-
         setStatusMessage({
           type: 'success',
-          text: feedback,
-          deepLink: res.waDeepLink
+          text: feedback
         });
+
+        // Jalankan auto polling status real-time
+        startJobPolling(res.data.jobId);
       } else {
         setStatusMessage({
           type: 'error',
-          text: res.error || 'Gagal memproses pesan uji coba WhatsApp.'
+          text:
+            res.error ||
+            'Gagal mendaftarkan pesan uji coba WhatsApp ke antrean.'
         });
       }
     } catch (err: any) {
@@ -318,6 +390,128 @@ export default function UserProfileClient({
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
+  };
+
+  // Visual Stepper Cerdas Status Antrean WhatsApp
+  const renderStatusStepper = (
+    status: 'pending' | 'processing' | 'delivered' | 'failed'
+  ) => {
+    const isStep1Done = status === 'processing' || status === 'delivered';
+    const isStep2Active = status === 'processing';
+    const isStep2Done = status === 'delivered';
+    const isStep3Done = status === 'delivered';
+    const isStep3Failed = status === 'failed';
+
+    return (
+      <div className='grid grid-cols-3 gap-2 py-2'>
+        {/* Step 1: 🟡 Antrean Terdaftar di Redis */}
+        <div
+          className={`flex flex-col items-center justify-between rounded-lg border p-2.5 text-center text-xs transition-all ${
+            isStep1Done
+              ? 'border-emerald-300 bg-emerald-50/70 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200'
+              : 'border-amber-400 bg-amber-50/80 text-amber-950 ring-1 ring-amber-300 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-700'
+          }`}
+        >
+          <div
+            className={`mb-1.5 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+              isStep1Done
+                ? 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+                : 'animate-pulse bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200'
+            }`}
+          >
+            {isStep1Done ? <Check className='h-4 w-4' /> : '1'}
+          </div>
+          <span className='text-[11px] leading-tight font-bold'>
+            🟡 Antrean Redis
+          </span>
+          <span className='text-muted-foreground mt-0.5 text-[10px]'>
+            {isStep1Done ? 'Telah diambil worker' : 'Terdaftar di antrean'}
+          </span>
+        </div>
+
+        {/* Step 2: 🔵 Sedang Diproses Worker */}
+        <div
+          className={`flex flex-col items-center justify-between rounded-lg border p-2.5 text-center text-xs transition-all ${
+            isStep2Done
+              ? 'border-emerald-300 bg-emerald-50/70 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200'
+              : isStep2Active
+                ? 'border-blue-400 bg-blue-50/80 text-blue-950 ring-1 ring-blue-300 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-200 dark:ring-blue-700'
+                : 'border-slate-200 bg-slate-50/60 text-slate-400 dark:border-slate-800 dark:bg-slate-900/40'
+          }`}
+        >
+          <div
+            className={`mb-1.5 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+              isStep2Done
+                ? 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+                : isStep2Active
+                  ? 'animate-pulse bg-blue-200 text-blue-900 dark:bg-blue-900 dark:text-blue-200'
+                  : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+            }`}
+          >
+            {isStep2Done ? (
+              <Check className='h-4 w-4' />
+            ) : isStep2Active ? (
+              <Loader2 className='h-4 w-4 animate-spin' />
+            ) : (
+              '2'
+            )}
+          </div>
+          <span className='text-[11px] leading-tight font-bold'>
+            🔵 Diproses Worker
+          </span>
+          <span className='text-muted-foreground mt-0.5 text-[10px]'>
+            {isStep2Done
+              ? 'Pengiriman selesai'
+              : isStep2Active
+                ? 'Mengirim via Baileys...'
+                : 'Menunggu giliran'}
+          </span>
+        </div>
+
+        {/* Step 3: 🟢 Berhasil Masuk ke WhatsApp (atau 🔴 Gagal / Dalam Antrean Ulang) */}
+        <div
+          className={`flex flex-col items-center justify-between rounded-lg border p-2.5 text-center text-xs transition-all ${
+            isStep3Done
+              ? 'border-emerald-400 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-300 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-200 dark:ring-emerald-700'
+              : isStep3Failed
+                ? 'border-rose-400 bg-rose-50 text-rose-950 ring-1 ring-rose-300 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-200 dark:ring-rose-700'
+                : 'border-slate-200 bg-slate-50/60 text-slate-400 dark:border-slate-800 dark:bg-slate-900/40'
+          }`}
+        >
+          <div
+            className={`mb-1.5 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+              isStep3Done
+                ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100'
+                : isStep3Failed
+                  ? 'bg-rose-200 text-rose-900 dark:bg-rose-800 dark:text-rose-100'
+                  : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+            }`}
+          >
+            {isStep3Done ? (
+              <CheckCircle2 className='h-4 w-4 text-emerald-700 dark:text-emerald-300' />
+            ) : isStep3Failed ? (
+              <AlertCircle className='h-4 w-4 text-rose-700 dark:text-rose-300' />
+            ) : (
+              '3'
+            )}
+          </div>
+          <span className='text-[11px] leading-tight font-bold'>
+            {isStep3Done
+              ? '🟢 Berhasil Masuk WA'
+              : isStep3Failed
+                ? '🔴 Gagal / Retry'
+                : '⚪ Masuk WhatsApp'}
+          </span>
+          <span className='text-muted-foreground mt-0.5 text-[10px]'>
+            {isStep3Done
+              ? 'Tiba di WhatsApp HP'
+              : isStep3Failed
+                ? 'Batas retry tercapai'
+                : 'Menunggu pengiriman'}
+          </span>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -503,89 +697,143 @@ export default function UserProfileClient({
             </Button>
           </div>
 
-          {/* Alert Card Interaktif Hasil Pengujian WhatsApp */}
+          {/* Alert Card Interaktif Hasil Pengujian WhatsApp Otomatis (Redis Queue & Stepper) */}
           {testResult && (
-            <div className='mt-4 rounded-xl border border-emerald-300 bg-emerald-50/80 p-4 shadow-xs dark:border-emerald-800 dark:bg-emerald-950/40'>
+            <div className='mt-4 rounded-xl border border-slate-200 bg-slate-50/90 p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900/60'>
               <div className='space-y-3'>
                 <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
                   <div className='flex items-center gap-2'>
-                    <span className='flex h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500' />
-                    <span className='text-sm font-bold text-emerald-950 dark:text-emerald-100'>
-                      Pesan Uji Coba WhatsApp Siap Digunakan
+                    <span
+                      className={`flex h-2.5 w-2.5 rounded-full ${
+                        testResult.status === 'delivered'
+                          ? 'bg-emerald-500'
+                          : testResult.status === 'failed'
+                            ? 'bg-rose-500'
+                            : 'animate-pulse bg-amber-500'
+                      }`}
+                    />
+                    <span className='text-sm font-bold text-slate-900 dark:text-slate-100'>
+                      Status Antrean Notifikasi WhatsApp
                     </span>
                   </div>
-                  <Badge
-                    variant='outline'
-                    className='border-emerald-400 bg-emerald-100/70 text-[11px] font-semibold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
-                  >
-                    {testResult.gatewaySuccess
-                      ? 'Gateway Terkirim Otomatis'
-                      : 'Kirim Mandiri (wa.me)'}
-                  </Badge>
+                  <div className='flex items-center gap-2'>
+                    {isPollingStatus && (
+                      <Badge
+                        variant='outline'
+                        className='gap-1 border-blue-300 bg-blue-50 text-[10px] font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300'
+                      >
+                        <Loader2 className='h-3 w-3 animate-spin' />
+                        Polling Live
+                      </Badge>
+                    )}
+                    <Badge
+                      variant='outline'
+                      className={`text-[11px] font-semibold ${
+                        testResult.status === 'delivered'
+                          ? 'border-emerald-400 bg-emerald-100/70 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
+                          : testResult.status === 'failed'
+                            ? 'border-rose-400 bg-rose-100/70 text-rose-800 dark:border-rose-700 dark:bg-rose-900/50 dark:text-rose-300'
+                            : testResult.status === 'processing'
+                              ? 'border-blue-400 bg-blue-100/70 text-blue-800 dark:border-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
+                              : 'border-amber-400 bg-amber-100/70 text-amber-800 dark:border-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+                      }`}
+                    >
+                      {testResult.status === 'delivered'
+                        ? '🟢 Berhasil Masuk WA'
+                        : testResult.status === 'failed'
+                          ? '🔴 Gagal Terkirim'
+                          : testResult.status === 'processing'
+                            ? '🔵 Sedang Diproses Worker'
+                            : '🟡 Mengantre di Redis'}
+                    </Badge>
+                  </div>
                 </div>
 
-                <p className='text-xs text-emerald-900/90 dark:text-emerald-200'>
+                {/* Visual Status Stepper Cerdas */}
+                {renderStatusStepper(testResult.status)}
+
+                <p className='text-xs text-slate-600 dark:text-slate-300'>
                   {testResult.feedbackText}
                 </p>
 
-                {/* Detail Nomor & Timestamp */}
-                <div className='flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-emerald-200/80 bg-white/70 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200'>
-                  <div className='flex items-center gap-1.5 font-mono font-bold'>
-                    <Smartphone className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
-                    <span>Nomor Tujuan: {testResult.phone}</span>
+                {/* Detail Nomor, Job ID, Timestamp */}
+                <div className='flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-300'>
+                  <div className='flex items-center gap-1.5 font-mono'>
+                    <Smartphone className='h-3.5 w-3.5 text-slate-500' />
+                    <span>
+                      Tujuan:{' '}
+                      <strong className='text-slate-900 dark:text-slate-100'>
+                        {testResult.phone}
+                      </strong>
+                    </span>
                   </div>
-                  <div className='text-muted-foreground flex items-center gap-1.5 dark:text-emerald-300/80'>
-                    <Clock className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+                  <div className='text-muted-foreground flex items-center gap-1.5 font-mono'>
+                    <Layers className='h-3.5 w-3.5 text-slate-500' />
+                    <span>
+                      Job ID:{' '}
+                      <strong className='text-foreground'>
+                        {testResult.jobId.slice(0, 8)}...
+                      </strong>
+                    </span>
+                  </div>
+                  <div className='text-muted-foreground flex items-center gap-1.5'>
+                    <Clock className='h-3.5 w-3.5 text-slate-500' />
                     <span>{testResult.timestamp}</span>
                   </div>
+                  {testResult.attempts > 0 && (
+                    <div className='text-muted-foreground flex items-center gap-1'>
+                      <span>
+                        Percobaan: <strong>{testResult.attempts}x</strong>
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Tombol Interaktif Utama */}
-                <div className='flex flex-col items-stretch gap-2 pt-1 sm:flex-row sm:items-center'>
+                {/* Tombol Aksi */}
+                <div className='flex flex-wrap items-center gap-2 pt-1'>
                   <Button
-                    asChild
-                    size='default'
-                    className='flex-1 gap-2 bg-[#25D366] font-bold text-white shadow-xs transition-all hover:bg-[#1EBE5D] hover:shadow-md'
+                    type='button'
+                    variant='default'
+                    size='sm'
+                    onClick={() => setIsTestDialogOpen(true)}
+                    className='gap-1.5 text-xs font-semibold'
                   >
-                    <a
-                      href={testResult.deepLink}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                    >
-                      <MessageSquare className='h-4 w-4 fill-white' />
-                      Buka WhatsApp Sekarang (Kirim Pesan)
-                      <ExternalLink className='h-3.5 w-3.5 opacity-90' />
-                    </a>
+                    <MessageSquare className='h-3.5 w-3.5' />
+                    Lihat Isi Pesan & Detail Job
                   </Button>
 
                   <Button
                     type='button'
                     variant='outline'
-                    size='default'
-                    onClick={handleCopyMessage}
-                    className='gap-1.5 border-emerald-300 bg-white font-medium text-emerald-900 hover:bg-emerald-50 dark:border-emerald-700 dark:bg-slate-900 dark:text-emerald-100 dark:hover:bg-slate-800'
+                    size='sm'
+                    onClick={() => checkJobStatusNow(testResult.jobId)}
+                    disabled={isPollingStatus}
+                    className='gap-1.5 text-xs'
                   >
-                    {copiedMessage ? (
-                      <>
-                        <Check className='h-4 w-4 text-emerald-600' />
-                        Tersalin!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className='h-4 w-4' />
-                        Salin Pesan
-                      </>
-                    )}
+                    <RefreshCw
+                      className={`h-3.5 w-3.5 ${isPollingStatus ? 'animate-spin' : ''}`}
+                    />
+                    Perbarui Status
                   </Button>
 
                   <Button
                     type='button'
                     variant='ghost'
-                    size='default'
-                    onClick={() => setIsTestDialogOpen(true)}
-                    className='px-3 text-xs text-emerald-900 hover:bg-emerald-100/60 hover:text-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900/40'
+                    size='sm'
+                    onClick={handleCopyMessage}
+                    className='gap-1.5 text-xs'
                   >
-                    Lihat Isi Pesan
+                    {copiedMessage ? (
+                      <>
+                        <Check className='h-3.5 w-3.5 text-emerald-600' />
+                        Tersalin!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className='h-3.5 w-3.5' />
+                        Salin Teks Pesan
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -889,27 +1137,51 @@ export default function UserProfileClient({
         </div>
       </div>
 
-      {/* 6. Dialog Interaktif Uji Coba WhatsApp Personal */}
+      {/* 6. Dialog Interaktif Uji Coba WhatsApp Personal (Redis Queue & Status Stepper) */}
       <Dialog open={isTestDialogOpen} onOpenChange={setIsTestDialogOpen}>
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
-            <div className='mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 sm:mx-0 dark:bg-emerald-950/80 dark:text-emerald-400'>
-              <MessageSquare className='h-6 w-6' />
+            <div className='mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600 sm:mx-0 dark:bg-blue-950/80 dark:text-blue-400'>
+              <Bot className='h-6 w-6' />
             </div>
             <DialogTitle className='text-lg font-bold text-slate-900 dark:text-slate-100'>
-              Uji Coba Notifikasi WhatsApp Personal
+              Pemantauan Pengiriman Pesan WhatsApp
             </DialogTitle>
             <DialogDescription className='text-xs text-slate-500 dark:text-slate-400'>
-              Pesan pengujian telah disiapkan untuk memastikan nomor WhatsApp
-              Anda menerima notifikasi otomatis persetujuan, revisi, dan
-              deadline LKE.
+              Pesan uji coba didaftarkan ke antrean sistem (Redis Queue) dan
+              dikirimkan secara otomatis oleh Background Worker ke ponsel Anda.
             </DialogDescription>
           </DialogHeader>
 
           {testResult && (
             <div className='space-y-4 py-1'>
-              {/* Box Ringkasan Penerima & Waktu */}
+              {/* Stepper Status Antrean */}
+              <div className='rounded-lg border border-slate-200 bg-slate-50/50 p-2 dark:border-slate-800 dark:bg-slate-900/40'>
+                <div className='flex items-center justify-between px-1 pb-1'>
+                  <span className='text-xs font-semibold text-slate-700 dark:text-slate-300'>
+                    Perjalanan Pengiriman Pesan:
+                  </span>
+                  {isPollingStatus && (
+                    <span className='inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400'>
+                      <Loader2 className='h-3 w-3 animate-spin' />
+                      Live Polling
+                    </span>
+                  )}
+                </div>
+                {renderStatusStepper(testResult.status)}
+              </div>
+
+              {/* Box Ringkasan Penerima & Job ID */}
               <div className='space-y-2 rounded-lg border bg-slate-50/90 p-3 text-xs dark:border-slate-800 dark:bg-slate-900/60'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-muted-foreground flex items-center gap-1.5'>
+                    <Layers className='h-3.5 w-3.5 text-slate-500' />
+                    Job ID Antrean:
+                  </span>
+                  <span className='font-mono font-semibold text-slate-900 dark:text-slate-100'>
+                    {testResult.jobId}
+                  </span>
+                </div>
                 <div className='flex items-center justify-between'>
                   <span className='text-muted-foreground flex items-center gap-1.5'>
                     <Smartphone className='h-3.5 w-3.5 text-slate-500' />
@@ -922,7 +1194,7 @@ export default function UserProfileClient({
                 <div className='flex items-center justify-between'>
                   <span className='text-muted-foreground flex items-center gap-1.5'>
                     <Clock className='h-3.5 w-3.5 text-slate-500' />
-                    Waktu Pengujian:
+                    Waktu Pendaftaran:
                   </span>
                   <span className='font-medium text-slate-700 dark:text-slate-300'>
                     {testResult.timestamp}
@@ -930,16 +1202,26 @@ export default function UserProfileClient({
                 </div>
                 <div className='flex items-center justify-between border-t border-slate-200/60 pt-1 dark:border-slate-800'>
                   <span className='text-muted-foreground flex items-center gap-1.5'>
-                    <CheckCircle2 className='h-3.5 w-3.5 text-emerald-500' />
-                    Status Saluran:
+                    <ShieldCheck className='h-3.5 w-3.5 text-emerald-500' />
+                    Status Eksekusi:
                   </span>
                   <Badge
                     variant='outline'
-                    className='border-emerald-300 bg-emerald-50 text-[10px] font-semibold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                    className={`text-[10px] font-semibold ${
+                      testResult.status === 'delivered'
+                        ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                        : testResult.status === 'failed'
+                          ? 'border-rose-400 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+                          : 'border-blue-400 bg-blue-50 text-blue-800 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300'
+                    }`}
                   >
-                    {testResult.gatewaySuccess
-                      ? 'Gateway Aktif Terkirim'
-                      : 'Kirim Mandiri WhatsApp Web (wa.me)'}
+                    {testResult.status === 'delivered'
+                      ? '🟢 Terkirim ke WhatsApp'
+                      : testResult.status === 'failed'
+                        ? '🔴 Gagal Dikirim'
+                        : testResult.status === 'processing'
+                          ? '🔵 Sedang Diproses Worker'
+                          : '🟡 Mengantre di Redis'}
                   </Badge>
                 </div>
               </div>
@@ -971,44 +1253,40 @@ export default function UserProfileClient({
                   </Button>
                 </div>
 
-                <div className='relative max-h-44 overflow-y-auto rounded-lg border border-emerald-200/80 bg-emerald-50/50 p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-slate-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200'>
+                <div className='relative max-h-44 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200'>
                   {testResult.messageText}
                 </div>
               </div>
 
-              {/* Tombol Aksi Utama */}
-              <div className='space-y-2 pt-1'>
+              {/* Tombol Aksi */}
+              <div className='flex items-center gap-2 pt-1'>
                 <Button
-                  asChild
-                  size='lg'
-                  className='w-full gap-2 bg-[#25D366] py-6 text-sm font-bold text-white shadow-md transition-all hover:bg-[#1EBE5D] hover:shadow-lg'
+                  type='button'
+                  variant='outline'
+                  onClick={() => checkJobStatusNow(testResult.jobId)}
+                  disabled={isPollingStatus}
+                  className='flex-1 gap-1.5 text-xs'
                 >
-                  <a
-                    href={testResult.deepLink}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    onClick={() => setIsTestDialogOpen(false)}
-                  >
-                    <MessageSquare className='h-5 w-5 fill-white' />
-                    Buka WhatsApp Sekarang (Kirim Pesan)
-                    <ExternalLink className='ml-1 h-4 w-4 opacity-90' />
-                  </a>
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${isPollingStatus ? 'animate-spin' : ''}`}
+                  />
+                  Cek Ulang Status Job
                 </Button>
 
                 <Button
                   type='button'
                   variant='outline'
                   onClick={handleCopyMessage}
-                  className='w-full gap-2 text-xs'
+                  className='gap-1.5 text-xs'
                 >
                   {copiedMessage ? (
                     <>
-                      <Check className='h-4 w-4 text-emerald-600' />
-                      Teks Pesan Berhasil Disalin ke Clipboard!
+                      <Check className='h-3.5 w-3.5 text-emerald-600' />
+                      Tersalin
                     </>
                   ) : (
                     <>
-                      <Copy className='h-4 w-4' />
+                      <Copy className='h-3.5 w-3.5' />
                       Salin Pesan
                     </>
                   )}

@@ -357,14 +357,14 @@
   - [x] *Throttling & Pacing Anti-Spam:* Pasang jeda waktu aman (2-4 detik antar pesan) saat memproses antrean massal agar nomor bot WhatsApp aman dari deteksi spam Meta.
   - [x] *Fallback Serverless Processor (`/api/queue/process`):* Sediakan Route Handler terproteksi (`CRON_SECRET`) yang dapat dipicu oleh Vercel Cron atau Supabase Webhook untuk menguras antrean jika worker standalone sedang idle.
 
-- [ ] **Otomasi Total Pengujian Notifikasi WhatsApp (Eliminasi Manual `wa.me`):**
-  - [ ] *Refactor `sendTestNotificationToSelfAction` (`src/actions/profile-actions.ts`):*
+- [x] **Otomasi Total Pengujian Notifikasi WhatsApp (Eliminasi Manual `wa.me`):**
+  - [x] *Refactor `sendTestNotificationToSelfAction` (`src/actions/profile-actions.ts`):*
     - Hapus keharusan membuka jendela popup peramban `window.open(wa.me)`.
     - Daftarkan pengujian notifikasi sebagai job `TEST_WA` langsung ke Redis Queue.
     - Kembalikan respons instan berstatus `queued` beserta `jobId`.
-  - [ ] *Refactor `sendTestNotificationAction` Admin Kontak (`src/actions/kontak-actions.ts`):*
+  - [x] *Refactor `sendTestNotificationAction` Admin Kontak (`src/actions/kontak-actions.ts`):*
     - Alihkan pengujian nomor kontak dinas dan koordinator pilar langsung ke Redis Queue otomatis tanpa dialog manual.
-  - [ ] *Penyempurnaan UI Pengguna (`user-profile-client.tsx` & `KontakManagerClient.tsx`):*
+  - [x] *Penyempurnaan UI Pengguna (`user-profile-client.tsx` & `KontakManagerClient.tsx`):*
     - Ganti tombol/badge "Kirim Mandiri (wa.me)" dengan visual status stepper cerdas: `Mengantre di Redis` ➔ `Sedang Diproses Worker` ➔ `Berhasil Terkirim ke WhatsApp`.
     - Sediakan polling status job singkat (interval 2 detik) yang mengabarkan pengguna begitu pesan mendarat di WhatsApp ponsel mereka.
 

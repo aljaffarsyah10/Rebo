@@ -7,11 +7,9 @@ import { createClient as createServerSupabaseClient } from '@/lib/supabase/serve
 import { createClient } from '@supabase/supabase-js';
 import { getCurrentUserSession } from '@/lib/auth/session';
 import { currentUser } from '@clerk/nextjs/server';
-import {
-  formatPhoneNumber,
-  sendWhatsAppMessage,
-  createWhatsAppDeepLink
-} from '@/lib/notifications/whatsapp';
+import { formatPhoneNumber } from '@/lib/notifications/whatsapp';
+import { enqueueWhatsAppNotification, getJobStatus } from '@/lib/redis/queue';
+import type { WhatsAppQueuePayload } from '@/lib/redis/types';
 import type { UserProfileData } from '@/types/rebo';
 
 // ==============================================================================
@@ -426,11 +424,13 @@ export interface TestWaActionResultData {
   timestamp?: string;
   gatewaySuccess?: boolean;
   isSimulated?: boolean;
+  jobId?: string;
+  status?: string;
 }
 
 /**
  * Mengirimkan pesan percobaan interaktif ke nomor WhatsApp pribadi pengguna
- * untuk memastikan nomor terdaftar dan WhatsApp Gateway berjalan normal.
+ * melalui antrean Redis Queue (non-blocking) untuk diproses otomatis oleh Worker.
  */
 export async function sendTestNotificationToSelfAction(
   phone: string
@@ -484,20 +484,36 @@ Ini adalah pesan pengujian koneksi notifikasi WhatsApp personal dari Sistem REBO
 
 📱 *Nomor Terdaftar:* ${formattedPhone}
 🕒 *Waktu Pengujian:* ${formattedTimestamp}
-✅ *Status:* Terhubung dengan WhatsApp Gateway
+⚡ *Metode Pengiriman:* Antrean Pesan Otomatis (Redis Message Queue)
+✅ *Status:* Terdaftar di Sistem & Diproses Otomatis oleh Worker
 
 Dengan mengaktifkan preferensi notifikasi, Anda akan menerima pembaruan instan saat bukti dukung yang Anda unggah disetujui, memerlukan revisi, atau mendekati batas tenggat waktu evaluasi.
 
 _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
 
-    const deepLink = createWhatsAppDeepLink(formattedPhone, testMessage);
-
-    const sendResult = await sendWhatsAppMessage({
-      phone: formattedPhone,
-      message: testMessage
+    // 1. Daftarkan pekerjaan pengiriman ke antrean Redis secara non-blocking
+    const enqueueResult = await enqueueWhatsAppNotification({
+      type: 'TEST_WA',
+      targetPhone: formattedPhone,
+      message: testMessage,
+      metadata: {
+        userId,
+        userName,
+        userRole,
+        source: 'user_profile_self_test'
+      }
     });
 
-    // Catat ke audit log tanpa memblokir alur jika terjadi kendala DB
+    if (!enqueueResult.success || !enqueueResult.jobId) {
+      return {
+        success: false,
+        error:
+          enqueueResult.error ||
+          'Gagal mendaftarkan pesan uji coba ke antrean Redis.'
+      };
+    }
+
+    // 2. Catat ke audit log tanpa memblokir alur jika terjadi kendala DB
     try {
       const client = getIndependentSupabaseClient();
       const supabase = client || (await createServerSupabaseClient());
@@ -509,9 +525,9 @@ _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
           phone: formattedPhone,
           user_id: userId,
           user_name: userName,
-          success: sendResult.success,
-          error: sendResult.error || null,
-          simulated: Boolean(sendResult.isSimulated)
+          jobId: enqueueResult.jobId,
+          status: 'queued',
+          queued: true
         },
         user_id: session?.userId ? session.userId : null,
         user_name: userName,
@@ -525,38 +541,18 @@ _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
       );
     }
 
-    const isGatewayActualSuccess =
-      sendResult.success && !sendResult.isSimulated;
-
-    if (isGatewayActualSuccess) {
-      return {
-        success: true,
-        message:
-          'Pesan uji coba berhasil dikirim melalui WhatsApp Gateway! Anda juga dapat membuka WhatsApp langsung melalui tombol di bawah.',
-        waDeepLink: deepLink,
-        data: {
-          phone: formattedPhone,
-          testMessage,
-          timestamp: formattedTimestamp,
-          gatewaySuccess: true,
-          isSimulated: false
-        }
-      };
-    }
-
-    // Jika sendWhatsAppMessage gagal atau Gateway dalam simulasi / tidak dikonfigurasi:
-    // JANGAN gagalkan proses! Kembalikan success: true dengan deep link wa.me
     return {
       success: true,
       message:
-        'Pesan uji coba WhatsApp resmi siap dikirim! Klik tombol di bawah atau periksa tab WhatsApp yang terbuka.',
-      waDeepLink: deepLink,
+        'Pesan pengujian berhasil didaftarkan ke antrean sistem (Redis Queue) dan sedang diproses otomatis oleh Worker.',
       data: {
         phone: formattedPhone,
         testMessage,
         timestamp: formattedTimestamp,
-        gatewaySuccess: false,
-        isSimulated: Boolean(sendResult.isSimulated)
+        jobId: enqueueResult.jobId,
+        status: 'queued',
+        gatewaySuccess: true,
+        isSimulated: false
       }
     };
   } catch (error: any) {
@@ -565,33 +561,47 @@ _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
       error
     );
 
-    const cleanPhone = (phone || '').replace(/[^\d+]/g, '');
-    const formattedPhone = formatPhoneNumber(cleanPhone);
-    const fallbackLink = /^628[0-9]{7,13}$/.test(formattedPhone)
-      ? createWhatsAppDeepLink(
-          formattedPhone,
-          `🔔 *[UJI COBA NOTIFIKASI PERSONAL REBO V2]*\n\nPesan pengujian koneksi WhatsApp Sistem REBO BPS Sitaro ke nomor ${formattedPhone}.`
-        )
-      : undefined;
-
-    if (fallbackLink) {
-      return {
-        success: true,
-        message:
-          'Pesan uji coba WhatsApp resmi siap dikirim! Klik tombol di bawah atau periksa tab WhatsApp yang terbuka.',
-        waDeepLink: fallbackLink,
-        data: {
-          phone: formattedPhone,
-          testMessage: `🔔 *[UJI COBA NOTIFIKASI PERSONAL REBO V2]*\n\nPesan pengujian koneksi WhatsApp Sistem REBO BPS Sitaro ke nomor ${formattedPhone}.`,
-          timestamp: new Date().toLocaleTimeString('id-ID'),
-          gatewaySuccess: false
-        }
-      };
-    }
-
     return {
       success: false,
       error: error?.message || 'Gagal mengirim pesan uji coba WhatsApp.'
+    };
+  }
+}
+
+// ==============================================================================
+// 5. CHECK NOTIFICATION JOB STATUS ACTION
+// ==============================================================================
+
+/**
+ * Memeriksa status terkini pekerjaan pengiriman notifikasi dari Redis Queue
+ * berdasarkan jobId agar UI pengguna dapat memantau pergerakan antrean secara real-time.
+ */
+export async function checkNotificationJobStatusAction(jobId: string): Promise<{
+  success: boolean;
+  data?: WhatsAppQueuePayload | null;
+  error?: string;
+}> {
+  try {
+    if (!jobId || typeof jobId !== 'string') {
+      return {
+        success: false,
+        error: 'Job ID tidak valid.'
+      };
+    }
+
+    const job = await getJobStatus(jobId);
+    return {
+      success: true,
+      data: job
+    };
+  } catch (error: any) {
+    console.error(
+      '[PROFILE-ACTIONS] Error in checkNotificationJobStatusAction:',
+      error
+    );
+    return {
+      success: false,
+      error: error?.message || 'Gagal membaca status pekerjaan antrean.'
     };
   }
 }

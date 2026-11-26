@@ -295,14 +295,13 @@ export default function KontakManagerClient({
     }
   };
 
-  // 5. Handler Kirim Pesan Uji Coba WA ke Kontak Tertentu
+  // 5. Handler Kirim Pesan Uji Coba WA ke Kontak Tertentu via Redis Queue
   const handleSendTestToContact = async (contact: KontakPilarRecord) => {
     setSendingTestId(contact.id);
     const toastId = toast.loading(
-      `Menghubungi Gateway WhatsApp untuk ${contact.nama_pic}...`,
+      `Mendaftarkan pesan uji coba untuk ${contact.nama_pic}...`,
       {
-        description:
-          'Menunggu respons gateway (proses cold-start server Render dapat membutuhkan waktu hingga 10 detik).'
+        description: `Target: ${contact.nama_pic} (${contact.no_wa}) ke antrean Redis Queue.`
       }
     );
     try {
@@ -312,27 +311,14 @@ export default function KontakManagerClient({
       );
       toast.dismiss(toastId);
       if (res.success) {
-        if (res.waDeepLink) {
-          try {
-            window.open(res.waDeepLink, '_blank');
-          } catch {
-            // Popup blocker handler
-          }
-          toast.success(res.message, {
-            action: {
-              label: 'Buka WhatsApp',
-              onClick: () => window.open(res.waDeepLink, '_blank')
-            }
-          });
-        } else {
-          toast.success(res.message, {
-            description: `Pesan uji coba telah dikirim ke nomor ${contact.no_wa}.`
-          });
-        }
+        toast.success('Pesan uji coba didaftarkan ke antrean Redis!', {
+          description: `Pesan untuk ${contact.nama_pic} (${contact.no_wa}) sedang diproses oleh Worker${res.jobId ? ` (Job ID: ${res.jobId.slice(0, 8)}...)` : ''}.`,
+          duration: 5000
+        });
       } else {
         toast.error(res.error || 'Pengiriman pesan uji coba gagal.', {
           description:
-            'Pastikan WhatsApp Gateway aktif dan perangkat telah tertaut.'
+            'Pastikan konfigurasi Redis dan antrean sistem berjalan normal.'
         });
       }
     } catch (err: unknown) {
