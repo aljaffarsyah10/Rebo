@@ -304,10 +304,10 @@
   - [x] Pastikan saat Admin mengubah status periode aktif di `/rebo/admin/periode`, seluruh halaman (Monitoring, Overview, Form RB, dan Kanban) langsung membaca periode tersebut tanpa memerlukan logout-login ulang.
 
 ### 5. Perbaikan Menu Informasi RB & Katalog Arsip (`/rebo/informasi` & `/rebo/arsip`)
-- [ ] **Penanganan Broken Link Berkas Arsip:**
-  - [ ] Jika suatu tautan file arsip Google Drive eksternal memerlukan izin akses (*Request Access*) atau terhapus, berikan badge penanda khusus *"Periksa Izin Akses"* agar admin dapat segera memperbaikinya.
-- [ ] **Responsivitas Filter Kategori Arsip:**
-  - [ ] Pastikan filter kategori (SK, SOP, Laporan, Paparan) berjalan secara instan di sisi klien (*client-side fast filter*) tanpa membuat browser me-reload halaman dari awal.
+- [x] **Penanganan Broken Link Berkas Arsip:**
+  - [x] Jika suatu tautan file arsip Google Drive eksternal memerlukan izin akses (*Request Access*) atau terhapus, berikan badge penanda khusus *"Periksa Izin Akses"* agar admin dapat segera memperbaikinya.
+- [x] **Responsivitas Filter Kategori Arsip:**
+  - [x] Pastikan filter kategori (SK, SOP, Laporan, Paparan) berjalan secara instan di sisi klien (*client-side fast filter*) tanpa membuat browser me-reload halaman dari awal.
 
 ### 6. Perbaikan Autentikasi, Keamanan Sesi & Konsistensi UI
 - [ ] **Kelancaran Redirect Pasca Login (Clerk):**

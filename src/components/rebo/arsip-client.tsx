@@ -34,6 +34,11 @@ import {
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
+import {
   Archive,
   Search,
   Filter,
@@ -56,7 +61,12 @@ import {
   RotateCcw,
   X,
   FileArchive,
-  Layers
+  Layers,
+  Lock,
+  AlertCircle,
+  CheckCircle2,
+  Presentation,
+  Award
 } from 'lucide-react';
 import {
   createArsipDokumen,
@@ -75,7 +85,7 @@ interface ArsipClientProps {
 }
 
 // Konfigurasi Tab Kategori Resmi
-interface CategoryTabConfig {
+export interface CategoryTabConfig {
   key: 'ALL' | KategoriArsip;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -83,7 +93,7 @@ interface CategoryTabConfig {
   activeColor: string;
 }
 
-const CATEGORY_TABS: CategoryTabConfig[] = [
+export const CATEGORY_TABS: CategoryTabConfig[] = [
   {
     key: 'ALL',
     label: 'Semua Kategori',
@@ -103,16 +113,8 @@ const CATEGORY_TABS: CategoryTabConfig[] = [
       'bg-purple-600 text-white dark:bg-purple-600 dark:text-white shadow-sm ring-1 ring-purple-400'
   },
   {
-    key: 'RENCANA_AKSI',
-    label: 'Rencana Aksi',
-    icon: Target,
-    badgeBg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300',
-    activeColor:
-      'bg-blue-600 text-white dark:bg-blue-600 dark:text-white shadow-sm ring-1 ring-blue-400'
-  },
-  {
-    key: 'SOP_INOVASI',
-    label: 'SOP Inovasi',
+    key: 'SOP_PELAYANAN',
+    label: 'SOP Pelayanan',
     icon: Sparkles,
     badgeBg:
       'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300',
@@ -120,13 +122,37 @@ const CATEGORY_TABS: CategoryTabConfig[] = [
       'bg-emerald-600 text-white dark:bg-emerald-600 dark:text-white shadow-sm ring-1 ring-emerald-400'
   },
   {
-    key: 'LKE_RESMI',
-    label: 'LKE Resmi',
+    key: 'LAPORAN_NOTULA',
+    label: 'Laporan & Notula',
     icon: FileSpreadsheet,
     badgeBg:
       'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300',
     activeColor:
       'bg-amber-600 text-white dark:bg-amber-600 dark:text-white shadow-sm ring-1 ring-amber-400'
+  },
+  {
+    key: 'PAPARAN',
+    label: 'Paparan & Bahan Tayang',
+    icon: Presentation,
+    badgeBg: 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-300',
+    activeColor:
+      'bg-rose-600 text-white dark:bg-rose-600 dark:text-white shadow-sm ring-1 ring-rose-400'
+  },
+  {
+    key: 'INOVASI_DOKUMENTASI',
+    label: 'Inovasi & Dokumentasi',
+    icon: Award,
+    badgeBg: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-300',
+    activeColor:
+      'bg-cyan-600 text-white dark:bg-cyan-600 dark:text-white shadow-sm ring-1 ring-cyan-400'
+  },
+  {
+    key: 'RENCANA_AKSI',
+    label: 'Rencana Aksi',
+    icon: Target,
+    badgeBg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300',
+    activeColor:
+      'bg-blue-600 text-white dark:bg-blue-600 dark:text-white shadow-sm ring-1 ring-blue-400'
   },
   {
     key: 'PEDOMAN',
@@ -138,6 +164,102 @@ const CATEGORY_TABS: CategoryTabConfig[] = [
       'bg-indigo-600 text-white dark:bg-indigo-600 dark:text-white shadow-sm ring-1 ring-indigo-400'
   }
 ];
+
+// Helper: Evaluasi Aksesibilitas Tautan File Arsip
+export interface LinkHealthInfo {
+  status: 'ACCESSIBLE' | 'NEEDS_PERMISSION' | 'INVALID';
+  badgeLabel: string;
+  badgeClass: string;
+  tooltipText: string;
+  isWarning: boolean;
+}
+
+export function evaluateLinkHealth(url?: string | null): LinkHealthInfo {
+  if (!url || typeof url !== 'string' || !url.trim()) {
+    return {
+      status: 'INVALID',
+      badgeLabel: 'Tautan Rusak / Kosong',
+      badgeClass:
+        'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300',
+      tooltipText:
+        'Tautan berkas arsip belum diisi atau kosong. Silakan hubungi Admin untuk memperbarui berkas.',
+      isWarning: true
+    };
+  }
+
+  const clean = url.trim();
+
+  // Validasi URL sintaks
+  let parsed: URL;
+  try {
+    parsed = new URL(clean.startsWith('http') ? clean : `https://${clean}`);
+  } catch {
+    return {
+      status: 'INVALID',
+      badgeLabel: 'Format URL Tidak Valid',
+      badgeClass:
+        'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300',
+      tooltipText:
+        'Format alamat tautan berkas arsip tidak dikenali atau rusak. Hubungi Admin.',
+      isWarning: true
+    };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  const isGoogleDrive =
+    hostname.includes('drive.google.com') ||
+    hostname.includes('docs.google.com');
+
+  // Berkas arsip eksternal Google Drive kedinasan BPS berpotensi memerlukan izin akses (Domain @bps.go.id / Request Access)
+  if (isGoogleDrive) {
+    return {
+      status: 'NEEDS_PERMISSION',
+      badgeLabel: 'Periksa Izin Akses',
+      badgeClass:
+        'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 ring-1 ring-amber-300/60 dark:ring-amber-700/60',
+      tooltipText:
+        'Tautan file eksternal mungkin memerlukan izin akses akun BPS atau sedang diperbarui. Hubungi Admin jika berkas tidak terbuka.',
+      isWarning: true
+    };
+  }
+
+  // Tautan file publik lainnya (misal: JDIH, situs web regulasi nasional)
+  return {
+    status: 'ACCESSIBLE',
+    badgeLabel: 'Akses Publik / Terbuka',
+    badgeClass:
+      'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300',
+    tooltipText:
+      'Tautan berkas arsip publik valid dan siap dibuka di peramban.',
+    isWarning: false
+  };
+}
+
+// Helper: Pencocokan Kategori (Fleksibel dengan alias subtype)
+export const isCategoryMatch = (
+  docKategori: string,
+  selectedKey: string
+): boolean => {
+  if (selectedKey === 'ALL') return true;
+  if (selectedKey === 'SK_TIM') return docKategori === 'SK_TIM';
+  if (selectedKey === 'SOP_PELAYANAN') {
+    return docKategori === 'SOP_PELAYANAN' || docKategori === 'SOP_INOVASI';
+  }
+  if (selectedKey === 'LAPORAN_NOTULA') {
+    return docKategori === 'LAPORAN_NOTULA' || docKategori === 'LKE_RESMI';
+  }
+  if (selectedKey === 'PAPARAN') return docKategori === 'PAPARAN';
+  if (selectedKey === 'INOVASI_DOKUMENTASI') {
+    return (
+      docKategori === 'INOVASI_DOKUMENTASI' ||
+      docKategori === 'SOP_INOVASI' ||
+      docKategori === 'RENCANA_AKSI'
+    );
+  }
+  if (selectedKey === 'RENCANA_AKSI') return docKategori === 'RENCANA_AKSI';
+  if (selectedKey === 'PEDOMAN') return docKategori === 'PEDOMAN';
+  return docKategori === selectedKey;
+};
 
 export default function ArsipClient({
   initialData,
@@ -167,51 +289,49 @@ export default function ArsipClient({
   const [formUrl, setFormUrl] = useState('');
   const [formKeterangan, setFormKeterangan] = useState('');
 
-  // Hitung jumlah berkas per kategori secara real-time
+  // 1. Hitung jumlah berkas per kategori secara real-time in-memory via useMemo
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {
-      ALL: 0,
-      SK_TIM: 0,
-      RENCANA_AKSI: 0,
-      SOP_INOVASI: 0,
-      LKE_RESMI: 0,
-      PEDOMAN: 0
-    };
+    const counts: Record<string, number> = {};
+    CATEGORY_TABS.forEach((tab) => {
+      counts[tab.key] = 0;
+    });
 
     items.forEach((doc) => {
       const matchYear =
         selectedYear === 'ALL' || doc.tahun === Number(selectedYear);
       if (matchYear) {
-        counts.ALL++;
-        if (counts[doc.kategori] !== undefined) {
-          counts[doc.kategori]++;
-        }
+        counts['ALL'] = (counts['ALL'] || 0) + 1;
+        CATEGORY_TABS.forEach((tab) => {
+          if (tab.key !== 'ALL' && isCategoryMatch(doc.kategori, tab.key)) {
+            counts[tab.key] = (counts[tab.key] || 0) + 1;
+          }
+        });
       }
     });
 
     return counts;
   }, [items, selectedYear]);
 
-  // Instant Search & Multi-Tag Filtering Responsif tanpa roundtrip server
+  // 2. Instant Search & Multi-Tag Category Filtering Responsif in-memory via useMemo
   const displayedItems = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
     return items.filter((doc) => {
-      // 1. Filter Tahun
+      // Filter Tahun
       const matchesYear =
         selectedYear === 'ALL' || doc.tahun === Number(selectedYear);
       if (!matchesYear) return false;
 
-      // 2. Filter Kategori
-      const matchesKategori =
-        selectedKategori === 'ALL' || doc.kategori === selectedKategori;
-      if (!matchesKategori) return false;
+      // Filter Kategori
+      if (!isCategoryMatch(doc.kategori, selectedKategori)) return false;
 
-      // 3. Instant Search Query
+      // Instant Search Query
       if (!q) return true;
 
       const kategoriLabel =
-        KATEGORI_ARSIP_MAP[doc.kategori]?.label?.toLowerCase() || '';
+        KATEGORI_ARSIP_MAP[
+          doc.kategori as KategoriArsip
+        ]?.label?.toLowerCase() || '';
       return (
         doc.judul_dokumen.toLowerCase().includes(q) ||
         (doc.nomor_surat && doc.nomor_surat.toLowerCase().includes(q)) ||
@@ -223,7 +343,18 @@ export default function ArsipClient({
     });
   }, [items, selectedYear, selectedKategori, searchQuery]);
 
-  // Reset Filter Cepat
+  // Label Kategori Terpilih
+  const currentCategoryLabel = useMemo(() => {
+    if (selectedKategori === 'ALL') return 'Semua Kategori';
+    const tab = CATEGORY_TABS.find((t) => t.key === selectedKategori);
+    return (
+      tab?.label ||
+      KATEGORI_ARSIP_MAP[selectedKategori as KategoriArsip]?.label ||
+      selectedKategori
+    );
+  }, [selectedKategori]);
+
+  // Reset Seluruh Filter
   const handleResetFilter = () => {
     setSelectedYear('ALL');
     setSelectedKategori('ALL');
@@ -301,16 +432,53 @@ export default function ArsipClient({
     }
   };
 
-  // Copy Link Handler
+  // Quick Copy Link Handler with feedback toast
   const handleCopyLink = async (doc: ArsipDokumen) => {
     try {
+      if (!doc.file_url || !doc.file_url.trim()) {
+        toast.error('Tautan berkas kosong dan tidak dapat disalin.');
+        return;
+      }
       await navigator.clipboard.writeText(doc.file_url);
       setCopiedId(doc.id);
-      toast.success('Tautan berkas berhasil disalin ke clipboard!');
+      toast.success('Tautan berkas berhasil disalin ke clipboard!', {
+        description: doc.file_url
+      });
       setTimeout(() => setCopiedId(null), 2500);
     } catch {
-      toast.error('Gagal menyalin tautan.');
+      toast.error('Gagal menyalin tautan ke clipboard.');
     }
+  };
+
+  // Test-Open Link Handler dengan pengingat izin akses
+  const handleTestOpenLink = (doc: ArsipDokumen) => {
+    if (!doc.file_url || !doc.file_url.trim()) {
+      toast.error('Tautan berkas kosong atau tidak ditemukan.', {
+        description: 'Hubungi Admin untuk memperbarui tautan dokumen arsip ini.'
+      });
+      return;
+    }
+
+    const health = evaluateLinkHealth(doc.file_url);
+    if (health.status === 'INVALID') {
+      toast.error('Tautan berkas rusak atau tidak valid.', {
+        description: health.tooltipText
+      });
+      return;
+    }
+
+    toast.info('Membuka tautan berkas arsip...', {
+      description:
+        health.status === 'NEEDS_PERMISSION'
+          ? 'Tautan file eksternal mungkin memerlukan izin akses akun BPS atau sedang diperbarui. Hubungi Admin jika berkas tidak terbuka.'
+          : 'Membuka berkas dokumen di tab baru.',
+      duration: 4000
+    });
+
+    const targetUrl = doc.file_url.startsWith('http')
+      ? doc.file_url
+      : `https://${doc.file_url}`;
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
   };
 
   // Create Document Handler
@@ -335,7 +503,7 @@ export default function ArsipClient({
       if (res.success && res.data) {
         toast.success('Dokumen arsip resmi berhasil ditambahkan!');
         setIsModalOpen(false);
-        // Tambahkan ke in-memory list
+        // Tambahkan ke in-memory list secara langsung
         setItems((prev) => [res.data!, ...prev]);
         if (!years.includes(Number(formTahun))) {
           setYears((prev) =>
@@ -367,22 +535,30 @@ export default function ArsipClient({
   };
 
   // Helper Icon Kategori
-  const getKategoriIcon = (kat: KategoriArsip) => {
+  const getKategoriIcon = (kat: string) => {
     switch (kat) {
       case 'SK_TIM':
         return (
           <ShieldCheck className='h-4 w-4 text-purple-600 dark:text-purple-400' />
         );
-      case 'RENCANA_AKSI':
-        return <Target className='h-4 w-4 text-blue-600 dark:text-blue-400' />;
+      case 'SOP_PELAYANAN':
       case 'SOP_INOVASI':
         return (
           <Sparkles className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
         );
+      case 'LAPORAN_NOTULA':
       case 'LKE_RESMI':
         return (
           <FileSpreadsheet className='h-4 w-4 text-amber-600 dark:text-amber-400' />
         );
+      case 'PAPARAN':
+        return (
+          <Presentation className='h-4 w-4 text-rose-600 dark:text-rose-400' />
+        );
+      case 'INOVASI_DOKUMENTASI':
+        return <Award className='h-4 w-4 text-cyan-600 dark:text-cyan-400' />;
+      case 'RENCANA_AKSI':
+        return <Target className='h-4 w-4 text-blue-600 dark:text-blue-400' />;
       case 'PEDOMAN':
       default:
         return (
@@ -419,9 +595,9 @@ export default function ArsipClient({
             </h1>
             <p className='max-w-3xl text-sm text-slate-700 sm:text-base dark:text-slate-300'>
               Pusat repositori digital dokumen resmi pembangunan Zona Integritas
-              BPS Sitaro: Surat Keputusan (SK) Tim Kerja, Rencana Aksi, SOP
-              Inovasi Layanan, Lembar Kerja Evaluasi (LKE), serta Pedoman PMPRB
-              KemenPAN-RB.
+              BPS Sitaro: Surat Keputusan (SK) Tim Kerja, SOP Pelayanan, Laporan
+              &amp; Notula, Paparan Bahan Tayang, Inovasi &amp; Dokumentasi,
+              serta Pedoman Regulasi PMPRB KemenPAN-RB.
             </p>
           </div>
 
@@ -477,8 +653,9 @@ export default function ArsipClient({
                         Tambah Dokumen Arsip Resmi
                       </DialogTitle>
                       <DialogDescription>
-                        Unggah metadata dokumen SK, Rencana Aksi, SOP, atau LKE
-                        ke repositori digital Zona Integritas BPS Sitaro.
+                        Unggah metadata dokumen SK, SOP, Laporan, Paparan, atau
+                        Inovasi ke repositori digital Zona Integritas BPS
+                        Sitaro.
                       </DialogDescription>
                     </DialogHeader>
 
@@ -512,14 +689,26 @@ export default function ArsipClient({
                             className='h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
                           >
                             <option value='SK_TIM'>SK Tim Kerja ZI</option>
+                            <option value='SOP_PELAYANAN'>SOP Pelayanan</option>
+                            <option value='LAPORAN_NOTULA'>
+                              Laporan &amp; Notula
+                            </option>
+                            <option value='PAPARAN'>
+                              Paparan &amp; Bahan Tayang
+                            </option>
+                            <option value='INOVASI_DOKUMENTASI'>
+                              Inovasi &amp; Dokumentasi
+                            </option>
                             <option value='RENCANA_AKSI'>
-                              Rencana Aksi & Kerja
+                              Rencana Aksi &amp; Kerja
                             </option>
                             <option value='SOP_INOVASI'>
-                              SOP & Inovasi Layanan
+                              SOP &amp; Inovasi Layanan
                             </option>
                             <option value='LKE_RESMI'>LKE / LHE Resmi</option>
-                            <option value='PEDOMAN'>Pedoman & Juknis</option>
+                            <option value='PEDOMAN'>
+                              Pedoman &amp; Juknis
+                            </option>
                           </select>
                         </div>
 
@@ -609,7 +798,7 @@ export default function ArsipClient({
         </div>
       </div>
 
-      {/* 2. Interactive Multi-Tag Category Filter (Pills / Badge Filter) */}
+      {/* 2. Interactive Multi-Tag Category Filter (Instant In-Memory Pills / Badge Filter) */}
       <div className='space-y-2'>
         <div className='flex items-center justify-between'>
           <span className='flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400'>
@@ -619,9 +808,9 @@ export default function ArsipClient({
           {selectedKategori !== 'ALL' && (
             <button
               onClick={() => setSelectedKategori('ALL')}
-              className='text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400'
+              className='cursor-pointer text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400'
             >
-              Lihat Semua
+              Lihat Semua Kategori
             </button>
           )}
         </div>
@@ -637,7 +826,7 @@ export default function ArsipClient({
                 key={tab.key}
                 type='button'
                 onClick={() => setSelectedKategori(tab.key)}
-                className={`flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-150 ${
+                className={`flex shrink-0 cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all duration-150 ${
                   isSelected
                     ? `${tab.activeColor} border-transparent`
                     : 'border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80'
@@ -682,7 +871,7 @@ export default function ArsipClient({
             </select>
           </div>
 
-          {/* Filter Kategori Dropdown (Secondary / Sync) */}
+          {/* Filter Kategori Dropdown (Synchronized with Pills) */}
           <div className='flex items-center gap-1.5'>
             <Filter className='h-4 w-4 text-slate-500' />
             <select
@@ -690,12 +879,11 @@ export default function ArsipClient({
               onChange={(e) => setSelectedKategori(e.target.value)}
               className='h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-800 shadow-xs outline-hidden focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
             >
-              <option value='ALL'>Semua Kategori</option>
-              <option value='SK_TIM'>SK Tim Kerja ZI</option>
-              <option value='RENCANA_AKSI'>Rencana Aksi & Kerja</option>
-              <option value='SOP_INOVASI'>SOP & Inovasi Layanan</option>
-              <option value='LKE_RESMI'>LKE / LHE Resmi</option>
-              <option value='PEDOMAN'>Pedoman & Juknis</option>
+              {CATEGORY_TABS.map((tab) => (
+                <option key={tab.key} value={tab.key}>
+                  {tab.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -782,8 +970,7 @@ export default function ArsipClient({
               variant='outline'
               className='bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300'
             >
-              {KATEGORI_ARSIP_MAP[selectedKategori as KategoriArsip]?.label ||
-                selectedKategori}
+              {currentCategoryLabel}
             </Badge>
           )}
           {searchQuery && (
@@ -812,41 +999,64 @@ export default function ArsipClient({
 
       {/* 5. Document Grid / List Content */}
       {displayedItems.length === 0 ? (
-        <Card className='rounded-2xl border-dashed py-12 text-center'>
+        <Card className='rounded-2xl border-dashed border-slate-200/90 py-12 text-center dark:border-slate-800'>
           <CardContent className='flex flex-col items-center justify-center space-y-3'>
-            <div className='rounded-full bg-slate-100 p-3 dark:bg-slate-800'>
-              <FolderOpen className='h-8 w-8 text-slate-400' />
+            <div className='rounded-full bg-amber-50 p-3.5 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400'>
+              <FolderOpen className='h-8 w-8' />
             </div>
-            <div className='space-y-1'>
+            <div className='max-w-md space-y-1.5'>
               <h3 className='text-base font-bold text-slate-800 dark:text-slate-200'>
-                Tidak ada dokumen arsip yang sesuai
+                {selectedKategori !== 'ALL'
+                  ? `Tidak ada dokumen untuk kategori "${currentCategoryLabel}"`
+                  : 'Tidak ada dokumen arsip yang sesuai'}
               </h3>
               <p className='text-xs text-slate-500 dark:text-slate-400'>
-                Coba sesuaikan kata kunci pencarian atau ubah filter tahun dan
-                kategori.
+                {selectedKategori !== 'ALL'
+                  ? `Belum ada berkas arsip resmi yang tercatat dalam kategori ini${
+                      selectedYear !== 'ALL'
+                        ? ` untuk periode tahun ${selectedYear}`
+                        : ''
+                    }. Silakan pilih kategori lain atau tampilkan seluruh arsip.`
+                  : 'Coba sesuaikan kata kunci pencarian atau ubah filter tahun dan kategori.'}
               </p>
             </div>
-            {isFilterActive && (
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={handleResetFilter}
-                className='mt-2'
-              >
-                <RotateCcw className='mr-1.5 h-3.5 w-3.5' />
-                Kembalikan Semua Dokumen
-              </Button>
-            )}
+            <div className='flex flex-wrap items-center justify-center gap-2 pt-2'>
+              {selectedKategori !== 'ALL' && (
+                <Button
+                  variant='default'
+                  size='sm'
+                  onClick={() => setSelectedKategori('ALL')}
+                  className='h-8 bg-blue-600 text-xs text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500'
+                >
+                  <Archive className='mr-1.5 h-3.5 w-3.5' />
+                  Tampilkan Semua Kategori
+                </Button>
+              )}
+              {isFilterActive && (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={handleResetFilter}
+                  className='h-8 text-xs'
+                >
+                  <RotateCcw className='mr-1.5 h-3.5 w-3.5' />
+                  Reset Seluruh Filter
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       ) : viewMode === 'grid' ? (
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
           {displayedItems.map((doc) => {
-            const kategoriInfo = KATEGORI_ARSIP_MAP[doc.kategori] || {
+            const kategoriInfo = KATEGORI_ARSIP_MAP[
+              doc.kategori as KategoriArsip
+            ] || {
               label: doc.kategori,
               badgeClass: 'bg-slate-100 text-slate-800',
               description: ''
             };
+            const linkHealth = evaluateLinkHealth(doc.file_url);
 
             return (
               <Card
@@ -882,6 +1092,32 @@ export default function ArsipClient({
                     </div>
                   )}
 
+                  {/* Link Accessibility / Permission Badge with Tooltip */}
+                  <div className='pt-0.5'>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className='inline-flex cursor-help items-center'>
+                          <Badge
+                            variant='outline'
+                            className={`flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold transition-colors ${linkHealth.badgeClass}`}
+                          >
+                            {linkHealth.status === 'NEEDS_PERMISSION' ? (
+                              <Lock className='h-3.5 w-3.5 text-amber-600 dark:text-amber-400' />
+                            ) : linkHealth.status === 'INVALID' ? (
+                              <AlertCircle className='h-3.5 w-3.5 text-rose-600 dark:text-rose-400' />
+                            ) : (
+                              <CheckCircle2 className='h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400' />
+                            )}
+                            <span>{linkHealth.badgeLabel}</span>
+                          </Badge>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className='max-w-xs p-2.5 text-xs font-normal shadow-md'>
+                        <p>{linkHealth.tooltipText}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+
                   {doc.keterangan && (
                     <CardDescription className='line-clamp-3 text-xs text-slate-600 dark:text-slate-400'>
                       {doc.keterangan}
@@ -904,21 +1140,18 @@ export default function ArsipClient({
                   </div>
 
                   <div className='flex w-full items-center gap-2'>
-                    <a
-                      href={doc.file_url}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='flex-1'
+                    {/* Test-Open Button */}
+                    <Button
+                      size='sm'
+                      onClick={() => handleTestOpenLink(doc)}
+                      className='h-8 flex-1 bg-blue-600 text-xs text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500'
+                      title='Buka dan uji aksesibilitas berkas arsip'
                     >
-                      <Button
-                        size='sm'
-                        className='h-8 w-full bg-blue-600 text-xs text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500'
-                      >
-                        <ExternalLink className='mr-1.5 h-3.5 w-3.5' />
-                        Buka Berkas
-                      </Button>
-                    </a>
+                      <ExternalLink className='mr-1.5 h-3.5 w-3.5' />
+                      Buka Berkas
+                    </Button>
 
+                    {/* Quick Copy Link Button with feedback toast */}
                     <Button
                       variant='outline'
                       size='sm'
@@ -1000,6 +1233,7 @@ export default function ArsipClient({
                   <th className='px-4 py-3.5 font-semibold'>
                     Nomor SK / Surat
                   </th>
+                  <th className='px-4 py-3.5 font-semibold'>Status Akses</th>
                   <th className='px-4 py-3.5 font-semibold'>Pengunggah</th>
                   <th className='py-3.5 pr-6 pl-4 text-right font-semibold'>
                     Aksi
@@ -1008,11 +1242,14 @@ export default function ArsipClient({
               </thead>
               <tbody className='divide-y divide-slate-100 dark:divide-slate-800/60'>
                 {displayedItems.map((doc) => {
-                  const kategoriInfo = KATEGORI_ARSIP_MAP[doc.kategori] || {
+                  const kategoriInfo = KATEGORI_ARSIP_MAP[
+                    doc.kategori as KategoriArsip
+                  ] || {
                     label: doc.kategori,
                     badgeClass: 'bg-slate-100 text-slate-800',
                     description: ''
                   };
+                  const linkHealth = evaluateLinkHealth(doc.file_url);
 
                   return (
                     <tr
@@ -1046,24 +1283,47 @@ export default function ArsipClient({
                       <td className='px-4 py-3.5 font-mono text-slate-600 dark:text-slate-400'>
                         {doc.nomor_surat || '-'}
                       </td>
+                      <td className='px-4 py-3.5'>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className='inline-flex cursor-help items-center'>
+                              <Badge
+                                variant='outline'
+                                className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold ${linkHealth.badgeClass}`}
+                              >
+                                {linkHealth.status === 'NEEDS_PERMISSION' ? (
+                                  <Lock className='h-3 w-3 text-amber-600 dark:text-amber-400' />
+                                ) : linkHealth.status === 'INVALID' ? (
+                                  <AlertCircle className='h-3 w-3 text-rose-600 dark:text-rose-400' />
+                                ) : (
+                                  <CheckCircle2 className='h-3 w-3 text-emerald-600 dark:text-emerald-400' />
+                                )}
+                                <span>{linkHealth.badgeLabel}</span>
+                              </Badge>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className='max-w-xs p-2 text-xs font-normal shadow-md'>
+                            <p>{linkHealth.tooltipText}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </td>
                       <td className='px-4 py-3.5 text-slate-500 dark:text-slate-400'>
                         {doc.uploaded_by}
                       </td>
                       <td className='py-3.5 pr-6 pl-4 text-right'>
                         <div className='flex items-center justify-end gap-1.5'>
-                          <a
-                            href={doc.file_url}
-                            target='_blank'
-                            rel='noopener noreferrer'
+                          {/* Test-Open Button */}
+                          <Button
+                            size='sm'
+                            onClick={() => handleTestOpenLink(doc)}
+                            className='h-8 min-h-[34px] touch-manipulation bg-blue-600 px-3 text-xs text-white hover:bg-blue-700 sm:h-7 sm:min-h-[28px] sm:px-2.5 sm:text-[11px]'
+                            title='Buka & Uji Akses Berkas'
                           >
-                            <Button
-                              size='sm'
-                              className='h-8 min-h-[34px] touch-manipulation bg-blue-600 px-3 text-xs text-white hover:bg-blue-700 sm:h-7 sm:min-h-[28px] sm:px-2.5 sm:text-[11px]'
-                            >
-                              <ExternalLink className='mr-1 h-3 w-3' />
-                              Buka
-                            </Button>
-                          </a>
+                            <ExternalLink className='mr-1 h-3 w-3' />
+                            Buka
+                          </Button>
+
+                          {/* Quick Copy Link Button */}
                           <Button
                             variant='outline'
                             size='sm'
@@ -1077,6 +1337,7 @@ export default function ArsipClient({
                               <Copy className='h-3 w-3' />
                             )}
                           </Button>
+
                           {isAdmin && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>

@@ -483,7 +483,11 @@ export type KategoriArsip =
   | 'RENCANA_AKSI'
   | 'SOP_INOVASI'
   | 'LKE_RESMI'
-  | 'PEDOMAN';
+  | 'PEDOMAN'
+  | 'SOP_PELAYANAN'
+  | 'LAPORAN_NOTULA'
+  | 'PAPARAN'
+  | 'INOVASI_DOKUMENTASI';
 
 export interface ArsipDokumen {
   id: string;
@@ -546,6 +550,41 @@ export const KATEGORI_ARSIP_MAP: Record<KategoriArsip, KategoriArsipInfo> = {
       'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-300',
     iconName: 'BookOpen',
     description: 'Peraturan MenPAN-RB, Petunjuk Teknis, dan Buku Saku BPS RI'
+  },
+  SOP_PELAYANAN: {
+    code: 'SOP_PELAYANAN',
+    label: 'SOP Pelayanan',
+    badgeClass:
+      'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300',
+    iconName: 'Sparkles',
+    description:
+      'Standar Operasional Prosedur Pelayanan Statistik Terpadu (PST)'
+  },
+  LAPORAN_NOTULA: {
+    code: 'LAPORAN_NOTULA',
+    label: 'Laporan & Notula',
+    badgeClass:
+      'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300',
+    iconName: 'FileSpreadsheet',
+    description:
+      'Laporan Hasil Evaluasi (LHE), LKjIP, dan notula rapat koordinasi'
+  },
+  PAPARAN: {
+    code: 'PAPARAN',
+    label: 'Paparan & Bahan Tayang',
+    badgeClass:
+      'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300',
+    iconName: 'Presentation',
+    description:
+      'Bahan paparan, slide presentasi evaluasi TPN/TPI, dan sosialisasi'
+  },
+  INOVASI_DOKUMENTASI: {
+    code: 'INOVASI_DOKUMENTASI',
+    label: 'Inovasi & Dokumentasi',
+    badgeClass:
+      'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-300',
+    iconName: 'Award',
+    description: 'Dokumentasi inovasi pelayanan dan replikasi program unggulan'
   }
 };
 
