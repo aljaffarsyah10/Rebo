@@ -287,12 +287,12 @@
   - [x] Optimasi komponen tabel indikator pada pilar dengan jumlah pertanyaan banyak (misal Pilar 3 & Pilar 5) agar scroll dan navigasi tetap lancar di laptop/perangkat berspesifikasi rendah.
 
 ### 3. Perbaikan Papan Kanban Tindak Lanjut (`/rebo/kanban`)
-- [ ] **Penanganan Catatan Revisi Berteks Panjang:**
-  - [ ] Batasi tinggi kartu tugas (clamping text maksimal 3-4 baris) dengan tombol *"Lihat Selengkapnya"* / modal detail agar kartu dengan catatan verifikator yang panjang tidak merusak proporsi tata letak kolom Kanban.
-- [ ] **Status Sinkronisasi Drag-and-Drop Real-Time:**
-  - [ ] Pastikan perpindahan kartu antar kolom (To Do ➔ In Progress ➔ Done) langsung memperbarui status di database dengan feedback toast ringkas dan mekanisme rollback jika terjadi gangguan koneksi.
-- [ ] **Penyempurnaan Empty State Kolom:**
-  - [ ] Berikan visualisasi dan teks placeholder yang ramah pada kolom yang kosong (contoh: *"Bagus! Tidak ada catatan revisi yang tertunda"* pada kolom To Do).
+- [x] **Penanganan Catatan Revisi Berteks Panjang:**
+  - [x] Batasi tinggi kartu tugas (clamping text maksimal 3-4 baris) dengan tombol *"Lihat Selengkapnya"* / modal detail agar kartu dengan catatan verifikator yang panjang tidak merusak proporsi tata letak kolom Kanban.
+- [x] **Status Sinkronisasi Drag-and-Drop Real-Time:**
+  - [x] Pastikan perpindahan kartu antar kolom (To Do ➔ In Progress ➔ Done) langsung memperbarui status di database dengan feedback toast ringkas dan mekanisme rollback jika terjadi gangguan koneksi.
+- [x] **Penyempurnaan Empty State Kolom:**
+  - [x] Berikan visualisasi dan teks placeholder yang ramah pada kolom yang kosong (contoh: *"Bagus! Tidak ada catatan revisi yang tertunda"* pada kolom To Do).
 
 ### 4. Perbaikan Menu Monitoring & Siklus Periode (`/rebo/monitoring` & `/rebo/admin/periode`)
 - [ ] **Penanganan Kasus Nilai Nol / Pembagian Nol (NaN Handling):**

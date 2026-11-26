@@ -459,3 +459,169 @@ export async function sendKlarifikasiAction(params: {
     };
   }
 }
+
+/**
+ * Server action untuk sinkronisasi perpindahan kartu Kanban (Drag & Drop)
+ * antar kolom:
+ * - 3: Perlu Revisi (To Do)
+ * - 1: Menunggu Review (In Progress / In Review)
+ * - 2: Disetujui (Done)
+ *
+ * Mengupdate pertanyaan_periode dan fallback legacy buktiDukung,
+ * mencatat audit trail, dan me-revalidate path cache.
+ */
+export async function updateKanbanCardStatusAction(params: {
+  idPertanyaan: string;
+  idPeriode?: string;
+  newStatus: StatusKelengkapan;
+  previousStatus?: StatusKelengkapan;
+}): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!session.userId) {
+      return {
+        success: false,
+        error:
+          'Sesi berakhir atau pengguna belum login. Silakan masuk terlebih dahulu.'
+      };
+    }
+
+    const supabase = await createClient();
+
+    // 1. Tentukan target periode evaluasi
+    let targetPeriodeId = params.idPeriode;
+    if (!targetPeriodeId) {
+      const activePeriode = await getActivePeriode();
+      targetPeriodeId = activePeriode?.id || 'default-periode-2026';
+    }
+
+    // 2. Cari data pertanyaan_periode yang ada
+    const { data: existingPP } = await supabase
+      .from('pertanyaan_periode')
+      .select('*')
+      .eq('id_pertanyaan', params.idPertanyaan)
+      .eq('id_periode', targetPeriodeId)
+      .maybeSingle();
+
+    const senderName = session.fullName || session.email || 'Tim RB';
+    const now = new Date();
+
+    const updatePayload: Record<string, any> = {
+      status_kelengkapan: params.newStatus,
+      updated_at: now.toISOString()
+    };
+
+    // Jika dipindah ke kolom Disetujui (2), otomatis set verifier info
+    if (params.newStatus === 2) {
+      updatePayload.verified_by = senderName;
+      updatePayload.verified_at = now.toISOString();
+      if (!existingPP?.nilai_verifikasi && existingPP?.nilai_mandiri) {
+        updatePayload.nilai_verifikasi = existingPP.nilai_mandiri;
+      }
+    }
+
+    let idPertanyaanPeriode = existingPP?.id;
+
+    if (existingPP?.id) {
+      const { error: ppUpdateError } = await supabase
+        .from('pertanyaan_periode')
+        .update(updatePayload)
+        .eq('id', existingPP.id);
+
+      if (ppUpdateError) {
+        throw new Error(
+          `Gagal memperbarui status pertanyaan_periode: ${ppUpdateError.message}`
+        );
+      }
+    } else {
+      const { data: insertedPP, error: ppInsertError } = await supabase
+        .from('pertanyaan_periode')
+        .insert({
+          id_pertanyaan: params.idPertanyaan,
+          id_periode: targetPeriodeId,
+          status_kelengkapan: params.newStatus,
+          submitted_by_user_id: session.userId,
+          submitted_by_name: senderName,
+          verified_by: params.newStatus === 2 ? senderName : null,
+          verified_at: params.newStatus === 2 ? now.toISOString() : null,
+          updated_at: now.toISOString()
+        })
+        .select('id')
+        .maybeSingle();
+
+      if (ppInsertError) {
+        throw new Error(
+          `Gagal membuat data pertanyaan_periode baru: ${ppInsertError.message}`
+        );
+      }
+      idPertanyaanPeriode = insertedPP?.id;
+    }
+
+    // 3. Update tabel legacy buktiDukung untuk fallback
+    try {
+      const { data: legacyRow } = await supabase
+        .from('buktiDukung')
+        .select('id_bukti')
+        .eq('id_pertanyaan', params.idPertanyaan)
+        .maybeSingle();
+
+      if (legacyRow?.id_bukti) {
+        await supabase
+          .from('buktiDukung')
+          .update({
+            status_kelengkapan: params.newStatus,
+            updated_at: now.toISOString()
+          })
+          .eq('id_pertanyaan', params.idPertanyaan);
+      }
+    } catch (legacyErr: any) {
+      console.warn(
+        '[KANBAN-ACTIONS] Warning updating legacy buktiDukung status:',
+        legacyErr?.message
+      );
+    }
+
+    // 4. Catat audit trail perpindahan kartu Kanban
+    try {
+      await supabase.from('audit_log').insert({
+        id_pertanyaan_periode: idPertanyaanPeriode || null,
+        action: 'UPDATE_KANBAN_STATUS',
+        user_id: session.userId,
+        user_name: senderName,
+        role: session.role || 'operator',
+        old_state: {
+          status_kelengkapan:
+            params.previousStatus ?? existingPP?.status_kelengkapan ?? null
+        },
+        new_state: {
+          status_kelengkapan: params.newStatus
+        },
+        created_at: now.toISOString()
+      });
+    } catch (auditErr: any) {
+      console.warn(
+        '[KANBAN-ACTIONS] Warning inserting audit_log:',
+        auditErr?.message
+      );
+    }
+
+    revalidatePath('/rebo/kanban');
+    revalidatePath('/rebo/formRB');
+    revalidatePath('/rebo/monitoring');
+
+    return {
+      success: true,
+      message: 'Status indikator berhasil diperbarui.'
+    };
+  } catch (err: any) {
+    console.error('[KANBAN-ACTIONS] updateKanbanCardStatusAction error:', err);
+    return {
+      success: false,
+      error: err?.message || 'Gagal mengubah status kartu di database.'
+    };
+  }
+}
