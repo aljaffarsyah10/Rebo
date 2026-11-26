@@ -317,6 +317,24 @@
 - [x] **Penyelarasan Warna & Tipografi Mobile:**
   - [x] Terapkan palet warna lembut (*calm-soft neutral palette*) yang konsisten pada seluruh dialog konfirmasi dan modal formulir, serta sesuaikan padding kartu pada layar ponsel agar teks tidak terpotong di tepi layar.
 
+### 7. Hasil Pengujian Nyata & Temuan Hardening (Live Testing Findings)
+- [ ] **Sesi WhatsApp Baileys Persisten di Database (Supabase Session Store):**
+  - [ ] *Temuan Pengujian:* Render free-tier memiliki sistem berkas sementara (*ephemeral*), sehingga saat instance restart atau cold start, kredensial lokal di folder `auth_info/` dapat terhapus dan mengembalikan status `connected: false`.
+  - [ ] *Rencana Perbaikan:* Buat adaptor penyimpanan sesi Baileys langsung ke tabel Supabase (`public.wa_auth_session`), sehingga sekali QR code dipindai, status login WhatsApp akan **abadi dan tersimpan permanen di cloud**, tidak pernah hilang walau Render restart atau di-redeploy.
+- [ ] **Toleransi Latensi Cold-Start Render (Uji Latensi 17.6 Detik):**
+  - [ ] *Temuan Pengujian:* Pengujian *keep-alive* langsung mencatat latensi cold-start Render mencapai 17.590 ms (17,6 detik) saat pertama kali dibangunkan dari status *sleep*.
+  - [ ] *Rencana Perbaikan:* Tingkatkan timeout fetch gateway pada server actions menjadi 25 detik, dan sediakan teks status progresif di antarmuka web (*"Menghubungkan ke WhatsApp Gateway... Harap tunggu sebentar"*).
+- [ ] **Deklarasi Eksplisit Dynamic Rendering (`force-dynamic`):**
+  - [ ] *Temuan Pengujian:* Build Next.js mencatat peringatan `Dynamic server usage: Route couldn't be rendered statically because it used cookies` pada halaman yang membaca sesi Clerk.
+  - [ ] *Rencana Perbaikan:* Deklarasikan `export const dynamic = 'force-dynamic'` secara eksplisit pada rute yang menggunakan sesi Clerk untuk mencegah build fallback warnings.
+- [ ] **Pembersihan ESLint Warnings & React Hook Dependencies:**
+  - [ ] *Temuan Pengujian:* Terdeteksi beberapa warning variabel tidak terpakai dan missing dependency array di `GdriveGeneratorClient.tsx` (`loadStorageStats`) dan `KontakManagerClient.tsx` (`formattedWa`).
+  - [ ] *Rencana Perbaikan:* Perbaiki dependency array pada `useEffect` dan bersihkan import/variabel yang tidak terpakai agar konsol peramban bersih tanpa noise.
+- [ ] **Proteksi Horizontal Overflow pada Tabel Mobile:**
+  - [ ] *Temuan Pengujian:* Tabel indikator pertanyaan dengan opsi skor di Form RB berisiko menyebabkan geser layar (*horizontal scroll shift*) pada smartphone layar kecil (< 375px).
+  - [ ] *Rencana Perbaikan:* Pasang kelas `w-full max-w-full overflow-x-auto` dengan pembungkus card responsif agar hanya tabel yang bergulir dan layout navigasi tetap terkunci rapi.
+
+
 
 
 
