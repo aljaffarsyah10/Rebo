@@ -3,7 +3,8 @@ import { getCurrentUserSession } from '@/lib/auth/session';
 import { isAdmin, isTPI } from '@/lib/auth/rbac';
 import {
   getKontakListAction,
-  getGatewayStatusAction
+  getGatewayStatusAction,
+  getRedisQueueAdminDataAction
 } from '@/actions/kontak-actions';
 import KontakManagerClient from './KontakManagerClient';
 
@@ -24,16 +25,18 @@ export default async function KontakPage() {
     redirect('/rebo/overview');
   }
 
-  // 2. Ambil data kontak awal dan status gateway saat ini
-  const [kontakRes, gatewayStatus] = await Promise.all([
+  // 2. Ambil data kontak awal, status gateway, dan data antrean Redis saat ini
+  const [kontakRes, gatewayStatus, queueRes] = await Promise.all([
     getKontakListAction(),
-    getGatewayStatusAction()
+    getGatewayStatusAction(),
+    getRedisQueueAdminDataAction()
   ]);
 
   return (
     <KontakManagerClient
       initialContacts={kontakRes.data || []}
       initialGatewayStatus={gatewayStatus}
+      initialQueueData={queueRes.data || null}
     />
   );
 }

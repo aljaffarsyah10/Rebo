@@ -22,7 +22,9 @@ import {
   Check,
   X,
   Radio,
-  Share2
+  Share2,
+  Server,
+  Layers
 } from 'lucide-react';
 import PageContainer from '@/components/layout/page-container';
 import {
@@ -66,12 +68,17 @@ import {
   triggerManualReminderAction,
   getGatewayStatusAction,
   getKontakListAction,
-  type GatewayStatusResult
+  getRedisQueueAdminDataAction,
+  retryDlqAction,
+  clearDlqAction,
+  type GatewayStatusResult,
+  type RedisQueueAdminData
 } from '@/actions/kontak-actions';
 
 interface KontakManagerClientProps {
   initialContacts: KontakPilarRecord[];
   initialGatewayStatus: GatewayStatusResult;
+  initialQueueData?: RedisQueueAdminData | null;
 }
 
 // Skema warna pilar lembut & modern
@@ -119,12 +126,21 @@ const PILAR_COLOR_MAP: Record<
 
 export default function KontakManagerClient({
   initialContacts,
-  initialGatewayStatus
+  initialGatewayStatus,
+  initialQueueData
 }: KontakManagerClientProps) {
   const [contacts, setContacts] =
     useState<KontakPilarRecord[]>(initialContacts);
   const [gatewayStatus, setGatewayStatus] =
     useState<GatewayStatusResult>(initialGatewayStatus);
+
+  // Redis Queue & Worker States
+  const [queueData, setQueueData] = useState<RedisQueueAdminData | null>(
+    initialQueueData || null
+  );
+  const [isLoadingQueue, setIsLoadingQueue] = useState(false);
+  const [isRetryingDlq, setIsRetryingDlq] = useState(false);
+  const [isClearingDlq, setIsClearingDlq] = useState(false);
 
   // Loading states
   const [isRefreshing, startRefreshTransition] = useTransition();
@@ -138,14 +154,40 @@ export default function KontakManagerClient({
   const [autoPolling, setAutoPolling] = useState(true);
   const [lastPolledAt, setLastPolledAt] = useState<Date>(new Date());
 
-  // Auto-polling status gateway tiap 35 detik untuk mendeteksi perubahan status koneksi secara otomatis
+  const fetchQueueData = async (silent = false) => {
+    if (!silent) setIsLoadingQueue(true);
+    try {
+      const res = await getRedisQueueAdminDataAction();
+      if (res.success && res.data) {
+        setQueueData(res.data);
+      }
+    } catch {
+      // silent
+    } finally {
+      if (!silent) setIsLoadingQueue(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!initialQueueData) {
+      fetchQueueData(true);
+    }
+  }, [initialQueueData]);
+
+  // Auto-polling status gateway & Redis queue tiap 35 detik
   useEffect(() => {
     if (!autoPolling) return;
 
     const intervalId = setInterval(async () => {
       try {
-        const res = await getGatewayStatusAction();
-        setGatewayStatus(res);
+        const [resGateway, resQueue] = await Promise.all([
+          getGatewayStatusAction(),
+          getRedisQueueAdminDataAction()
+        ]);
+        setGatewayStatus(resGateway);
+        if (resQueue.success && resQueue.data) {
+          setQueueData(resQueue.data);
+        }
         setLastPolledAt(new Date());
       } catch (err: unknown) {
         // Silent failure pada background polling agar tidak memunculkan toast error berkala
@@ -154,6 +196,40 @@ export default function KontakManagerClient({
 
     return () => clearInterval(intervalId);
   }, [autoPolling]);
+
+  const handleRetryDlq = async () => {
+    setIsRetryingDlq(true);
+    try {
+      const res = await retryDlqAction();
+      if (res.success) {
+        toast.success(res.message);
+        await fetchQueueData(true);
+      } else {
+        toast.error(res.error || 'Gagal memproses kirim ulang DLQ.');
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Gagal retry DLQ.');
+    } finally {
+      setIsRetryingDlq(false);
+    }
+  };
+
+  const handleClearDlq = async () => {
+    setIsClearingDlq(true);
+    try {
+      const res = await clearDlqAction();
+      if (res.success) {
+        toast.success(res.message);
+        await fetchQueueData(true);
+      } else {
+        toast.error(res.error || 'Gagal membersihkan DLQ.');
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Gagal membersihkan DLQ.');
+    } finally {
+      setIsClearingDlq(false);
+    }
+  };
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -630,6 +706,242 @@ export default function KontakManagerClient({
                     Arahkan kamera smartphone ke halaman QR untuk pairing akun
                     bot.
                   </span>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ========================================================================= */}
+        {/* 2.5. PANEL PEMANTAUAN ANTREAN & WORKER REDIS */}
+        {/* ========================================================================= */}
+        <Card className='via-card to-card border-indigo-200/80 bg-gradient-to-br from-indigo-50/40 shadow-xs transition-shadow hover:shadow-sm dark:border-indigo-900/50 dark:from-indigo-950/20'>
+          <CardHeader className='pb-3'>
+            <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+              <div className='flex items-center gap-2.5'>
+                <div className='flex size-8 items-center justify-center rounded-lg border border-indigo-200 bg-indigo-100 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-300'>
+                  <Server className='size-4' />
+                </div>
+                <div>
+                  <CardTitle className='text-base font-semibold'>
+                    Pemantauan Antrean & Worker Redis
+                  </CardTitle>
+                  <CardDescription className='text-xs'>
+                    Observabilitas antrean pesan WhatsApp, Dead Letter Queue
+                    (DLQ), dan status worker background
+                  </CardDescription>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-2'>
+                {queueData?.health.connected ? (
+                  <Badge
+                    variant='outline'
+                    className='gap-1.5 border-emerald-300 bg-emerald-100/80 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                  >
+                    <span className='size-2 animate-pulse rounded-full bg-emerald-500' />
+                    🟢 Terhubung ({queueData.health.provider.toUpperCase()} •{' '}
+                    {queueData.health.latencyMs} ms)
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant='outline'
+                    className='gap-1.5 border-amber-300 bg-amber-100/80 px-2.5 py-1 text-xs font-medium text-amber-800 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                  >
+                    <span className='size-2 rounded-full bg-amber-500' />
+                    🟡 Mode Fallback Memory (
+                    {queueData?.health.provider || 'In-Memory'})
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className='space-y-4 pt-1'>
+            {/* 3 Metrik Utama Antrean */}
+            <div className='grid grid-cols-1 gap-3 sm:grid-cols-3'>
+              {/* Metrik 1: Antrean Aktif (Pending) */}
+              <div className='flex items-center justify-between rounded-xl border border-sky-200/80 bg-sky-50/50 p-3.5 backdrop-blur-xs dark:border-sky-900/40 dark:bg-sky-950/20'>
+                <div className='space-y-1'>
+                  <p className='text-muted-foreground text-xs font-medium'>
+                    Antrean Aktif (Pending)
+                  </p>
+                  <p className='text-foreground font-mono text-2xl font-bold tracking-tight'>
+                    {queueData?.metrics.pending ?? 0}
+                  </p>
+                  <p className='text-muted-foreground text-[11px]'>
+                    Pesan siap dikirim worker
+                  </p>
+                </div>
+                <div className='flex size-10 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300'>
+                  <Layers className='size-5' />
+                </div>
+              </div>
+
+              {/* Metrik 2: Terjadwal (Delayed) */}
+              <div className='flex items-center justify-between rounded-xl border border-purple-200/80 bg-purple-50/50 p-3.5 backdrop-blur-xs dark:border-purple-900/40 dark:bg-purple-950/20'>
+                <div className='space-y-1'>
+                  <p className='text-muted-foreground text-xs font-medium'>
+                    Terjadwal (Delayed)
+                  </p>
+                  <p className='text-foreground font-mono text-2xl font-bold tracking-tight'>
+                    {queueData?.metrics.delayed ?? 0}
+                  </p>
+                  <p className='text-muted-foreground text-[11px]'>
+                    Peringatan deadline terjadwal
+                  </p>
+                </div>
+                <div className='flex size-10 items-center justify-center rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'>
+                  <Clock className='size-5' />
+                </div>
+              </div>
+
+              {/* Metrik 3: Gagal (DLQ) */}
+              <div className='flex items-center justify-between rounded-xl border border-rose-200/80 bg-rose-50/50 p-3.5 backdrop-blur-xs dark:border-rose-900/40 dark:bg-rose-950/20'>
+                <div className='space-y-1'>
+                  <p className='text-muted-foreground text-xs font-medium'>
+                    Gagal Total (DLQ)
+                  </p>
+                  <p className='font-mono text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400'>
+                    {queueData?.metrics.dlq ?? 0}
+                  </p>
+                  <p className='text-muted-foreground text-[11px]'>
+                    Gagal setelah 5x percobaan
+                  </p>
+                </div>
+                <div className='flex size-10 items-center justify-center rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'>
+                  <AlertCircle className='size-5' />
+                </div>
+              </div>
+            </div>
+
+            {/* Tombol Aksi Retry DLQ & Refresh */}
+            <div className='flex flex-wrap items-center justify-between gap-3 pt-1'>
+              <div className='flex flex-wrap items-center gap-2'>
+                <Button
+                  variant='default'
+                  size='sm'
+                  onClick={handleRetryDlq}
+                  disabled={
+                    isRetryingDlq || (queueData?.metrics.dlq ?? 0) === 0
+                  }
+                  className='gap-2 bg-indigo-600 text-xs text-white shadow-sm hover:bg-indigo-700'
+                >
+                  <RefreshCw
+                    className={`size-3.5 ${isRetryingDlq ? 'animate-spin' : ''}`}
+                  />
+                  <span>Kirim Ulang Antrean Gagal (Retry DLQ)</span>
+                </Button>
+
+                {(queueData?.metrics.dlq ?? 0) > 0 && (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={handleClearDlq}
+                    disabled={isClearingDlq}
+                    className='gap-1.5 border-rose-200 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-rose-900 dark:hover:bg-rose-950/40'
+                  >
+                    <span>Bersihkan DLQ</span>
+                  </Button>
+                )}
+
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => fetchQueueData(false)}
+                  disabled={isLoadingQueue}
+                  className='gap-2 text-xs'
+                >
+                  <RefreshCw
+                    className={`size-3.5 ${isLoadingQueue ? 'animate-spin' : ''}`}
+                  />
+                  <span>Segarkan Metrik</span>
+                </Button>
+              </div>
+
+              <p className='text-muted-foreground font-mono text-[11px]'>
+                Auto-retry exponential backoff: 5s ➔ 15s ➔ 30s
+              </p>
+            </div>
+
+            {/* Tabel Ringkas 5-10 Riwayat Job Terakhir */}
+            <div className='space-y-2 pt-2'>
+              <div className='flex items-center justify-between'>
+                <p className='text-foreground flex items-center gap-1.5 text-xs font-semibold'>
+                  <BarChart3 className='size-3.5 text-indigo-600' />
+                  Riwayat Pekerjaan Antrean Terbaru (5-10 Terakhir)
+                </p>
+                <span className='text-muted-foreground text-[11px]'>
+                  Total tercatat: {queueData?.recentJobs.length || 0}
+                </span>
+              </div>
+
+              <div className='bg-card/60 overflow-hidden rounded-lg border backdrop-blur-xs'>
+                {queueData?.recentJobs && queueData.recentJobs.length > 0 ? (
+                  <div className='divide-y text-xs'>
+                    <div className='bg-muted/60 text-muted-foreground grid grid-cols-12 p-2.5 text-[11px] font-semibold'>
+                      <div className='col-span-3'>Job ID</div>
+                      <div className='col-span-3'>Jenis Pesan</div>
+                      <div className='col-span-3'>Nomor Tujuan</div>
+                      <div className='col-span-3 text-right'>Status</div>
+                    </div>
+                    {queueData.recentJobs.slice(0, 10).map((job) => {
+                      const statusVariant =
+                        job.status === 'delivered'
+                          ? 'border-emerald-300 bg-emerald-100/70 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                          : job.status === 'processing'
+                            ? 'border-sky-300 bg-sky-100/70 text-sky-800 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-300'
+                            : job.status === 'failed'
+                              ? 'border-rose-300 bg-rose-100/70 text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                              : 'border-amber-300 bg-amber-100/70 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300';
+
+                      const statusLabel =
+                        job.status === 'delivered'
+                          ? '🟢 Terkirim'
+                          : job.status === 'processing'
+                            ? '🔵 Diproses'
+                            : job.status === 'failed'
+                              ? '🔴 Gagal'
+                              : '🟡 Mengantre';
+
+                      return (
+                        <div
+                          key={job.id}
+                          className='hover:bg-muted/40 grid grid-cols-12 items-center p-2.5 transition-colors'
+                        >
+                          <div
+                            className='text-muted-foreground col-span-3 truncate font-mono text-[11px]'
+                            title={job.id}
+                          >
+                            #{job.id.slice(0, 8)}...
+                          </div>
+                          <div className='text-foreground col-span-3 truncate font-medium'>
+                            <Badge
+                              variant='outline'
+                              className='px-1.5 py-0 text-[10px]'
+                            >
+                              {job.type}
+                            </Badge>
+                          </div>
+                          <div className='text-muted-foreground col-span-3 truncate font-mono text-[11px]'>
+                            {job.targetPhone || '-'}
+                          </div>
+                          <div className='col-span-3 text-right'>
+                            <Badge
+                              variant='outline'
+                              className={`px-1.5 py-0.5 text-[10px] font-medium ${statusVariant}`}
+                            >
+                              {statusLabel}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className='text-muted-foreground p-6 text-center text-xs'>
+                    Belum ada riwayat aktivitas pekerjaan di antrean Redis.
+                  </div>
                 )}
               </div>
             </div>

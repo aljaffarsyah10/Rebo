@@ -368,26 +368,26 @@
     - Ganti tombol/badge "Kirim Mandiri (wa.me)" dengan visual status stepper cerdas: `Mengantre di Redis` ➔ `Sedang Diproses Worker` ➔ `Berhasil Terkirim ke WhatsApp`.
     - Sediakan polling status job singkat (interval 2 detik) yang mengabarkan pengguna begitu pesan mendarat di WhatsApp ponsel mereka.
 
-- [ ] **Migrasi Seluruh Notifikasi Sistem ke Antrean Redis:**
-  - [ ] *Notifikasi Verifikasi & Revisi Bukti Dukung (`src/actions/verifikasi-actions.ts`):*
+- [x] **Migrasi Seluruh Notifikasi Sistem ke Antrean Redis:**
+  - [x] *Notifikasi Verifikasi & Revisi Bukti Dukung (`src/actions/verifikasi-actions.ts`):*
     - Saat verifikator menyetujui atau meminta perbaikan berkas, panggil `enqueueWhatsAppNotification` di latar belakang. Waktu tunggu submit verifikasi di browser berkurang drastis dari 3-10 detik menjadi < 150 ms.
-  - [ ] *Notifikasi Early Warning Deadline (`src/actions/deadline-actions.ts`):*
+  - [x] *Notifikasi Early Warning Deadline (`src/actions/deadline-actions.ts`):*
     - Jadwalkan pengingat batas waktu H-30, H-14, H-7, H-3, H-1 ke dalam Redis Sorted Set (`wa_queue:delayed`) untuk dieksekusi otomatis tepat pada tanggal dan jam kerja yang ditentukan.
-  - [ ] *Notifikasi Undangan Rapat & Notulen (`src/actions/agenda-actions.ts` & `notulen-actions.ts`):*
+  - [x] *Notifikasi Undangan Rapat & Notulen (`src/actions/agenda-actions.ts` & `notulen-actions.ts`):*
     - Integrasikan pengiriman tautan resume dan notula rapat ke antrean Redis tanpa membebani browser sekretaris rapat.
-  - [ ] *Notifikasi Laporan Whistleblowing System (`src/actions/wbs-actions.ts`):*
+  - [x] *Notifikasi Laporan Whistleblowing System (`src/actions/wbs-actions.ts`):*
     - Teruskan pembaruan status laporan anonim ke nomor kontak pelapor melalui Redis Queue terenkripsi.
 
-- [ ] **Dasbor Pemantauan Antrean & Status Redis di Menu Eksisting (`/rebo/admin/kontak`):**
-  - [ ] *Penguatan Menu Kontak Eksisting:* Tidak menambah menu baru. Tambahkan tab/kartu pemantauan antrean "Antrean & Worker Redis" langsung di dalam halaman `/rebo/admin/kontak`.
-  - [ ] *Metrik Real-Time Redis:* Tampilkan widget status koneksi Redis (🟢 Connected / 🔴 Disconnected, Latensi Ping ms, Memori Terpakai).
-  - [ ] *Statistik Antrean:* Tampilkan hitungan dinamis pesan `Menunggu (Pending)`, `Diproses (Processing)`, `Terkirim (Completed)`, dan `Gagal (DLQ)`.
-  - [ ] *Tabel Riwayat & Detail Job:* Sediakan tabel pemantau 15 aktivitas antrean terakhir dengan filter tipe pesan dan status kirim.
-  - [ ] *Tindakan Perbaikan 1-Klik:* Tombol "Kirim Ulang Antrean Gagal" (*Retry DLQ*) dan "Bersihkan Antrean Kedaluwarsa" (*Purge Completed*).
+- [x] **Dasbor Pemantauan Antrean & Status Redis di Menu Eksisting (`/rebo/admin/kontak`):**
+  - [x] *Penguatan Menu Kontak Eksisting:* Tidak menambah menu baru. Tambahkan tab/kartu pemantauan antrean "Antrean & Worker Redis" langsung di dalam halaman `/rebo/admin/kontak`.
+  - [x] *Metrik Real-Time Redis:* Tampilkan widget status koneksi Redis (🟢 Connected / 🔴 Disconnected, Latensi Ping ms, Memori Terpakai).
+  - [x] *Statistik Antrean:* Tampilkan hitungan dinamis pesan `Menunggu (Pending)`, `Diproses (Processing)`, `Terkirim (Completed)`, dan `Gagal (DLQ)`.
+  - [x] *Tabel Riwayat & Detail Job:* Sediakan tabel pemantau 15 aktivitas antrean terakhir dengan filter tipe pesan dan status kirim.
+  - [x] *Tindakan Perbaikan 1-Klik:* Tombol "Kirim Ulang Antrean Gagal" (*Retry DLQ*) dan "Bersihkan Antrean Kedaluwarsa" (*Purge Completed*).
 
-- [ ] **Pemanfaatan Ekstra Redis untuk Peningkatan Performa Aplikasi REBO:**
-  - [ ] *Cache Agregasi Skor 6 Pilar & Monitoring:* Simpan kalkulasi skor total LKE, progres per pilar, dan status WBK ke dalam Redis Cache (TTL 5-10 menit) dengan mekanisme *smart invalidation* saat ada aksi verifikasi baru, memangkas 80% beban kueri ke Supabase.
-  - [ ] *Sliding-Window Rate Limiting:* Batasi pengiriman formulir dan uji coba WA (maksimal 5 kali per menit per user) menggunakan Redis atomic increment untuk mencegah serangan DoS atau penyalahgunaan kuota WhatsApp.
+- [x] **Pemanfaatan Ekstra Redis untuk Peningkatan Performa Aplikasi REBO:**
+  - [x] *Cache Agregasi Skor 6 Pilar & Monitoring:* Simpan kalkulasi skor total LKE, progres per pilar, dan status WBK ke dalam Redis Cache (TTL 5-10 menit) dengan mekanisme *smart invalidation* saat ada aksi verifikasi baru, memangkas 80% beban kueri ke Supabase.
+  - [x] *Sliding-Window Rate Limiting:* Batasi pengiriman formulir dan uji coba WA (maksimal 5 kali per menit per user) menggunakan Redis atomic increment untuk mencegah serangan DoS atau penyalahgunaan kuota WhatsApp.
 
 
 

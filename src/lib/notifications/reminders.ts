@@ -20,6 +20,7 @@ import {
   formatDeadlineReminderMessage,
   formatWeeklyRecapMessage
 } from './whatsapp';
+import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
 import type { PeriodeEvaluasi } from '@/types/rebo';
 
 export interface PilarProgressStat {
@@ -395,13 +396,23 @@ export async function executeWaReminderEngine(
 
       if (!dryRun) {
         if (phone) {
-          const sendRes = await sendWhatsAppMessage({
-            phone,
-            message: reminderMsg
+          // Masukkan ke antrean Redis secara non-blocking
+          const enqueueRes = await enqueueWhatsAppNotification({
+            type: 'DEADLINE_ALERT',
+            targetPhone: phone,
+            message: reminderMsg,
+            metadata: {
+              source: 'reminder_engine_deadline',
+              pilarId: i,
+              pilarNama: pStat.namaPilar,
+              pic: picName,
+              sisaHari,
+              milestone: milestoneLabel
+            }
           });
-          sent = sendRes.success;
-          if (!sendRes.success) {
-            errorMsg = sendRes.error;
+          sent = enqueueRes.success;
+          if (!enqueueRes.success) {
+            errorMsg = enqueueRes.error;
           }
         } else {
           errorMsg = 'Nomor WhatsApp PIC tidak ditemukan.';
@@ -493,12 +504,19 @@ export async function executeWaReminderEngine(
 
     if (!dryRun) {
       for (const adminPhone of adminRecipients) {
-        const sendRes = await sendWhatsAppMessage({
-          phone: adminPhone,
-          message: recapMsg
+        // Masukkan ke antrean Redis secara non-blocking
+        const enqueueRes = await enqueueWhatsAppNotification({
+          type: 'DEADLINE_ALERT',
+          targetPhone: adminPhone,
+          message: recapMsg,
+          metadata: {
+            source: 'reminder_engine_recap',
+            sisaHari,
+            tahun: tahunPeriode
+          }
         });
-        if (sendRes.success) recapSent = true;
-        else recapError = sendRes.error;
+        if (enqueueRes.success) recapSent = true;
+        else recapError = enqueueRes.error;
       }
 
       // Catat ke audit_log

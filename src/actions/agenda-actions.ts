@@ -16,6 +16,7 @@ import {
   sendWhatsAppMessage,
   createWhatsAppDeepLink
 } from '@/lib/notifications/whatsapp';
+import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
 
 // Server-side in-memory cache untuk fallback jika tabel Supabase belum ada / offline
 let inMemoryAgendaList: AgendaAksiZI[] = [...DEFAULT_AGENDA_LIST];
@@ -353,15 +354,23 @@ export async function sendAgendaWAReminderAction(agendaId: string): Promise<{
       });
     }
 
-    // Kirim pesan WhatsApp ke setiap penerima target
-    const sendPromises = targetRecipients.map((recipient) =>
-      sendWhatsAppMessage({
-        phone: recipient.noWa,
-        message: messageText
+    // Kirim pesan WhatsApp ke antrean Redis secara non-blocking
+    const enqueuePromises = targetRecipients.map((recipient) =>
+      enqueueWhatsAppNotification({
+        type: 'AGENDA_REMINDER',
+        targetPhone: recipient.noWa,
+        message: messageText,
+        metadata: {
+          source: 'broadcast_agenda',
+          agendaId: agenda.id,
+          judul: agenda.judul,
+          recipientNama: recipient.nama,
+          pilarId: agenda.pilar_id
+        }
       })
     );
 
-    await Promise.all(sendPromises);
+    await Promise.all(enqueuePromises);
 
     // Buat deep link wa.me utama untuk opsi buka manual di browser
     const primaryPhone = targetRecipients[0].noWa;

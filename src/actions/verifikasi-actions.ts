@@ -18,6 +18,8 @@ import {
   createWhatsAppDeepLink,
   formatPhoneNumber
 } from '@/lib/notifications/whatsapp';
+import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
+import { invalidateCacheKey, CACHE_KEYS } from '@/lib/redis/cache';
 import {
   getPilarContact,
   getDefaultNotificationReceiver
@@ -357,6 +359,12 @@ export async function submitVerifikasiAction(
     revalidatePath('/rebo/overview');
     revalidatePath('/rebo/kanban');
 
+    // Invalidate Redis cache agar monitoring dan overview segera mengambil agregat skor terbaru
+    invalidateCacheKey(
+      CACHE_KEYS.PILAR_SCORES,
+      CACHE_KEYS.MONITORING_GLOBAL
+    ).catch(() => {});
+
     // 11. Ambil data terbaru untuk feedback langsung
     let freshData: any = null;
     if (idPertanyaanPeriode) {
@@ -476,15 +484,27 @@ export async function submitVerifikasiAction(
           namaVerifikator: verifierName
         });
 
-        // 1. Prioritaskan notifikasi langsung ke pengunggah bukti (Worker-Tracking)
+        // 1. Prioritaskan notifikasi langsung ke pengunggah bukti (Worker-Tracking via Redis Queue)
         let workerNotified = false;
         if (workerPhone && workerNotifEnabled) {
           const formattedWorkerPhone = formatPhoneNumber(workerPhone);
           waDeepLink = createWhatsAppDeepLink(formattedWorkerPhone, msg);
 
-          const sendWorkerResult = await sendWhatsAppMessage({
-            phone: formattedWorkerPhone,
-            message: msg
+          // Masukkan ke Redis Message Queue secara non-blocking (< 20ms)
+          const enqueueWorkerRes = await enqueueWhatsAppNotification({
+            type: 'REVISI_BUKTI',
+            targetPhone: formattedWorkerPhone,
+            message: msg,
+            metadata: {
+              source: 'verifikasi_revisi_worker',
+              worker_user_id: workerUserId,
+              worker_name: workerName,
+              pilar_id: targetPilarId,
+              pilar_nama: pName,
+              indikator: validated.id_pertanyaan,
+              catatan_revisi: cleanCatatan,
+              verifier: verifierName
+            }
           });
 
           workerNotified = true;
@@ -503,8 +523,9 @@ export async function submitVerifikasiAction(
                 pilar_nama: pName,
                 indikator: validated.id_pertanyaan,
                 catatan_revisi: cleanCatatan,
-                success: sendWorkerResult.success,
-                error: sendWorkerResult.error || null
+                queued: enqueueWorkerRes.success,
+                jobId: enqueueWorkerRes.jobId || null,
+                error: enqueueWorkerRes.error || null
               },
               user_id: session.userId,
               user_name: verifierName,
@@ -530,9 +551,20 @@ export async function submitVerifikasiAction(
             waDeepLink = createWhatsAppDeepLink(generalRecipientPhone, msg);
           }
 
-          const sendResult = await sendWhatsAppMessage({
-            phone: generalRecipientPhone,
-            message: msg
+          // Masukkan ke Redis Message Queue secara non-blocking (< 20ms)
+          const enqueueGenRes = await enqueueWhatsAppNotification({
+            type: 'REVISI_BUKTI',
+            targetPhone: generalRecipientPhone,
+            message: msg,
+            metadata: {
+              source: 'verifikasi_revisi_koordinator',
+              pic_name: picContact?.namaPic || null,
+              pilar_id: targetPilarId,
+              pilar_nama: pName,
+              indikator: validated.id_pertanyaan,
+              catatan_revisi: cleanCatatan,
+              verifier: verifierName
+            }
           });
 
           // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_REVISION)
@@ -548,8 +580,9 @@ export async function submitVerifikasiAction(
                 pilar_nama: pName,
                 indikator: validated.id_pertanyaan,
                 catatan_revisi: cleanCatatan,
-                success: sendResult.success,
-                error: sendResult.error || null
+                queued: enqueueGenRes.success,
+                jobId: enqueueGenRes.jobId || null,
+                error: enqueueGenRes.error || null
               },
               user_id: session.userId,
               user_name: verifierName,
@@ -575,15 +608,27 @@ export async function submitVerifikasiAction(
           namaVerifikator: verifierName
         });
 
-        // 1. Prioritaskan notifikasi langsung ke pengunggah bukti (Worker-Tracking)
+        // 1. Prioritaskan notifikasi langsung ke pengunggah bukti (Worker-Tracking via Redis Queue)
         let workerNotified = false;
         if (workerPhone && workerNotifEnabled) {
           const formattedWorkerPhone = formatPhoneNumber(workerPhone);
           waDeepLink = createWhatsAppDeepLink(formattedWorkerPhone, msg);
 
-          const sendWorkerResult = await sendWhatsAppMessage({
-            phone: formattedWorkerPhone,
-            message: msg
+          // Masukkan ke Redis Message Queue secara non-blocking (< 20ms)
+          const enqueueWorkerRes = await enqueueWhatsAppNotification({
+            type: 'APPROVAL_BUKTI',
+            targetPhone: formattedWorkerPhone,
+            message: msg,
+            metadata: {
+              source: 'verifikasi_approval_worker',
+              worker_user_id: workerUserId,
+              worker_name: workerName,
+              pilar_id: targetPilarId,
+              pilar_nama: pName,
+              indikator: validated.id_pertanyaan,
+              skor: validated.nilai_verifikasi,
+              verifier: verifierName
+            }
           });
 
           workerNotified = true;
@@ -602,8 +647,9 @@ export async function submitVerifikasiAction(
                 pilar_nama: pName,
                 indikator: validated.id_pertanyaan,
                 skor: validated.nilai_verifikasi,
-                success: sendWorkerResult.success,
-                error: sendWorkerResult.error || null
+                queued: enqueueWorkerRes.success,
+                jobId: enqueueWorkerRes.jobId || null,
+                error: enqueueWorkerRes.error || null
               },
               user_id: session.userId,
               user_name: verifierName,
@@ -629,9 +675,20 @@ export async function submitVerifikasiAction(
             waDeepLink = createWhatsAppDeepLink(generalRecipientPhone, msg);
           }
 
-          const sendResult = await sendWhatsAppMessage({
-            phone: generalRecipientPhone,
-            message: msg
+          // Masukkan ke Redis Message Queue secara non-blocking (< 20ms)
+          const enqueueGenRes = await enqueueWhatsAppNotification({
+            type: 'APPROVAL_BUKTI',
+            targetPhone: generalRecipientPhone,
+            message: msg,
+            metadata: {
+              source: 'verifikasi_approval_koordinator',
+              pic_name: picContact?.namaPic || null,
+              pilar_id: targetPilarId,
+              pilar_nama: pName,
+              indikator: validated.id_pertanyaan,
+              skor: validated.nilai_verifikasi,
+              verifier: verifierName
+            }
           });
 
           // Catat pengiriman ke tabel public.audit_log (action: NOTIF_WA_APPROVED)
@@ -647,8 +704,9 @@ export async function submitVerifikasiAction(
                 pilar_nama: pName,
                 indikator: validated.id_pertanyaan,
                 skor: validated.nilai_verifikasi,
-                success: sendResult.success,
-                error: sendResult.error || null
+                queued: enqueueGenRes.success,
+                jobId: enqueueGenRes.jobId || null,
+                error: enqueueGenRes.error || null
               },
               user_id: session.userId,
               user_name: verifierName,

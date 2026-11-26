@@ -17,6 +17,7 @@ import {
   sendWhatsAppMessage,
   createWhatsAppDeepLink
 } from '@/lib/notifications/whatsapp';
+import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
 
 // Server-side in-memory cache untuk fallback jika tabel Supabase belum ada / offline
 let inMemoryNotulenList: NotulenRapat[] = [...DEFAULT_NOTULEN_LIST];
@@ -370,13 +371,25 @@ export async function convertKesepakatanToKanbanAndNotifyAction(
       status: item.status
     });
 
-    // 3. Kirim via WhatsApp Notification Service
+    // 3. Kirim via Redis Message Queue (Non-blocking)
     let waSendResult: { success: boolean; error?: string } = { success: true };
     if (item.pic_phone) {
-      waSendResult = await sendWhatsAppMessage({
-        phone: item.pic_phone,
-        message: waMessage
+      const enqueueRes = await enqueueWhatsAppNotification({
+        type: 'AGENDA_REMINDER',
+        targetPhone: item.pic_phone,
+        message: waMessage,
+        metadata: {
+          source: 'notulen_kesepakatan_kanban',
+          notulenId: notulen.id,
+          nomorNotula: notulen.nomor_notula,
+          picName: item.pic_name,
+          pilarId: item.pilar_id
+        }
       });
+      waSendResult = {
+        success: enqueueRes.success,
+        error: enqueueRes.error
+      };
     }
 
     // Buat deep link wa.me sebagai fallback manual jika pengguna ingin membuka WhatsApp Web

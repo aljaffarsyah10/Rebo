@@ -16,7 +16,19 @@ import {
   formatPhoneNumber,
   createWhatsAppDeepLink
 } from '@/lib/notifications/whatsapp';
-import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
+import {
+  enqueueWhatsAppNotification,
+  getQueueMetrics,
+  getRecentJobs,
+  retryFailedJobs,
+  clearDlq,
+  type QueueMetrics
+} from '@/lib/redis/queue';
+import { getRedisHealthStatus } from '@/lib/redis/client';
+import type {
+  RedisHealthStatus,
+  WhatsAppQueuePayload
+} from '@/lib/redis/types';
 import {
   executeReminders,
   type ReminderExecutionResult,
@@ -715,6 +727,149 @@ export async function getGatewayStatusAction(): Promise<GatewayStatusResult> {
       message: isTimeout
         ? 'Koneksi ke gateway timeout (10 detik). Layanan di Render mungkin sedang tertidur (sleep) atau sedang booting.'
         : `Tidak dapat menghubungi gateway (${err?.message || 'Offline'}).`
+    };
+  }
+}
+
+// ==============================================================================
+// 6. REDIS QUEUE ADMIN ACTIONS
+// ==============================================================================
+
+export interface RedisQueueAdminData {
+  health: RedisHealthStatus;
+  metrics: QueueMetrics;
+  recentJobs: WhatsAppQueuePayload[];
+}
+
+/**
+ * Mengambil ringkasan data antrean Redis untuk pemantauan dasbor admin:
+ * - Status kesehatan koneksi Redis (koneksi, latensi, provider)
+ * - Metrik antrean (pending, delayed, dlq)
+ * - Riwayat 10 pesan/pekerjaan notifikasi terakhir
+ */
+export async function getRedisQueueAdminDataAction(): Promise<
+  KontakActionResult<RedisQueueAdminData>
+> {
+  try {
+    const [health, metrics, recentJobs] = await Promise.all([
+      getRedisHealthStatus(),
+      getQueueMetrics(),
+      getRecentJobs(10)
+    ]);
+
+    return {
+      success: true,
+      data: {
+        health,
+        metrics,
+        recentJobs
+      },
+      message: 'Data antrean Redis berhasil dimuat.'
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error(
+      '[KONTAK-ACTIONS] Error getRedisQueueAdminDataAction:',
+      errorMsg
+    );
+    return {
+      success: false,
+      error: errorMsg,
+      data: {
+        health: {
+          connected: false,
+          provider: 'none',
+          latencyMs: 0,
+          error: errorMsg
+        },
+        metrics: {
+          pending: 0,
+          delayed: 0,
+          dlq: 0,
+          isHealthy: false
+        },
+        recentJobs: []
+      }
+    };
+  }
+}
+
+/**
+ * Memindahkan seluruh pesan gagal dari Dead Letter Queue (DLQ) kembali ke antrean aktif
+ */
+export async function retryDlqAction(): Promise<{
+  success: boolean;
+  retriedCount: number;
+  message: string;
+  error?: string;
+}> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!isAdmin(session.role)) {
+      return {
+        success: false,
+        retriedCount: 0,
+        message: '',
+        error: 'Akses ditolak: Hanya Admin yang dapat memicu kirim ulang DLQ.'
+      };
+    }
+
+    const res = await retryFailedJobs();
+    revalidatePath('/rebo/admin/kontak');
+
+    return {
+      success: true,
+      retriedCount: res.retriedCount,
+      message:
+        res.retriedCount > 0
+          ? `Berhasil memindahkan ${res.retriedCount} pekerjaan dari DLQ kembali ke antrean aktif!`
+          : 'Tidak ada pekerjaan gagal di Dead Letter Queue (DLQ).'
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error('[KONTAK-ACTIONS] Error retryDlqAction:', errorMsg);
+    return {
+      success: false,
+      retriedCount: 0,
+      message: '',
+      error: errorMsg || 'Gagal memproses retry DLQ.'
+    };
+  }
+}
+
+/**
+ * Membersihkan seluruh pekerjaan di Dead Letter Queue (DLQ)
+ */
+export async function clearDlqAction(): Promise<{
+  success: boolean;
+  message: string;
+  error?: string;
+}> {
+  try {
+    const session = await getCurrentUserSession();
+    if (!isAdmin(session.role)) {
+      return {
+        success: false,
+        message: '',
+        error: 'Akses ditolak: Hanya Admin yang dapat membersihkan DLQ.'
+      };
+    }
+
+    const cleared = await clearDlq();
+    revalidatePath('/rebo/admin/kontak');
+
+    return {
+      success: cleared,
+      message: cleared
+        ? 'Antrean gagal (DLQ) berhasil dibersihkan.'
+        : 'Gagal membersihkan DLQ.'
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      message: '',
+      error: errorMsg || 'Gagal membersihkan DLQ.'
     };
   }
 }

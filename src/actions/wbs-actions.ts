@@ -12,6 +12,7 @@ import {
   sendWhatsAppMessage,
   formatPhoneNumber
 } from '@/lib/notifications/whatsapp';
+import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
 import {
   LaporanPengaduanWBS,
   CreateWBSInput,
@@ -150,11 +151,18 @@ export async function submitLaporanWBSAction(data: CreateWBSInput): Promise<{
 
       if (targetPhone) {
         const waMessage = formatWBSAlertWAMessage(newLaporan);
-        const waResult = await sendWhatsAppMessage({
-          phone: formatPhoneNumber(targetPhone),
-          message: waMessage
+        const enqueueResult = await enqueueWhatsAppNotification({
+          type: 'WBS_STATUS',
+          targetPhone: formatPhoneNumber(targetPhone),
+          message: waMessage,
+          metadata: {
+            source: 'wbs_report_alert',
+            laporanId: newLaporan.id,
+            ticketCode: newLaporan.ticket_code,
+            kategori: newLaporan.kategori
+          }
         });
-        waSent = waResult.success;
+        waSent = enqueueResult.success;
         if (waSent) {
           newLaporan.notifikasi_tim_sent = true;
         }
