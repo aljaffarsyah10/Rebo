@@ -387,10 +387,31 @@ export default function KontakManagerClient({
       );
       toast.dismiss(toastId);
       if (res.success) {
-        toast.success('Pesan uji coba didaftarkan ke antrean Redis!', {
-          description: `Pesan untuk ${contact.nama_pic} (${contact.no_wa}) sedang diproses oleh Worker${res.jobId ? ` (Job ID: ${res.jobId.slice(0, 8)}...)` : ''}.`,
-          duration: 5000
-        });
+        if (res.status === 'delivered') {
+          toast.success(
+            `Pesan uji coba terkirim ke WhatsApp ${contact.nama_pic}!`,
+            {
+              description: `Telah dikirimkan otomatis ke nomor ${contact.no_wa} via Redis Dispatcher.`,
+              duration: 5000
+            }
+          );
+        } else if (res.status === 'needs_qr') {
+          toast.warning('WhatsApp Gateway Aktif, Perlu Scan QR', {
+            description: res.message,
+            duration: 8000,
+            action: res.waDeepLink
+              ? {
+                  label: 'Buka wa.me',
+                  onClick: () => window.open(res.waDeepLink, '_blank')
+                }
+              : undefined
+          });
+        } else {
+          toast.success('Pesan uji coba didaftarkan ke antrean Redis!', {
+            description: `Pesan untuk ${contact.nama_pic} (${contact.no_wa}) sedang diproses oleh Worker${res.jobId ? ` (Job ID: ${res.jobId.slice(0, 8)}...)` : ''}.`,
+            duration: 5000
+          });
+        }
       } else {
         toast.error(res.error || 'Pengiriman pesan uji coba gagal.', {
           description:

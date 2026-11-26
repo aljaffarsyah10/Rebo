@@ -420,28 +420,64 @@ class UpstashRedisWrapper implements IRedisClient {
 }
 
 /**
- * ioredis Wrapper adhering to IRedisClient
+ * ioredis Wrapper adhering to IRedisClient with automatic In-Memory fallback on connection drop
  */
 class IORedisWrapper implements IRedisClient {
   public provider: RedisProvider = 'ioredis';
   public rawClient: any;
+  private fallbackClient = new InMemoryRedisClient();
+  private isFailing = false;
 
   constructor(client: any) {
     this.rawClient = client;
   }
 
+  private handleFallback<T>(
+    operation: () => Promise<T>,
+    fallbackOp: () => Promise<T>
+  ): Promise<T> {
+    if (this.isFailing) {
+      return fallbackOp();
+    }
+    return operation().catch((err: any) => {
+      const isConnError =
+        err?.code === 'ECONNREFUSED' ||
+        err?.code === 'ENOTFOUND' ||
+        err?.message?.includes('max retries') ||
+        err?.message?.includes('Connection is closed');
+      if (isConnError) {
+        if (!this.isFailing) {
+          console.warn(
+            `[Redis Client] Server TCP tidak merespons (${err.message}). Beralih otomatis ke In-Memory Queue (Ultra-Cepat).`
+          );
+          this.isFailing = true;
+        }
+        return fallbackOp();
+      }
+      throw err;
+    });
+  }
+
   async ping(): Promise<string> {
-    return await this.rawClient.ping();
+    return this.handleFallback(
+      () => this.rawClient.ping(),
+      () => this.fallbackClient.ping()
+    );
   }
 
   async get<T = string>(key: string): Promise<T | null> {
-    const val = await this.rawClient.get(key);
-    if (val === null || val === undefined) return null;
-    try {
-      return JSON.parse(val) as T;
-    } catch {
-      return val as unknown as T;
-    }
+    return this.handleFallback(
+      async () => {
+        const val = await this.rawClient.get(key);
+        if (val === null || val === undefined) return null;
+        try {
+          return JSON.parse(val) as T;
+        } catch {
+          return val as unknown as T;
+        }
+      },
+      () => this.fallbackClient.get<T>(key)
+    );
   }
 
   async set(
@@ -449,49 +485,81 @@ class IORedisWrapper implements IRedisClient {
     value: unknown,
     options?: { ex?: number; px?: number }
   ): Promise<'OK' | string | null> {
-    const serialized =
-      typeof value === 'string' ? value : JSON.stringify(value);
-    if (options?.ex) {
-      return await this.rawClient.set(key, serialized, 'EX', options.ex);
-    }
-    if (options?.px) {
-      return await this.rawClient.set(key, serialized, 'PX', options.px);
-    }
-    return await this.rawClient.set(key, serialized);
+    return this.handleFallback(
+      async () => {
+        const serialized =
+          typeof value === 'string' ? value : JSON.stringify(value);
+        if (options?.ex) {
+          return await this.rawClient.set(key, serialized, 'EX', options.ex);
+        }
+        if (options?.px) {
+          return await this.rawClient.set(key, serialized, 'PX', options.px);
+        }
+        return await this.rawClient.set(key, serialized);
+      },
+      () => this.fallbackClient.set(key, value, options)
+    );
   }
 
   async del(...keys: string[]): Promise<number> {
     if (keys.length === 0) return 0;
-    return await this.rawClient.del(...keys);
+    return this.handleFallback(
+      () => this.rawClient.del(...keys),
+      () => this.fallbackClient.del(...keys)
+    );
   }
 
   async lpush(key: string, ...elements: (string | number)[]): Promise<number> {
     if (elements.length === 0) return 0;
-    return await this.rawClient.lpush(key, ...elements);
+    return this.handleFallback(
+      () => this.rawClient.lpush(key, ...elements),
+      () => this.fallbackClient.lpush(key, ...elements)
+    );
   }
 
   async rpush(key: string, ...elements: (string | number)[]): Promise<number> {
     if (elements.length === 0) return 0;
-    return await this.rawClient.rpush(key, ...elements);
+    return this.handleFallback(
+      () => this.rawClient.rpush(key, ...elements),
+      () => this.fallbackClient.rpush(key, ...elements)
+    );
   }
 
   async lpop(key: string): Promise<string | null> {
-    const res = await this.rawClient.lpop(key);
-    return res ?? null;
+    return this.handleFallback(
+      async () => {
+        const res = await this.rawClient.lpop(key);
+        return res ?? null;
+      },
+      () => this.fallbackClient.lpop(key)
+    );
   }
 
   async rpop(key: string): Promise<string | null> {
-    const res = await this.rawClient.rpop(key);
-    return res ?? null;
+    return this.handleFallback(
+      async () => {
+        const res = await this.rawClient.rpop(key);
+        return res ?? null;
+      },
+      () => this.fallbackClient.rpop(key)
+    );
   }
 
   async lrange(key: string, start: number, stop: number): Promise<string[]> {
-    const res = await this.rawClient.lrange(key, start, stop);
-    return Array.isArray(res) ? res : [];
+    return this.handleFallback(
+      async () => {
+        const res = await this.rawClient.lrange(key, start, stop);
+        return Array.isArray(res) ? res : [];
+      },
+      () => this.fallbackClient.lrange(key, start, stop)
+    );
   }
 
   async llen(key: string): Promise<number> {
-    return await this.rawClient.llen(key);
+    return this.handleFallback(
+      () => this.rawClient.llen(key),
+      () => this.fallbackClient.llen(key)
+    );
   }
 
   async ltrim(
@@ -499,11 +567,18 @@ class IORedisWrapper implements IRedisClient {
     start: number,
     stop: number
   ): Promise<'OK' | string> {
-    return (await this.rawClient.ltrim(key, start, stop)) as 'OK' | string;
+    return this.handleFallback(
+      async () =>
+        (await this.rawClient.ltrim(key, start, stop)) as 'OK' | string,
+      () => this.fallbackClient.ltrim(key, start, stop)
+    );
   }
 
   async zadd(key: string, score: number, member: string): Promise<number> {
-    return await this.rawClient.zadd(key, score, member);
+    return this.handleFallback(
+      () => this.rawClient.zadd(key, score, member),
+      () => this.fallbackClient.zadd(key, score, member)
+    );
   }
 
   async zrangebyscore(
@@ -511,17 +586,28 @@ class IORedisWrapper implements IRedisClient {
     min: number | string,
     max: number | string
   ): Promise<string[]> {
-    const res = await this.rawClient.zrangebyscore(key, min, max);
-    return Array.isArray(res) ? res : [];
+    return this.handleFallback(
+      async () => {
+        const res = await this.rawClient.zrangebyscore(key, min, max);
+        return Array.isArray(res) ? res : [];
+      },
+      () => this.fallbackClient.zrangebyscore(key, min, max)
+    );
   }
 
   async zrem(key: string, ...members: string[]): Promise<number> {
     if (members.length === 0) return 0;
-    return await this.rawClient.zrem(key, ...members);
+    return this.handleFallback(
+      () => this.rawClient.zrem(key, ...members),
+      () => this.fallbackClient.zrem(key, ...members)
+    );
   }
 
   async zcard(key: string): Promise<number> {
-    return await this.rawClient.zcard(key);
+    return this.handleFallback(
+      () => this.rawClient.zcard(key),
+      () => this.fallbackClient.zcard(key)
+    );
   }
 
   async hset(
@@ -529,35 +615,54 @@ class IORedisWrapper implements IRedisClient {
     objOrField: Record<string, unknown> | string,
     value?: unknown
   ): Promise<number> {
-    if (typeof objOrField === 'string') {
-      const valStr = typeof value === 'string' ? value : JSON.stringify(value);
-      return await this.rawClient.hset(key, objOrField, valStr);
-    }
-    const map: Record<string, string> = {};
-    for (const [k, v] of Object.entries(objOrField)) {
-      map[k] = typeof v === 'string' ? v : JSON.stringify(v);
-    }
-    return await this.rawClient.hset(key, map);
+    return this.handleFallback(
+      async () => {
+        if (typeof objOrField === 'string') {
+          const valStr =
+            typeof value === 'string' ? value : JSON.stringify(value);
+          return await this.rawClient.hset(key, objOrField, valStr);
+        }
+        const map: Record<string, string> = {};
+        for (const [k, v] of Object.entries(objOrField)) {
+          map[k] = typeof v === 'string' ? v : JSON.stringify(v);
+        }
+        return await this.rawClient.hset(key, map);
+      },
+      () => this.fallbackClient.hset(key, objOrField, value)
+    );
   }
 
   async hget<T = string>(key: string, field: string): Promise<T | null> {
-    const res = await this.rawClient.hget(key, field);
-    if (res === null || res === undefined) return null;
-    try {
-      return JSON.parse(res) as T;
-    } catch {
-      return res as unknown as T;
-    }
+    return this.handleFallback(
+      async () => {
+        const res = await this.rawClient.hget(key, field);
+        if (res === null || res === undefined) return null;
+        try {
+          return JSON.parse(res) as T;
+        } catch {
+          return res as unknown as T;
+        }
+      },
+      () => this.fallbackClient.hget<T>(key, field)
+    );
   }
 
   async hgetall<T = Record<string, string>>(key: string): Promise<T | null> {
-    const res = await this.rawClient.hgetall(key);
-    if (!res || Object.keys(res).length === 0) return null;
-    return res as unknown as T;
+    return this.handleFallback(
+      async () => {
+        const res = await this.rawClient.hgetall(key);
+        if (!res || Object.keys(res).length === 0) return null;
+        return res as unknown as T;
+      },
+      () => this.fallbackClient.hgetall<T>(key)
+    );
   }
 
   async expire(key: string, seconds: number): Promise<number> {
-    return await this.rawClient.expire(key, seconds);
+    return this.handleFallback(
+      () => this.rawClient.expire(key, seconds),
+      () => this.fallbackClient.expire(key, seconds)
+    );
   }
 }
 
@@ -588,36 +693,40 @@ export function getRedisClient(): IRedisClient {
   }
 
   // Prioritas 2: ioredis via TCP connection (Worker / Render / VM / Local)
-  if (redisUrl) {
+  // Hanya inisialisasi jika redisUrl terisi non-kosong
+  if (redisUrl && redisUrl.trim()) {
     try {
       // Dynamic require ensures safety across Next.js runtimes
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const IORedis = require('ioredis');
       const RedisClass = IORedis.default || IORedis;
       const ioredisClient = new RedisClass(redisUrl, {
-        maxRetriesPerRequest: 1,
-        connectTimeout: 4000,
+        maxRetriesPerRequest: 0,
+        connectTimeout: 800,
         lazyConnect: true,
         enableAutoPipelining: true,
-        retryStrategy(times: number) {
-          if (times > 3) return null;
-          return Math.min(times * 150, 1000);
-        }
+        retryStrategy: () => null // Jangan retry berulang-ulang jika server mati
       });
 
       // Catch error event to prevent unhandled node exceptions on connection drop
       ioredisClient.on('error', (e: any) => {
-        console.warn('[Redis ioredis warning]', e?.message || e);
+        // Heningkan error event yang bising saat Redis offline
+        if (e?.code !== 'ECONNREFUSED') {
+          console.warn('[Redis ioredis warning]', e?.message || e);
+        }
       });
 
       globalThis.__rebo_redis_client__ = new IORedisWrapper(ioredisClient);
       return globalThis.__rebo_redis_client__;
     } catch (err) {
-      console.warn('[Redis] Failed to initialize ioredis client:', err);
+      console.warn(
+        '[Redis] Failed to initialize ioredis client, falling back to in-memory:',
+        err
+      );
     }
   }
 
-  // Prioritas 3: Graceful fallback in-memory cache/mock (Prevents build failure)
+  // Prioritas 3: Graceful fallback in-memory cache/mock (Prevents build failure & zero-latency)
   globalThis.__rebo_redis_client__ = new InMemoryRedisClient();
   return globalThis.__rebo_redis_client__;
 }
@@ -629,7 +738,13 @@ export async function getRedisHealthStatus(): Promise<RedisHealthStatus> {
   const startTime = Date.now();
   try {
     const client = getRedisClient();
-    const pong = await client.ping();
+    const pongPromise = client.ping();
+    const pong = await Promise.race([
+      pongPromise,
+      new Promise<string>((_, reject) =>
+        setTimeout(() => reject(new Error('Redis ping timeout (1000ms)')), 1000)
+      )
+    ]);
     const latencyMs = Math.max(1, Date.now() - startTime);
 
     let memoryUsage: string | null = null;

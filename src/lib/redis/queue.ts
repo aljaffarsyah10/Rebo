@@ -44,6 +44,7 @@ export interface EnqueueWhatsAppOptions {
   metadata?: Record<string, unknown>;
   maxAttempts?: number;
   scheduledAt?: string | number | Date;
+  autoDispatch?: boolean;
 }
 
 /**
@@ -164,6 +165,16 @@ export async function enqueueWhatsAppNotification(
     await redis.lpush(QUEUE_KEYS.RECENT_JOBS, id);
     if (typeof redis.ltrim === 'function') {
       await redis.ltrim(QUEUE_KEYS.RECENT_JOBS, 0, 99);
+    }
+
+    // 4. Jika autoDispatch diset true dan bukan delayed, jalankan background auto-dispatch
+    if (payload.autoDispatch && !isFutureDelayed) {
+      processJobById(id).catch((dispatchErr) => {
+        console.warn(
+          `[Redis Queue] Auto-dispatch job ${id} warning:`,
+          dispatchErr
+        );
+      });
     }
 
     return {
@@ -412,6 +423,138 @@ function getQueueBackoffDelayMs(attempts: number): number {
   if (attempts === 2) return 15000;
   if (attempts === 3) return 30000;
   return 60000;
+}
+
+/**
+ * Memproses pekerjaan spesifik berdasarkan jobId secara langsung (Inline Auto-Dispatch).
+ * Digunakan untuk pengujian interaktif (TEST_WA) agar pesan langsung terkirim
+ * dalam hitungan detik tanpa harus menunggu eksekusi worker eksternal.
+ */
+export async function processJobById(
+  jobId: string
+): Promise<ProcessedJobSummary | null> {
+  if (!jobId) return null;
+  const redis = getRedisClient();
+  const job = await getJobStatus(jobId);
+  if (!job) return null;
+
+  // 1. Update status ke 'processing'
+  const nowIso = new Date().toISOString();
+  job.status = 'processing';
+  job.processedAt = nowIso;
+  job.updatedAt = nowIso;
+  await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+    ex: JOB_TTL_SECONDS
+  });
+
+  // 2. Kirim pesan melalui WhatsApp Service
+  const sendResult = await sendWhatsAppMessage({
+    phone: job.targetPhone,
+    message: job.message
+  });
+
+  if (sendResult.success) {
+    job.status = 'delivered';
+    job.deliveredAt = new Date().toISOString();
+    job.updatedAt = new Date().toISOString();
+    job.error = null;
+    if (sendResult.messageId) {
+      job.metadata = {
+        ...(job.metadata || {}),
+        messageId: sendResult.messageId
+      };
+    }
+    await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+      ex: JOB_TTL_SECONDS
+    });
+
+    return {
+      id: jobId,
+      type: job.type,
+      targetPhone: job.targetPhone,
+      success: true,
+      status: 'delivered',
+      attempts: job.attempts,
+      messageId: sendResult.messageId
+    };
+  }
+
+  // 3. Jika gagal kirim
+  job.attempts = (Number(job.attempts) || 0) + 1;
+  const maxAttempts = Number(job.maxAttempts) || 5;
+
+  // Jika bot belum ditautkan (scan QR), set error deskriptif
+  if (sendResult.isDisconnected) {
+    job.status = 'failed';
+    job.updatedAt = new Date().toISOString();
+    job.error =
+      sendResult.error || 'Bot WhatsApp belum ditautkan (scan QR code).';
+    if (sendResult.qrUrl) {
+      job.metadata = {
+        ...(job.metadata || {}),
+        qrUrl: sendResult.qrUrl,
+        isDisconnected: true
+      };
+    }
+    await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+      ex: JOB_TTL_SECONDS
+    });
+
+    return {
+      id: jobId,
+      type: job.type,
+      targetPhone: job.targetPhone,
+      success: false,
+      status: 'failed',
+      attempts: job.attempts,
+      error: job.error
+    };
+  }
+
+  if (job.attempts < maxAttempts) {
+    const delayMs = getQueueBackoffDelayMs(job.attempts);
+    const scheduledTime = Date.now() + delayMs;
+
+    job.status = 'pending';
+    job.scheduledAt = new Date(scheduledTime).toISOString();
+    job.updatedAt = new Date().toISOString();
+    job.error = `Percobaan ${job.attempts}/${maxAttempts} gagal: ${sendResult.error}`;
+
+    await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+      ex: JOB_TTL_SECONDS
+    });
+    await redis.zadd(QUEUE_KEYS.DELAYED, scheduledTime, jobId);
+
+    return {
+      id: jobId,
+      type: job.type,
+      targetPhone: job.targetPhone,
+      success: false,
+      status: 'pending',
+      attempts: job.attempts,
+      error: job.error
+    };
+  }
+
+  // Batas percobaan tercapai -> Pindahkan ke DLQ
+  job.status = 'failed';
+  job.updatedAt = new Date().toISOString();
+  job.error = `Batas percobaan (${maxAttempts}) tercapai. Error terakhir: ${sendResult.error}`;
+
+  await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+    ex: JOB_TTL_SECONDS
+  });
+  await redis.lpush(QUEUE_KEYS.DLQ, jobId);
+
+  return {
+    id: jobId,
+    type: job.type,
+    targetPhone: job.targetPhone,
+    success: false,
+    status: 'failed',
+    attempts: job.attempts,
+    error: job.error
+  };
 }
 
 /**

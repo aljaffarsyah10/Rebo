@@ -73,7 +73,8 @@ import {
   Clock,
   Smartphone,
   RefreshCw,
-  Bot
+  Bot,
+  QrCode
 } from 'lucide-react';
 
 interface UserProfileClientProps {
@@ -139,10 +140,13 @@ export default function UserProfileClient({
     phone: string;
     messageText: string;
     timestamp: string;
-    status: 'pending' | 'processing' | 'delivered' | 'failed';
+    status: 'pending' | 'processing' | 'delivered' | 'failed' | 'needs_qr';
     attempts: number;
     feedbackText: string;
     error?: string;
+    waDeepLink?: string;
+    qrUrl?: string;
+    isDisconnected?: boolean;
   } | null>(null);
   const [isPollingStatus, setIsPollingStatus] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
@@ -269,14 +273,14 @@ export default function UserProfileClient({
     return null;
   };
 
-  // Mekanisme auto-polling ringan (interval 2 detik, maks 16 detik)
+  // Mekanisme auto-polling cepat (interval 1.2 detik, maks 5 kali = 6 detik)
   const startJobPolling = (jobId: string) => {
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
     }
     setIsPollingStatus(true);
     let count = 0;
-    const maxPolls = 8; // Polling 8 kali x 2 detik = 16 detik
+    const maxPolls = 5;
 
     pollTimerRef.current = setInterval(async () => {
       count++;
@@ -287,7 +291,7 @@ export default function UserProfileClient({
         setIsPollingStatus(false);
         setStatusMessage({
           type: 'success',
-          text: 'Pesan pengujian WhatsApp telah berhasil terkirim ke ponsel Anda via Worker!'
+          text: 'Pesan pengujian WhatsApp telah berhasil terkirim otomatis ke ponsel Anda!'
         });
         return;
       }
@@ -297,7 +301,7 @@ export default function UserProfileClient({
         setIsPollingStatus(false);
         setStatusMessage({
           type: 'error',
-          text: 'Pesan pengujian gagal dikirimkan ke WhatsApp.'
+          text: 'Pesan pengujian belum berhasil terkirim ke WhatsApp.'
         });
         return;
       }
@@ -306,10 +310,10 @@ export default function UserProfileClient({
         if (pollTimerRef.current) clearInterval(pollTimerRef.current);
         setIsPollingStatus(false);
       }
-    }, 2000);
+    }, 1200);
   };
 
-  // Handler kirim tes WA ke antrean Redis Queue (Eliminasi Manual wa.me)
+  // Handler kirim tes WA ke antrean Redis Queue (Auto-Dispatch & Fast Delivery)
   const handleTestWa = async () => {
     if (!noWa || !isWaValid) {
       setStatusMessage({
@@ -332,7 +336,11 @@ export default function UserProfileClient({
       if (res.success && res.data?.jobId) {
         const feedback =
           res.message ||
-          'Pesan pengujian WhatsApp berhasil didaftarkan ke antrean sistem (Redis Queue) dan sedang diproses otomatis oleh Worker.';
+          'Pesan pengujian WhatsApp diproses melalui antrean sistem (Redis Queue).';
+
+        const initialStatus =
+          (res.data?.status as any) ||
+          (res.data?.gatewaySuccess ? 'delivered' : 'pending');
 
         const resultData = {
           jobId: res.data.jobId,
@@ -347,21 +355,29 @@ export default function UserProfileClient({
               dateStyle: 'full',
               timeStyle: 'medium'
             })} WITA`,
-          status: 'pending' as const,
+          status: initialStatus,
           attempts: 0,
-          feedbackText: feedback
+          feedbackText: feedback,
+          waDeepLink: res.waDeepLink,
+          qrUrl: res.data?.qrUrl,
+          isDisconnected: Boolean(res.data?.isDisconnected),
+          error: res.data?.error
         };
 
         setTestResult(resultData);
         setIsTestDialogOpen(true);
 
         setStatusMessage({
-          type: 'success',
+          type: initialStatus === 'delivered' ? 'success' : 'info',
           text: feedback
         });
 
-        // Jalankan auto polling status real-time
-        startJobPolling(res.data.jobId);
+        // Jalankan polling hanya jika masih pending/processing
+        if (initialStatus === 'pending' || initialStatus === 'processing') {
+          startJobPolling(res.data.jobId);
+        } else {
+          setIsPollingStatus(false);
+        }
       } else {
         setStatusMessage({
           type: 'error',
@@ -394,11 +410,15 @@ export default function UserProfileClient({
 
   // Visual Stepper Cerdas Status Antrean WhatsApp
   const renderStatusStepper = (
-    status: 'pending' | 'processing' | 'delivered' | 'failed'
+    status: 'pending' | 'processing' | 'delivered' | 'failed' | 'needs_qr'
   ) => {
-    const isStep1Done = status === 'processing' || status === 'delivered';
+    const isStep1Done =
+      status === 'processing' ||
+      status === 'delivered' ||
+      status === 'needs_qr';
     const isStep2Active = status === 'processing';
     const isStep2Done = status === 'delivered';
+    const isStep2NeedsQr = status === 'needs_qr';
     const isStep3Done = status === 'delivered';
     const isStep3Failed = status === 'failed';
 
@@ -434,22 +454,28 @@ export default function UserProfileClient({
           className={`flex flex-col items-center justify-between rounded-lg border p-2.5 text-center text-xs transition-all ${
             isStep2Done
               ? 'border-emerald-300 bg-emerald-50/70 text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200'
-              : isStep2Active
-                ? 'border-blue-400 bg-blue-50/80 text-blue-950 ring-1 ring-blue-300 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-200 dark:ring-blue-700'
-                : 'border-slate-200 bg-slate-50/60 text-slate-400 dark:border-slate-800 dark:bg-slate-900/40'
+              : isStep2NeedsQr
+                ? 'border-amber-400 bg-amber-50/80 text-amber-950 ring-1 ring-amber-300 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200'
+                : isStep2Active
+                  ? 'border-blue-400 bg-blue-50/80 text-blue-950 ring-1 ring-blue-300 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-200 dark:ring-blue-700'
+                  : 'border-slate-200 bg-slate-50/60 text-slate-400 dark:border-slate-800 dark:bg-slate-900/40'
           }`}
         >
           <div
             className={`mb-1.5 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
               isStep2Done
                 ? 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
-                : isStep2Active
-                  ? 'animate-pulse bg-blue-200 text-blue-900 dark:bg-blue-900 dark:text-blue-200'
-                  : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                : isStep2NeedsQr
+                  ? 'bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-200'
+                  : isStep2Active
+                    ? 'animate-pulse bg-blue-200 text-blue-900 dark:bg-blue-900 dark:text-blue-200'
+                    : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
             }`}
           >
             {isStep2Done ? (
               <Check className='h-4 w-4' />
+            ) : isStep2NeedsQr ? (
+              <QrCode className='h-4 w-4 text-amber-700 dark:text-amber-300' />
             ) : isStep2Active ? (
               <Loader2 className='h-4 w-4 animate-spin' />
             ) : (
@@ -457,14 +483,16 @@ export default function UserProfileClient({
             )}
           </div>
           <span className='text-[11px] leading-tight font-bold'>
-            🔵 Diproses Worker
+            {isStep2NeedsQr ? '🟡 Perlu Scan QR' : '🔵 Diproses Worker'}
           </span>
           <span className='text-muted-foreground mt-0.5 text-[10px]'>
             {isStep2Done
               ? 'Pengiriman selesai'
-              : isStep2Active
-                ? 'Mengirim via Baileys...'
-                : 'Menunggu giliran'}
+              : isStep2NeedsQr
+                ? 'Bot belum ditautkan'
+                : isStep2Active
+                  ? 'Mengirim via Baileys...'
+                  : 'Menunggu giliran'}
           </span>
         </div>
 
@@ -1210,21 +1238,72 @@ export default function UserProfileClient({
                     className={`text-[10px] font-semibold ${
                       testResult.status === 'delivered'
                         ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
-                        : testResult.status === 'failed'
-                          ? 'border-rose-400 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
-                          : 'border-blue-400 bg-blue-50 text-blue-800 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300'
+                        : testResult.status === 'needs_qr'
+                          ? 'border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200'
+                          : testResult.status === 'failed'
+                            ? 'border-rose-400 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+                            : 'border-blue-400 bg-blue-50 text-blue-800 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300'
                     }`}
                   >
                     {testResult.status === 'delivered'
                       ? '🟢 Terkirim ke WhatsApp'
-                      : testResult.status === 'failed'
-                        ? '🔴 Gagal Dikirim'
-                        : testResult.status === 'processing'
-                          ? '🔵 Sedang Diproses Worker'
-                          : '🟡 Mengantre di Redis'}
+                      : testResult.status === 'needs_qr'
+                        ? '🟡 Perlu Scan QR Bot'
+                        : testResult.status === 'failed'
+                          ? '🔴 Gagal Dikirim'
+                          : testResult.status === 'processing'
+                            ? '🔵 Sedang Diproses Worker'
+                            : '🟡 Mengantre di Redis'}
                   </Badge>
                 </div>
               </div>
+
+              {/* Alert Khusus Jika WhatsApp Gateway Belum Ditautkan QR Code */}
+              {(testResult.status === 'needs_qr' ||
+                testResult.isDisconnected) && (
+                <div className='space-y-2.5 rounded-lg border border-amber-300 bg-amber-50/90 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'>
+                  <div className='flex items-start gap-2'>
+                    <AlertCircle className='mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400' />
+                    <div>
+                      <p className='font-semibold'>
+                        Bot WhatsApp Gateway Belum Ditautkan
+                      </p>
+                      <p className='mt-0.5 text-[11px] leading-relaxed text-amber-800 dark:text-amber-300'>
+                        {testResult.error ||
+                          'Server Gateway di cloud aktif, namun bot belum dipindai QR code. Silakan scan QR untuk mengaktifkan pengiriman otomatis 100% tanpa campur tangan manusia.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-wrap gap-2 pt-1'>
+                    {testResult.qrUrl && (
+                      <Button
+                        type='button'
+                        size='sm'
+                        onClick={() => window.open(testResult.qrUrl, '_blank')}
+                        className='h-7 gap-1.5 bg-amber-600 text-xs text-white hover:bg-amber-700'
+                      >
+                        <QrCode className='h-3.5 w-3.5' />
+                        Pindai QR Code Bot Gateway
+                      </Button>
+                    )}
+                    {testResult.waDeepLink && (
+                      <Button
+                        type='button'
+                        variant='outline'
+                        size='sm'
+                        onClick={() =>
+                          window.open(testResult.waDeepLink, '_blank')
+                        }
+                        className='h-7 gap-1.5 border-amber-400 text-xs text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-950/60'
+                      >
+                        <ExternalLink className='h-3.5 w-3.5' />
+                        Kirim Cadangan via wa.me
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Preview Chat Bubble Monospace */}
               <div className='space-y-1.5'>

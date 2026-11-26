@@ -22,6 +22,7 @@ import {
   getRecentJobs,
   retryFailedJobs,
   clearDlq,
+  processJobById,
   type QueueMetrics
 } from '@/lib/redis/queue';
 import { getRedisHealthStatus } from '@/lib/redis/client';
@@ -479,7 +480,21 @@ _Pesan otomatis dikirim oleh Sistem REBO V2 BPS Sitaro via Redis Queue_`;
       };
     }
 
-    // 2. Catat audit log tanpa memblokir alur
+    const jobId = enqueueRes.jobId;
+    const fallbackLink = createWhatsAppDeepLink(cleanPhone, testMessage);
+
+    // 2. Auto-dispatch instan dengan timeout cepat (3000ms)
+    let processedResult: any = null;
+    try {
+      processedResult = await Promise.race([
+        processJobById(jobId),
+        new Promise((resolve) => setTimeout(() => resolve(null), 3000))
+      ]);
+    } catch (procErr: any) {
+      console.warn('[KONTAK-ACTIONS] Auto-dispatch error:', procErr?.message);
+    }
+
+    // 3. Catat audit log tanpa memblokir alur
     try {
       const session = await getCurrentUserSession().catch(() => null);
       const client = getIndependentSupabaseClient();
@@ -491,9 +506,9 @@ _Pesan otomatis dikirim oleh Sistem REBO V2 BPS Sitaro via Redis Queue_`;
         new_state: {
           phone: cleanPhone,
           target_name: recipientName,
-          jobId: enqueueRes.jobId,
-          status: 'queued',
-          queued: true
+          jobId,
+          status: processedResult?.status || 'queued',
+          delivered: processedResult?.status === 'delivered'
         },
         user_id: session?.userId || null,
         user_name: session?.fullName || 'Administrator',
@@ -507,11 +522,39 @@ _Pesan otomatis dikirim oleh Sistem REBO V2 BPS Sitaro via Redis Queue_`;
       );
     }
 
+    if (processedResult?.status === 'delivered') {
+      return {
+        success: true,
+        message: `Pesan uji coba berhasil terkirim langsung ke nomor WhatsApp ${recipientName} (${cleanPhone})!`,
+        jobId,
+        status: 'delivered',
+        waDeepLink: fallbackLink
+      };
+    }
+
+    const rawError = processedResult?.error || '';
+    const isQrNeeded =
+      rawError.toLowerCase().includes('qr') ||
+      rawError.toLowerCase().includes('belum terhubung') ||
+      rawError.toLowerCase().includes('disconnected') ||
+      rawError.toLowerCase().includes('logged out');
+
+    if (isQrNeeded) {
+      return {
+        success: true,
+        message: `WhatsApp Gateway aktif, namun bot belum ditautkan (scan QR). Silakan scan QR code di gateway atau kirim manual via tautan wa.me.`,
+        jobId,
+        status: 'needs_qr',
+        waDeepLink: fallbackLink
+      };
+    }
+
     return {
       success: true,
-      message: `Pesan uji coba untuk ${recipientName} (${cleanPhone}) berhasil didaftarkan ke antrean sistem (Redis Queue) dengan Job ID: ${enqueueRes.jobId}. Worker akan mengirimkannya otomatis ke WhatsApp.`,
-      jobId: enqueueRes.jobId,
-      status: 'queued'
+      message: `Pesan uji coba untuk ${recipientName} (${cleanPhone}) didaftarkan ke antrean sistem (Redis Queue) dengan Job ID: ${jobId}. Sedang diproses otomatis oleh Worker.`,
+      jobId,
+      status: processedResult?.status || 'queued',
+      waDeepLink: fallbackLink
     };
   } catch (error: unknown) {
     const err = error as Error;

@@ -7,8 +7,15 @@ import { createClient as createServerSupabaseClient } from '@/lib/supabase/serve
 import { createClient } from '@supabase/supabase-js';
 import { getCurrentUserSession } from '@/lib/auth/session';
 import { currentUser } from '@clerk/nextjs/server';
-import { formatPhoneNumber } from '@/lib/notifications/whatsapp';
-import { enqueueWhatsAppNotification, getJobStatus } from '@/lib/redis/queue';
+import {
+  formatPhoneNumber,
+  createWhatsAppDeepLink
+} from '@/lib/notifications/whatsapp';
+import {
+  enqueueWhatsAppNotification,
+  getJobStatus,
+  processJobById
+} from '@/lib/redis/queue';
 import type { WhatsAppQueuePayload } from '@/lib/redis/types';
 import type { UserProfileData } from '@/types/rebo';
 
@@ -426,11 +433,14 @@ export interface TestWaActionResultData {
   isSimulated?: boolean;
   jobId?: string;
   status?: string;
+  qrUrl?: string;
+  isDisconnected?: boolean;
+  error?: string;
 }
 
 /**
  * Mengirimkan pesan percobaan interaktif ke nomor WhatsApp pribadi pengguna
- * melalui antrean Redis Queue (non-blocking) untuk diproses otomatis oleh Worker.
+ * melalui antrean Redis Queue dengan auto-dispatch instan dan pelacakan status.
  */
 export async function sendTestNotificationToSelfAction(
   phone: string
@@ -491,7 +501,7 @@ Dengan mengaktifkan preferensi notifikasi, Anda akan menerima pembaruan instan s
 
 _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
 
-    // 1. Daftarkan pekerjaan pengiriman ke antrean Redis secara non-blocking
+    // 1. Daftarkan pekerjaan pengiriman ke antrean Redis
     const enqueueResult = await enqueueWhatsAppNotification({
       type: 'TEST_WA',
       targetPhone: formattedPhone,
@@ -513,7 +523,28 @@ _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
       };
     }
 
-    // 2. Catat ke audit log tanpa memblokir alur jika terjadi kendala DB
+    const jobId = enqueueResult.jobId;
+    const fallbackDeepLink = createWhatsAppDeepLink(
+      formattedPhone,
+      testMessage
+    );
+
+    // 2. Auto-dispatch instan dengan timeout cepat (3000ms)
+    // agar pengguna menerima hasil terkirim secara langsung tanpa harus menunggu polling 16 detik!
+    let processedResult: any = null;
+    try {
+      processedResult = await Promise.race([
+        processJobById(jobId),
+        new Promise((resolve) => setTimeout(() => resolve(null), 3000))
+      ]);
+    } catch (procErr: any) {
+      console.warn(
+        '[PROFILE-ACTIONS] Auto-dispatch job warning:',
+        procErr?.message
+      );
+    }
+
+    // 3. Catat ke audit log tanpa memblokir alur jika terjadi kendala DB
     try {
       const client = getIndependentSupabaseClient();
       const supabase = client || (await createServerSupabaseClient());
@@ -525,9 +556,9 @@ _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
           phone: formattedPhone,
           user_id: userId,
           user_name: userName,
-          jobId: enqueueResult.jobId,
-          status: 'queued',
-          queued: true
+          jobId,
+          status: processedResult?.status || 'queued',
+          delivered: processedResult?.status === 'delivered'
         },
         user_id: session?.userId ? session.userId : null,
         user_name: userName,
@@ -541,18 +572,75 @@ _Pesan otomatis Sistem REBO BPS Kabupaten Kepulauan Sitaro_`;
       );
     }
 
+    // Skenario A: Langsung berhasil terkirim ke WhatsApp ponsel pengguna!
+    if (processedResult?.status === 'delivered') {
+      return {
+        success: true,
+        message:
+          'Pesan pengujian berhasil terkirim otomatis ke nomor WhatsApp Anda!',
+        waDeepLink: fallbackDeepLink,
+        data: {
+          phone: formattedPhone,
+          testMessage,
+          timestamp: formattedTimestamp,
+          jobId,
+          status: 'delivered',
+          gatewaySuccess: true,
+          isSimulated: false
+        }
+      };
+    }
+
+    // Skenario B: Gateway aktif namun bot WhatsApp belum di-scan QR (perangkat belum tertaut)
+    const rawError = processedResult?.error || '';
+    const isQrNeeded =
+      rawError.toLowerCase().includes('qr') ||
+      rawError.toLowerCase().includes('belum terhubung') ||
+      rawError.toLowerCase().includes('disconnected') ||
+      rawError.toLowerCase().includes('logged out');
+
+    if (isQrNeeded) {
+      const qrUrl =
+        (
+          process.env.WHATSAPP_GATEWAY_URL ||
+          'https://rebo-wa-gateway.onrender.com'
+        )
+          .replace(/\/+$/, '')
+          .replace(/\/send-message$/, '') + '/qr';
+
+      return {
+        success: true,
+        message:
+          'WhatsApp Gateway aktif, namun bot belum ditautkan (scan QR). Anda dapat memindai QR code atau menggunakan tombol kirim darurat WhatsApp Web (wa.me) di bawah.',
+        waDeepLink: fallbackDeepLink,
+        data: {
+          phone: formattedPhone,
+          testMessage,
+          timestamp: formattedTimestamp,
+          jobId,
+          status: 'needs_qr',
+          gatewaySuccess: false,
+          isDisconnected: true,
+          qrUrl,
+          error: rawError
+        }
+      };
+    }
+
+    // Skenario C: Sedang dalam antrean Redis / background retry
     return {
       success: true,
       message:
         'Pesan pengujian berhasil didaftarkan ke antrean sistem (Redis Queue) dan sedang diproses otomatis oleh Worker.',
+      waDeepLink: fallbackDeepLink,
       data: {
         phone: formattedPhone,
         testMessage,
         timestamp: formattedTimestamp,
-        jobId: enqueueResult.jobId,
-        status: 'queued',
-        gatewaySuccess: true,
-        isSimulated: false
+        jobId,
+        status: processedResult?.status || 'processing',
+        gatewaySuccess: false,
+        error: processedResult?.error || undefined
       }
     };
   } catch (error: any) {

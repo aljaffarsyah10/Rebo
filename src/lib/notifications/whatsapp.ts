@@ -63,6 +63,8 @@ export async function sendWhatsAppMessage(
   error?: string;
   isSimulated?: boolean;
   messageId?: string;
+  isDisconnected?: boolean;
+  qrUrl?: string;
 }> {
   try {
     let gatewayUrl =
@@ -89,6 +91,8 @@ export async function sendWhatsAppMessage(
 
     // Pastikan endpoint mengarah ke /send-message jika hanya berupa base URL
     gatewayUrl = gatewayUrl.replace(/\/+$/, '');
+    const baseUrl = gatewayUrl.replace(/\/send-message$/, '');
+    const qrUrl = `${baseUrl}/qr`;
     if (!gatewayUrl.endsWith('/send-message')) {
       gatewayUrl += '/send-message';
     }
@@ -105,21 +109,19 @@ export async function sendWhatsAppMessage(
       ...(gatewayApiKey ? { Authorization: `Bearer ${gatewayApiKey}` } : {})
     };
 
-    // Kirim request ke WA Gateway dengan timeout 10000ms untuk toleransi cold start Render free-tier
+    // Kirim request ke WA Gateway dengan timeout 5000ms untuk respons cepat tanpa hang lama
     let response: Response;
     try {
       response = await fetch(gatewayUrl, {
         method: 'POST',
         headers: requestHeaders,
         body: requestBody,
-        // Meningkatkan timeout dari 5000ms ke 10000ms untuk menampung cold start Render
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(5000)
       });
     } catch (fetchErr: any) {
-      // Jika error terjadi karena cold-start (timeout atau koneksi terputus saat gateway booting),
-      // lakukan 1x percobaan ulang (cold-start recovery retry)
+      // Jika terjadi timeout saat cold-start, coba 1x lagi dengan timeout 4000ms
       console.warn(
-        `[WA-NOTIFICATION] Percobaan pertama menghubungi gateway mengalami kendala (${fetchErr.message}). Mencoba ulang (cold-start recovery)...`
+        `[WA-NOTIFICATION] Percobaan pertama gateway mengalami kendala (${fetchErr.message}). Mencoba ulang cepat...`
       );
 
       try {
@@ -127,7 +129,7 @@ export async function sendWhatsAppMessage(
           method: 'POST',
           headers: requestHeaders,
           body: requestBody,
-          signal: AbortSignal.timeout(10000)
+          signal: AbortSignal.timeout(4000)
         });
       } catch (retryErr: any) {
         const isRetryTimeout =
@@ -137,7 +139,7 @@ export async function sendWhatsAppMessage(
           retryErr?.message?.toLowerCase().includes('timeout');
 
         const userFriendlyMessage = isRetryTimeout
-          ? 'Gateway WhatsApp sedang bangun dari mode sleep (Render cold start timeout). Silakan coba kirim ulang dalam 15-30 detik.'
+          ? 'Gateway WhatsApp sedang bangun dari mode sleep (Render cold start timeout). Pesan telah disimpan di antrean Redis dan akan dicoba ulang otomatis.'
           : `Gagal menghubungi WhatsApp Gateway: ${retryErr.message || 'Layanan sedang offline atau memulai ulang.'}`;
 
         console.warn(
@@ -151,9 +153,34 @@ export async function sendWhatsAppMessage(
     if (!response.ok) {
       const errText = await response.text();
       console.warn('[WA-NOTIFICATION] Gateway response error:', errText);
-      const isGatewayStarting = [502, 503, 504].includes(response.status);
+
+      // Periksa apakah gateway mengembalikan status belum ditautkan (scan QR)
+      const isQrNeeded =
+        errText.toLowerCase().includes('belum terhubung') ||
+        errText.toLowerCase().includes('scan qr') ||
+        errText.toLowerCase().includes('disconnected') ||
+        errText.toLowerCase().includes('logged out');
+
+      if (isQrNeeded || response.status === 503) {
+        // Parse pesan spesifik dari JSON jika ada
+        let specificError =
+          'Bot WhatsApp belum terhubung (belum scan QR). Silakan scan QR code di WhatsApp Gateway.';
+        try {
+          const parsed = JSON.parse(errText);
+          if (parsed.error) specificError = parsed.error;
+        } catch {}
+
+        return {
+          success: false,
+          error: specificError,
+          isDisconnected: true,
+          qrUrl
+        };
+      }
+
+      const isGatewayStarting = [502, 504].includes(response.status);
       const errorMessage = isGatewayStarting
-        ? 'Layanan WhatsApp Gateway sedang dalam proses booting (Render 502/503/504). Mohon tunggu sebentar lalu coba lagi.'
+        ? 'Layanan WhatsApp Gateway sedang dalam proses booting (Render 502/504). Mohon tunggu sebentar lalu coba lagi.'
         : `Gateway error: ${response.statusText} (${response.status})`;
       return { success: false, error: errorMessage };
     }
