@@ -19,18 +19,39 @@ const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const pino = require('pino');
 const path = require('path');
+const { useSupabaseAuthState } = require('./supabase-auth');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 3001;
 const API_KEY = process.env.API_KEY || ''; // Optional API Key security
 const AUTH_DIR = path.join(__dirname, 'auth_info');
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const USE_SUPABASE_AUTH = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+
+// Guard agar error asinkron Baileys/jaringan tidak menjatuhkan proses server (mencegah 502 di Render)
+process.on('uncaughtException', (err) => {
+  console.error(
+    '[WA-GATEWAY] Uncaught Exception (server tetap berjalan):',
+    err
+  );
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error(
+    '[WA-GATEWAY] Unhandled Rejection (server tetap berjalan):',
+    reason
+  );
+});
 
 app.use(cors());
 app.use(express.json());
 
 let sock = null;
 let isConnected = false;
+let isConnecting = false;
 let qrCodeString = null;
 
 // Format nomor telepon menjadi format JID WhatsApp (e.g. 081234 -> 6281234@s.whatsapp.net)
@@ -46,66 +67,110 @@ function formatToJid(phone) {
 
 // Inisialisasi koneksi WhatsApp Baileys
 async function connectToWhatsApp() {
-  const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
-  const { version } = await fetchLatestBaileysVersion();
+  if (isConnecting) {
+    return;
+  }
+  isConnecting = true;
 
-  console.log(
-    `[WA-GATEWAY] Memulai WhatsApp Web Socket (Baileys v${version.join('.')})...`
-  );
-
-  sock = makeWASocket({
-    version,
-    auth: state,
-    printQRInTerminal: false, // Kita cetak manual via qrcode-terminal agar rapi
-    logger: pino({ level: 'silent' }), // Heningkan log verbose
-    browser: ['REBO BPS Sitaro Bot', 'Chrome', '1.0.0']
-  });
-
-  sock.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect, qr } = update;
-
-    if (qr) {
-      qrCodeString = qr;
-      console.log('\n======================================================');
-      console.log('📱 SCAN QR CODE BERIKUT MENGGUNAKAN WHATSAPP:');
+  try {
+    let authResult;
+    if (USE_SUPABASE_AUTH) {
+      try {
+        console.log(
+          '[WA-GATEWAY] Menggunakan Supabase Persistent Session Store (public.wa_auth_session)...'
+        );
+        authResult = await useSupabaseAuthState({
+          supabaseUrl: SUPABASE_URL,
+          supabaseServiceRoleKey: SUPABASE_SERVICE_ROLE_KEY
+        });
+      } catch (supabaseErr) {
+        console.error(
+          '[WA-GATEWAY] Gagal menginisialisasi Supabase Auth Store, fallback ke file lokal:',
+          supabaseErr.message
+        );
+        authResult = await useMultiFileAuthState(AUTH_DIR);
+      }
+    } else {
       console.log(
-        '   (WhatsApp > Pengaturan / Titik Tiga > Perangkat Tertaut)'
+        `[WA-GATEWAY] SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY tidak diset. Menggunakan file auth lokal (${AUTH_DIR})...`
       );
-      console.log('======================================================\n');
-      qrcode.generate(qr, { small: true });
-      console.log('\n======================================================\n');
+      authResult = await useMultiFileAuthState(AUTH_DIR);
     }
 
-    if (connection === 'close') {
-      isConnected = false;
-      qrCodeString = null;
-      const statusCode = lastDisconnect?.error?.output?.statusCode;
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+    const { state, saveCreds } = authResult;
+    const { version } = await fetchLatestBaileysVersion();
 
-      console.log(
-        `[WA-GATEWAY] Koneksi terputus (Status: ${statusCode}). Mencoba rekoneksi: ${shouldReconnect}...`
-      );
+    console.log(
+      `[WA-GATEWAY] Memulai WhatsApp Web Socket (Baileys v${version.join('.')})...`
+    );
 
-      if (shouldReconnect) {
-        setTimeout(connectToWhatsApp, 3000);
-      } else {
+    sock = makeWASocket({
+      version,
+      auth: state,
+      printQRInTerminal: false, // Kita cetak manual via qrcode-terminal agar rapi
+      logger: pino({ level: 'silent' }), // Heningkan log verbose
+      browser: ['REBO BPS Sitaro Bot', 'Chrome', '1.0.0']
+    });
+
+    sock.ev.on('connection.update', (update) => {
+      const { connection, lastDisconnect, qr } = update;
+
+      if (qr) {
+        qrCodeString = qr;
+        console.log('\n======================================================');
+        console.log('📱 SCAN QR CODE BERIKUT MENGGUNAKAN WHATSAPP:');
         console.log(
-          '[WA-GATEWAY] Perangkat keluar (Logged out). Silakan restart service untuk scan ulang.'
+          '   (WhatsApp > Pengaturan / Titik Tiga > Perangkat Tertaut)'
+        );
+        console.log('======================================================\n');
+        qrcode.generate(qr, { small: true });
+        console.log(
+          '\n======================================================\n'
         );
       }
-    } else if (connection === 'open') {
-      isConnected = true;
-      qrCodeString = null;
-      console.log('======================================================');
-      console.log('✅ WHATSAPP BERHASIL TERHUBUNG & SIAP MENGIRIM PESAN!');
-      console.log(`   User ID : ${sock.user?.id?.split(':')[0] || 'Unknown'}`);
-      console.log(`   Nama    : ${sock.user?.name || 'Bot REBO BPS Sitaro'}`);
-      console.log(`   API URL : http://localhost:${PORT}/send-message`);
-      console.log('======================================================\n');
-    }
-  });
 
-  sock.ev.on('creds.update', saveCreds);
+      if (connection === 'close') {
+        isConnected = false;
+        isConnecting = false;
+        qrCodeString = null;
+        const statusCode = lastDisconnect?.error?.output?.statusCode;
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+        console.log(
+          `[WA-GATEWAY] Koneksi terputus (Status: ${statusCode}). Mencoba rekoneksi: ${shouldReconnect}...`
+        );
+
+        if (shouldReconnect) {
+          setTimeout(connectToWhatsApp, 3000);
+        } else {
+          console.log(
+            '[WA-GATEWAY] Perangkat keluar (Logged out). Silakan restart service untuk scan ulang.'
+          );
+        }
+      } else if (connection === 'open') {
+        isConnected = true;
+        isConnecting = false;
+        qrCodeString = null;
+        console.log('======================================================');
+        console.log('✅ WHATSAPP BERHASIL TERHUBUNG & SIAP MENGIRIM PESAN!');
+        console.log(
+          `   User ID : ${sock.user?.id?.split(':')[0] || 'Unknown'}`
+        );
+        console.log(`   Nama    : ${sock.user?.name || 'Bot REBO BPS Sitaro'}`);
+        console.log(`   API URL : http://localhost:${PORT}/send-message`);
+        console.log('======================================================\n');
+      }
+    });
+
+    sock.ev.on('creds.update', saveCreds);
+  } catch (err) {
+    isConnecting = false;
+    console.error(
+      '[WA-GATEWAY] Gagal menghubungkan WhatsApp socket (mencoba ulang dalam 5 detik):',
+      err
+    );
+    setTimeout(connectToWhatsApp, 5000);
+  }
 }
 
 // ==============================================================================
@@ -232,9 +297,14 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check endpoint
+// Health check endpoint (selalu merespons HTTP 200 termasuk saat sedang connecting)
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', connected: isConnected });
+  res.status(200).json({
+    status: 'ok',
+    connected: isConnected,
+    connecting: isConnecting,
+    authStore: USE_SUPABASE_AUTH ? 'supabase' : 'file'
+  });
 });
 
 // Mengirim pesan teks WhatsApp
@@ -284,10 +354,13 @@ app.post('/send-message', async (req, res) => {
   }
 });
 
-// Jalankan Server
-app.listen(PORT, () => {
+// Jalankan Server pada 0.0.0.0 agar dapat diakses oleh reverse proxy Render
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n======================================================`);
-  console.log(`🚀 REBO WhatsApp Gateway berjalan di http://localhost:${PORT}`);
+  console.log(`🚀 REBO WhatsApp Gateway berjalan di http://0.0.0.0:${PORT}`);
+  console.log(
+    `   Auth Store : ${USE_SUPABASE_AUTH ? 'Supabase (wa_auth_session)' : 'Local File (' + AUTH_DIR + ')'}`
+  );
   console.log(`======================================================\n`);
   connectToWhatsApp();
 });

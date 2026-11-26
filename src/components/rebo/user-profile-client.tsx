@@ -327,7 +327,7 @@ export default function UserProfileClient({
     setIsTestingWa(true);
     setStatusMessage({
       type: 'info',
-      text: `Mendaftarkan pengujian pesan ke antrean Redis untuk nomor ${targetPhone}...`
+      text: `Menghubungkan ke WhatsApp Gateway... Harap tunggu sebentar (${targetPhone}).`
     });
 
     try {
@@ -714,7 +714,7 @@ export default function UserProfileClient({
               {isTestingWa ? (
                 <>
                   <Loader2 className='h-3.5 w-3.5 animate-spin' />
-                  Mengirim Uji Coba...
+                  Menghubungkan ke WhatsApp Gateway... Harap tunggu sebentar
                 </>
               ) : (
                 <>

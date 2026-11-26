@@ -375,7 +375,7 @@ export default function KontakManagerClient({
   const handleSendTestToContact = async (contact: KontakPilarRecord) => {
     setSendingTestId(contact.id);
     const toastId = toast.loading(
-      `Mendaftarkan pesan uji coba untuk ${contact.nama_pic}...`,
+      'Menghubungkan ke WhatsApp Gateway... Harap tunggu sebentar',
       {
         description: `Target: ${contact.nama_pic} (${contact.no_wa}) ke antrean Redis Queue.`
       }
@@ -633,10 +633,12 @@ export default function KontakManagerClient({
                   Keterangan Status
                 </p>
                 <p className='text-muted-foreground truncate text-xs'>
-                  {gatewayStatus.message ||
-                    (isConnected
-                      ? 'Siap memproses notifikasi indikator'
-                      : 'Perlu scan QR code')}
+                  {isCheckingGateway
+                    ? 'Menghubungkan ke WhatsApp Gateway... Harap tunggu sebentar'
+                    : gatewayStatus.message ||
+                      (isConnected
+                        ? 'Siap memproses notifikasi indikator'
+                        : 'Perlu scan QR code')}
                 </p>
               </div>
             </div>
@@ -677,7 +679,11 @@ export default function KontakManagerClient({
                       isCheckingGateway ? 'animate-spin' : ''
                     }`}
                   />
-                  <span>Cek Koneksi Ulang</span>
+                  <span>
+                    {isCheckingGateway
+                      ? 'Menghubungkan ke WhatsApp Gateway...'
+                      : 'Cek Koneksi Ulang'}
+                  </span>
                 </Button>
 
                 {/* Toggle Auto-Polling Gateway Status (35 Detik) */}

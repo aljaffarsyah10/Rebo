@@ -107,8 +107,8 @@ async function handleKeepAlive(request: NextRequest) {
           Accept: 'application/json',
           ...(gatewayApiKey ? { Authorization: `Bearer ${gatewayApiKey}` } : {})
         },
-        // Timeout 15 detik untuk mengakomodasi waking-up Render container
-        signal: AbortSignal.timeout(15000)
+        // Timeout 25 detik untuk mengakomodasi waking-up Render container (cold start ~17.6s)
+        signal: AbortSignal.timeout(25000)
       });
 
       waResult.latencyMs = Math.round(performance.now() - waStart);

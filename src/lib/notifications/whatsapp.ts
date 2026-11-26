@@ -109,19 +109,19 @@ export async function sendWhatsAppMessage(
       ...(gatewayApiKey ? { Authorization: `Bearer ${gatewayApiKey}` } : {})
     };
 
-    // Kirim request ke WA Gateway dengan timeout 5000ms untuk respons cepat tanpa hang lama
+    // Kirim request ke WA Gateway dengan timeout 25000ms untuk toleransi cold-start Render (~17.6s)
     let response: Response;
     try {
       response = await fetch(gatewayUrl, {
         method: 'POST',
         headers: requestHeaders,
         body: requestBody,
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(25000)
       });
     } catch (fetchErr: any) {
-      // Jika terjadi timeout saat cold-start, coba 1x lagi dengan timeout 4000ms
+      // Jika terjadi timeout saat cold-start, coba 1x lagi dengan timeout 25000ms
       console.warn(
-        `[WA-NOTIFICATION] Percobaan pertama gateway mengalami kendala (${fetchErr.message}). Mencoba ulang cepat...`
+        `[WA-NOTIFICATION] Percobaan pertama gateway mengalami kendala (${fetchErr.message}). Mencoba ulang...`
       );
 
       try {
@@ -129,7 +129,7 @@ export async function sendWhatsAppMessage(
           method: 'POST',
           headers: requestHeaders,
           body: requestBody,
-          signal: AbortSignal.timeout(4000)
+          signal: AbortSignal.timeout(25000)
         });
       } catch (retryErr: any) {
         const isRetryTimeout =

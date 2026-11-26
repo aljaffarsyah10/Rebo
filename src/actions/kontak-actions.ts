@@ -681,8 +681,8 @@ export async function getGatewayStatusAction(): Promise<GatewayStatusResult> {
 
   try {
     const controller = new AbortController();
-    // Tingkatkan timeout dari 4500ms ke 10000ms untuk toleransi cold start Render
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    // Timeout 25 detik untuk toleransi cold start Render (~17.6 detik)
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     const res = await fetch(`${baseUrl}/`, {
       method: 'GET',
@@ -715,7 +715,7 @@ export async function getGatewayStatusAction(): Promise<GatewayStatusResult> {
 
     // Coba fallback ke /health
     const healthController = new AbortController();
-    const healthTimeout = setTimeout(() => healthController.abort(), 8000);
+    const healthTimeout = setTimeout(() => healthController.abort(), 25000);
 
     const healthRes = await fetch(`${baseUrl}/health`, {
       method: 'GET',
@@ -768,7 +768,7 @@ export async function getGatewayStatusAction(): Promise<GatewayStatusResult> {
       botName: null,
       hasActiveQr: false,
       message: isTimeout
-        ? 'Koneksi ke gateway timeout (10 detik). Layanan di Render mungkin sedang tertidur (sleep) atau sedang booting.'
+        ? 'Koneksi ke gateway timeout (25 detik). Layanan di Render mungkin sedang tertidur (sleep) atau sedang booting.'
         : `Tidak dapat menghubungi gateway (${err?.message || 'Offline'}).`
     };
   }
