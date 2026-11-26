@@ -7,7 +7,13 @@
     "start": "node index.js",
     "dev": "node --watch index.js"
   },
-  "keywords": ["whatsapp", "gateway", "baileys", "rebo", "notifications"],
+  "keywords": [
+    "whatsapp",
+    "gateway",
+    "baileys",
+    "rebo",
+    "notifications"
+  ],
   "author": "BPS Kabupaten Kepulauan Sitaro",
   "license": "ISC",
   "dependencies": {
@@ -15,6 +21,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "ioredis": "^6.1.0",
     "pino": "^9.6.0",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0"

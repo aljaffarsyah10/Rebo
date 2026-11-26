@@ -337,10 +337,10 @@
 ### 8. Arsitektur Otomasi Penuh Berbasis Redis (Redis Message Queue, Background Worker & Automated Notification Engine)
 *Tujuan: Menghilangkan ketergantungan pada pembukaan manual `wa.me` peramban. Seluruh notifikasi (Uji Coba WA, Revisi Berkas, Persetujuan Bukti, Peringatan Tenggat Waktu, Notulen, dan Pesan Sistem Lainnya) dialihkan melalui antrean pesan Redis dan dieksekusi secara otomatis oleh background worker di latar belakang.*
 
-- [ ] **Pondasi Klien Redis Terpadu (Dual-Mode Serverless & Long-Running Worker):**
-  - [ ] *Setup Konfigurasi Environment:* Daftarkan variabel `REDIS_URL` (koneksi TCP ioredis standar) dan `UPSTASH_REDIS_REST_URL` serta `UPSTASH_REDIS_REST_TOKEN` (koneksi HTTP REST Upstash untuk Next.js serverless Vercel) pada `env.example.txt` dan `.env.local`.
-  - [ ] *Modul Singleton Redis (`src/lib/redis/client.ts`):* Bangun koneksi Redis terisolasi yang adaptif. Gunakan HTTP REST client saat berjalan di Vercel Serverless Functions (menghindari kehabisan *connection pool*), dan TCP ioredis saat dijalankan oleh Background Worker di VM/Render/lokal.
-  - [ ] *Fungsi Cek Kesehatan Redis (`getRedisHealthStatus`):* Buat utilitas pengecekan ping, latensi (ms), dan status aktif (*Connected / Disconnected*) untuk validasi koneksi secara real-time.
+- [x] **Pondasi Klien Redis Terpadu (Dual-Mode Serverless & Long-Running Worker):**
+  - [x] *Setup Konfigurasi Environment:* Daftarkan variabel `REDIS_URL` (koneksi TCP ioredis standar) dan `UPSTASH_REDIS_REST_URL` serta `UPSTASH_REDIS_REST_TOKEN` (koneksi HTTP REST Upstash untuk Next.js serverless Vercel) pada `env.example.txt` dan `.env.local`.
+  - [x] *Modul Singleton Redis (`src/lib/redis/client.ts`):* Bangun koneksi Redis terisolasi yang adaptif. Gunakan HTTP REST client saat berjalan di Vercel Serverless Functions (menghindari kehabisan *connection pool*), dan TCP ioredis saat dijalankan oleh Background Worker di VM/Render/lokal.
+  - [x] *Fungsi Cek Kesehatan Redis (`getRedisHealthStatus`):* Buat utilitas pengecekan ping, latensi (ms), dan status aktif (*Connected / Disconnected*) untuk validasi koneksi secara real-time.
 
 - [ ] **Desain Skema & Producer Antrean Pesan (`src/lib/redis/queue.ts` & `types.ts`):**
   - [ ] *Struktur Payload Antrean:* Definisikan tipe payload terstandar: `id` (UUID), `type` (`TEST_WA`, `REVISI_BUKTI`, `APPROVAL_BUKTI`, `DEADLINE_ALERT`, `AGENDA_REMINDER`, `WBS_STATUS`), `targetPhone` (format internasional `628xxx`), `message` (teks terformat), `metadata` (userId, senderName, pilarId, dll.), `status` (`pending`, `processing`, `delivered`, `failed`), `attempts` (default 0, max 5), dan `createdAt`.
@@ -378,10 +378,11 @@
   - [ ] *Notifikasi Laporan Whistleblowing System (`src/actions/wbs-actions.ts`):*
     - Teruskan pembaruan status laporan anonim ke nomor kontak pelapor melalui Redis Queue terenkripsi.
 
-- [ ] **Dasbor Pemantauan Antrean & Status Redis Admin (`/rebo/admin/antrean`):**
+- [ ] **Dasbor Pemantauan Antrean & Status Redis di Menu Eksisting (`/rebo/admin/kontak`):**
+  - [ ] *Penguatan Menu Kontak Eksisting:* Tidak menambah menu baru. Tambahkan tab/kartu pemantauan antrean "Antrean & Worker Redis" langsung di dalam halaman `/rebo/admin/kontak`.
   - [ ] *Metrik Real-Time Redis:* Tampilkan widget status koneksi Redis (🟢 Connected / 🔴 Disconnected, Latensi Ping ms, Memori Terpakai).
   - [ ] *Statistik Antrean:* Tampilkan hitungan dinamis pesan `Menunggu (Pending)`, `Diproses (Processing)`, `Terkirim (Completed)`, dan `Gagal (DLQ)`.
-  - [ ] *Tabel Riwayat & Detail Job:* Sediakan tabel pemantau 20 aktivitas terakhir dengan filter tipe pesan dan status kirim.
+  - [ ] *Tabel Riwayat & Detail Job:* Sediakan tabel pemantau 15 aktivitas antrean terakhir dengan filter tipe pesan dan status kirim.
   - [ ] *Tindakan Perbaikan 1-Klik:* Tombol "Kirim Ulang Antrean Gagal" (*Retry DLQ*) dan "Bersihkan Antrean Kedaluwarsa" (*Purge Completed*).
 
 - [ ] **Pemanfaatan Ekstra Redis untuk Peningkatan Performa Aplikasi REBO:**
