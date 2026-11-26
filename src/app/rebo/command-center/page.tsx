@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
 import { getLHKPNComplianceListAction } from '@/actions/lhkpn-actions';
@@ -6,6 +6,7 @@ import { getDisiplinSummaryAction } from '@/actions/disiplin-actions';
 import { getInovasiListAction } from '@/actions/inovasi-actions';
 import { getActiveBannerPengumumanAction } from '@/actions/broadcast-actions';
 import CommandCenterClient from '@/components/rebo/command-center-client';
+import { CommandCenterPageSkeleton } from '@/components/rebo/rebo-skeletons';
 
 export const metadata: Metadata = {
   title: 'Executive Command Center | Mode Layar TV Kiosk | REBO V2',
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function CommandCenterPage() {
+async function CommandCenterContent() {
   // Ambil data agregasi monitoring, kepatuhan, inovasi, dan pengumuman secara paralel
   const [monitoringRes, lhkpnRes, disiplinRes, inovasiRes, bannerRes] =
     await Promise.all([
@@ -35,5 +36,13 @@ export default async function CommandCenterPage() {
       inovasiList={inovasiRes.data || []}
       pengumumanBroadcast={bannerRes.data || null}
     />
+  );
+}
+
+export default function CommandCenterPage() {
+  return (
+    <Suspense fallback={<CommandCenterPageSkeleton />}>
+      <CommandCenterContent />
+    </Suspense>
   );
 }

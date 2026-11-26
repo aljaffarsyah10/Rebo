@@ -15,9 +15,11 @@ import { getRedisClient } from './client';
 
 export const CACHE_KEYS = {
   PILAR_SCORES: 'cache:pilar_scores',
+  PILAR_SCORES_PEMENUHAN: 'cache:pilar_scores:pemenuhan',
   MONITORING_GLOBAL: 'cache:monitoring:global',
   PERIODE_ACTIVE: 'cache:periode:active',
-  LEADERBOARD: 'cache:leaderboard'
+  LEADERBOARD: 'cache:leaderboard',
+  BADGES: 'cache:badges'
 } as const;
 
 /**
@@ -107,9 +109,11 @@ export async function invalidateCachePattern(pattern: string): Promise<number> {
     const cleanPattern = pattern.replace(/\*/g, '');
     const knownKeys = [
       CACHE_KEYS.PILAR_SCORES,
+      CACHE_KEYS.PILAR_SCORES_PEMENUHAN,
       CACHE_KEYS.MONITORING_GLOBAL,
       CACHE_KEYS.PERIODE_ACTIVE,
-      CACHE_KEYS.LEADERBOARD
+      CACHE_KEYS.LEADERBOARD,
+      CACHE_KEYS.BADGES
     ];
 
     const matchedKeys = knownKeys.filter((k) => k.includes(cleanPattern));
@@ -122,4 +126,30 @@ export async function invalidateCachePattern(pattern: string): Promise<number> {
     console.warn(`[Redis Cache] Gagal invalidate pattern "${pattern}":`, err);
     return 0;
   }
+}
+
+/**
+ * Menghapus seluruh cache agregasi skor, monitoring, leaderboard, dan lencana
+ * ketika ada mutasi bukti dukung, verifikasi, atau status kanban.
+ */
+export async function invalidateReboScoreCaches(
+  periodeId?: string | null
+): Promise<number> {
+  const keysToInvalidate: string[] = [
+    CACHE_KEYS.PILAR_SCORES,
+    CACHE_KEYS.PILAR_SCORES_PEMENUHAN,
+    CACHE_KEYS.MONITORING_GLOBAL,
+    CACHE_KEYS.LEADERBOARD,
+    CACHE_KEYS.BADGES
+  ];
+
+  if (periodeId) {
+    keysToInvalidate.push(
+      `${CACHE_KEYS.MONITORING_GLOBAL}:${periodeId}`,
+      `${CACHE_KEYS.LEADERBOARD}:${periodeId}`,
+      `${CACHE_KEYS.PILAR_SCORES}:${periodeId}`
+    );
+  }
+
+  return invalidateCacheKey(...keysToInvalidate);
 }

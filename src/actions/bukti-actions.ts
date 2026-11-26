@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getCurrentUserSession } from '@/lib/auth/session';
 import { canEditBukti } from '@/lib/auth/rbac';
 import { revalidatePath } from 'next/cache';
+import { invalidateReboScoreCaches } from '@/lib/redis/cache';
 import { z } from 'zod';
 import {
   STATUS_KELENGKAPAN,
@@ -418,7 +419,13 @@ export async function submitBuktiAction(
     if (targetPilarId) {
       revalidatePath(`/rebo/formRB/${targetPilarId}`);
     }
+    revalidatePath('/rebo/formRB/pemenuhan');
     revalidatePath('/rebo/monitoring');
+    revalidatePath('/rebo/overview');
+    revalidatePath('/rebo/leaderboard');
+    revalidatePath('/rebo/command-center');
+
+    invalidateReboScoreCaches(validated.id_periode).catch(() => {});
 
     // 14. Ambil snapshot data terbaru untuk respon langsung ke UI
     let freshData: any = null;
@@ -653,6 +660,12 @@ export async function deleteDokumenBukti(dokumenId: string): Promise<{
     if (targetPilarId) {
       revalidatePath(`/rebo/formRB/${targetPilarId}`);
     }
+    revalidatePath('/rebo/formRB/pemenuhan');
+    revalidatePath('/rebo/monitoring');
+    revalidatePath('/rebo/overview');
+    revalidatePath('/rebo/leaderboard');
+
+    invalidateReboScoreCaches().catch(() => {});
 
     return {
       success: true,

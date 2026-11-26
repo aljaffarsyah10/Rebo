@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
 import { getLeaderboardPilarAction } from '@/actions/leaderboard-actions';
 import { getAchievementBadgesAction } from '@/actions/badge-actions';
 import { LeaderboardTabsWrapper } from '@/components/rebo/leaderboard-tabs-wrapper';
 import PageContainer from '@/components/layout/page-container';
+import { LeaderboardPageSkeleton } from '@/components/rebo/rebo-skeletons';
 
 export const metadata = {
   title: 'Leaderboard & Lencana Penghargaan 6 Pilar | REBO V2 BPS Sitaro',
@@ -11,7 +13,7 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function LeaderboardPage() {
+async function LeaderboardContent() {
   const [leaderboardResult, badgesResult] = await Promise.all([
     getLeaderboardPilarAction(),
     getAchievementBadgesAction()
@@ -34,11 +36,19 @@ export default async function LeaderboardPage() {
   };
 
   return (
+    <LeaderboardTabsWrapper
+      initialLeaderboardSummary={leaderboardResult.data}
+      initialBadgeData={badgeData}
+    />
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
     <PageContainer scrollable>
-      <LeaderboardTabsWrapper
-        initialLeaderboardSummary={leaderboardResult.data}
-        initialBadgeData={badgeData}
-      />
+      <Suspense fallback={<LeaderboardPageSkeleton />}>
+        <LeaderboardContent />
+      </Suspense>
     </PageContainer>
   );
 }

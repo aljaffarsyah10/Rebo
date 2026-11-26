@@ -19,7 +19,7 @@ import {
   formatPhoneNumber
 } from '@/lib/notifications/whatsapp';
 import { enqueueWhatsAppNotification } from '@/lib/redis/queue';
-import { invalidateCacheKey, CACHE_KEYS } from '@/lib/redis/cache';
+import { invalidateReboScoreCaches } from '@/lib/redis/cache';
 import {
   getPilarContact,
   getDefaultNotificationReceiver
@@ -358,12 +358,12 @@ export async function submitVerifikasiAction(
     revalidatePath('/rebo/monitoring');
     revalidatePath('/rebo/overview');
     revalidatePath('/rebo/kanban');
+    revalidatePath('/rebo/leaderboard');
+    revalidatePath('/rebo/command-center');
+    revalidatePath('/rebo/formRB/pemenuhan');
 
-    // Invalidate Redis cache agar monitoring dan overview segera mengambil agregat skor terbaru
-    invalidateCacheKey(
-      CACHE_KEYS.PILAR_SCORES,
-      CACHE_KEYS.MONITORING_GLOBAL
-    ).catch(() => {});
+    // Invalidate Redis cache agar monitoring, leaderboard, dan overview segera mengambil agregat skor terbaru
+    invalidateReboScoreCaches().catch(() => {});
 
     // 11. Ambil data terbaru untuk feedback langsung
     let freshData: any = null;

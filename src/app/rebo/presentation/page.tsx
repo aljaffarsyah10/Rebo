@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getActiveSatkerConfigAction } from '@/actions/satker-actions';
 import { getSurveiSummaryAction } from '@/actions/survei-actions';
@@ -8,6 +8,7 @@ import {
   PresentationDeckData
 } from '@/lib/presentation/presentation-types';
 import PresentationDeckClient from '@/components/rebo/presentation-deck-client';
+import { PresentationPageSkeleton } from '@/components/rebo/rebo-skeletons';
 
 export const metadata: Metadata = {
   title: 'Generator Slide Paparan ZI (PPTX) | REBO V2',
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function PresentationPage() {
+async function PresentationContent() {
   let activeSatker = DEFAULT_PRESENTATION_DATA.satkerName;
   let satkerShort = DEFAULT_PRESENTATION_DATA.satkerShort;
   let satkerKode = DEFAULT_PRESENTATION_DATA.satkerKode;
@@ -126,4 +127,12 @@ export default async function PresentationPage() {
   };
 
   return <PresentationDeckClient initialData={initialDeckData} />;
+}
+
+export default function PresentationPage() {
+  return (
+    <Suspense fallback={<PresentationPageSkeleton />}>
+      <PresentationContent />
+    </Suspense>
+  );
 }

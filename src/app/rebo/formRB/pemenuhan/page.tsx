@@ -1,4 +1,7 @@
+import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
+import { getCachedOrFetch, CACHE_KEYS } from '@/lib/redis/cache';
+import { PemenuhanDataSkeleton } from '@/components/rebo/rebo-skeletons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,85 +19,124 @@ import ProgressPilar from '@/components/rebo/progress-pilar';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PemenuhanPage() {
-  const supabase = await createClient();
+async function fetchPemenuhanPilarsData() {
+  return getCachedOrFetch(CACHE_KEYS.PILAR_SCORES_PEMENUHAN, 300, async () => {
+    const supabase = await createClient();
 
-  const { data: pilarsData, error } = await supabase
-    .from('pilar')
-    .select(
-      `
-      *,
-      area (*)
-    `
-    )
-    .order('id_pilar', { ascending: true });
-
-  // Filter hanya untuk Area 1 (Pemenuhan)
-  const pilarsArea1 = pilarsData?.filter((pilar) => pilar.id_area === 1) || [];
-
-  // Ambil totalSkor dan totalNilaiMaks dengan join pilar -> subpilar -> pertanyaan -> buktiDukung
-  for (const pilar of pilarsArea1) {
-    const { data: subpilarData } = await supabase
-      .from('subpilar')
+    const { data: pilarsData, error } = await supabase
+      .from('pilar')
       .select(
-        'id_subpilar, id_pilar, pertanyaan (id_pertanyaan, kategoriPenilaian (*), buktiDukung (*))'
+        `
+          *,
+          area (*)
+        `
       )
-      .eq('id_pilar', pilar.id_pilar);
+      .eq('id_area', 1)
+      .order('id_pilar', { ascending: true });
 
-    let totalSkor = 0;
-    let totalNilaiMaks = 0;
-    const pertanyaanList: any[] = [];
+    if (error) {
+      return { pilarsArea1: [], errorMessage: error.message };
+    }
 
-    if (subpilarData && subpilarData.length > 0) {
-      for (const subpilar of subpilarData) {
-        if (subpilar.pertanyaan && subpilar.pertanyaan.length > 0) {
-          for (const p of subpilar.pertanyaan) {
-            const kategoriMax = p.kategoriPenilaian?.length
-              ? Math.max(...p.kategoriPenilaian.map((k: any) => k.nilai))
-              : 0;
-            totalNilaiMaks += kategoriMax;
+    const pilarsArea1 = pilarsData || [];
+    const pilarIds = pilarsArea1.map((p: any) => p.id_pilar);
 
-            if (p.buktiDukung && p.buktiDukung.length > 0) {
-              totalSkor += p.buktiDukung.reduce(
-                (sum: number, b: any) => sum + (b.nilai_akhir || 0),
-                0
-              );
-              for (const b of p.buktiDukung) {
+    if (pilarIds.length > 0) {
+      // Batch query tunggal untuk semua subpilar Area 1 (menggantikan N+1 loop)
+      const { data: allSubpilars } = await supabase
+        .from('subpilar')
+        .select(
+          'id_subpilar, id_pilar, pertanyaan (id_pertanyaan, kategoriPenilaian (*), buktiDukung (*))'
+        )
+        .in('id_pilar', pilarIds);
+
+      const subpilarsByPilar = new Map<string, any[]>();
+      (allSubpilars || []).forEach((sub: any) => {
+        const key = String(sub.id_pilar);
+        const list = subpilarsByPilar.get(key) || [];
+        list.push(sub);
+        subpilarsByPilar.set(key, list);
+      });
+
+      for (const pilar of pilarsArea1) {
+        const subpilarData = subpilarsByPilar.get(String(pilar.id_pilar)) || [];
+        let totalSkor = 0;
+        let totalNilaiMaks = 0;
+        const pertanyaanList: any[] = [];
+
+        for (const subpilar of subpilarData) {
+          if (subpilar.pertanyaan && subpilar.pertanyaan.length > 0) {
+            for (const p of subpilar.pertanyaan) {
+              const kategoriMax = p.kategoriPenilaian?.length
+                ? Math.max(...p.kategoriPenilaian.map((k: any) => k.nilai))
+                : 0;
+              totalNilaiMaks += kategoriMax;
+
+              if (p.buktiDukung && p.buktiDukung.length > 0) {
+                totalSkor += p.buktiDukung.reduce(
+                  (sum: number, b: any) => sum + (b.nilai_akhir || 0),
+                  0
+                );
+                for (const b of p.buktiDukung) {
+                  pertanyaanList.push({
+                    id_pertanyaan: p.id_pertanyaan,
+                    status_kelengkapan: b.status_kelengkapan
+                  });
+                }
+              } else {
                 pertanyaanList.push({
                   id_pertanyaan: p.id_pertanyaan,
-                  status_kelengkapan: b.status_kelengkapan
+                  status_kelengkapan: 0
                 });
               }
-            } else {
-              pertanyaanList.push({
-                id_pertanyaan: p.id_pertanyaan,
-                status_kelengkapan: 0
-              });
             }
           }
         }
+
+        pilar.totalSkor = totalSkor;
+        pilar.totalNilaiMaks = totalNilaiMaks;
+        pilar.pertanyaanList = pertanyaanList;
       }
     }
-    pilar.totalSkor = totalSkor;
-    pilar.totalNilaiMaks = totalNilaiMaks;
-    pilar.pertanyaanList = pertanyaanList;
+
+    return { pilarsArea1, errorMessage: null as string | null };
+  });
+}
+
+async function PemenuhanContent() {
+  const { pilarsArea1, errorMessage } = await fetchPemenuhanPilarsData();
+
+  if (errorMessage) {
+    return (
+      <div className='flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50/70 p-6 dark:border-rose-900/60 dark:bg-rose-950/20'>
+        <AlertCircle className='h-6 w-6 text-rose-600 dark:text-rose-400' />
+        <div>
+          <h3 className='text-sm font-bold text-rose-900 dark:text-rose-200'>
+            Gagal Memuat Data Pilar
+          </h3>
+          <p className='text-xs text-rose-700 dark:text-rose-300'>
+            {errorMessage}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // Hitung metrik ringkasan keseluruhan Area 1
   const areaTotalSkor = pilarsArea1.reduce(
-    (sum, p) => sum + (p.totalSkor || 0),
+    (sum: number, p: any) => sum + (p.totalSkor || 0),
     0
   );
   const areaTotalMaks = pilarsArea1.reduce(
-    (sum, p) => sum + (p.totalNilaiMaks || 0),
+    (sum: number, p: any) => sum + (p.totalNilaiMaks || 0),
     0
   );
   const totalPertanyaanArea = pilarsArea1.reduce(
-    (sum, p) => sum + (p.pertanyaanList?.length || 0),
+    (sum: number, p: any) => sum + (p.pertanyaanList?.length || 0),
     0
   );
   const lengkapPertanyaanArea = pilarsArea1.reduce(
-    (sum, p) =>
+    (sum: number, p: any) =>
       sum +
       (p.pertanyaanList?.filter((q: any) => q.status_kelengkapan === 2)
         ?.length || 0),
@@ -105,78 +147,8 @@ export default async function PemenuhanPage() {
       ? Math.round((lengkapPertanyaanArea / totalPertanyaanArea) * 100)
       : 0;
 
-  if (error) {
-    return (
-      <div className='mx-auto max-w-5xl p-6'>
-        <div className='flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50/70 p-6 dark:border-rose-900/60 dark:bg-rose-950/20'>
-          <AlertCircle className='h-6 w-6 text-rose-600 dark:text-rose-400' />
-          <div>
-            <h3 className='text-sm font-bold text-rose-900 dark:text-rose-200'>
-              Gagal Memuat Data Pilar
-            </h3>
-            <p className='text-xs text-rose-700 dark:text-rose-300'>
-              {error.message}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className='mx-auto w-full max-w-7xl min-w-0 space-y-6 p-4 md:p-6'>
-      {/* Breadcrumb & Navigation Bar Sistematis */}
-      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400'>
-          <Link
-            href='/rebo/overview'
-            className='transition-colors hover:text-blue-600 dark:hover:text-blue-400'
-          >
-            Beranda
-          </Link>
-          <ChevronRight className='h-3.5 w-3.5' />
-          <Link
-            href='/rebo/formRB/area'
-            className='transition-colors hover:text-blue-600 dark:hover:text-blue-400'
-          >
-            Area RB
-          </Link>
-          <ChevronRight className='h-3.5 w-3.5' />
-          <span className='font-semibold text-slate-800 dark:text-slate-200'>
-            Pilar Pemenuhan
-          </span>
-        </div>
-
-        {/* Quick Area Switcher Tabs */}
-        <div className='inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-slate-800 dark:bg-slate-900/60'>
-          <Button
-            size='sm'
-            variant='ghost'
-            className='h-7 bg-white px-3 text-xs font-bold text-blue-700 shadow-2xs dark:bg-slate-800 dark:text-blue-300'
-          >
-            Area 1: Pemenuhan
-          </Button>
-          <Link href='/rebo/formRB/reform'>
-            <Button
-              size='sm'
-              variant='ghost'
-              className='h-7 px-3 text-xs text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300'
-            >
-              Area 2: Reform
-            </Button>
-          </Link>
-          <Link href='/rebo/formRB/area'>
-            <Button
-              size='sm'
-              variant='ghost'
-              className='h-7 px-2.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-            >
-              <LayoutGrid className='h-3.5 w-3.5' />
-            </Button>
-          </Link>
-        </div>
-      </div>
-
+    <>
       {/* Header Section dengan Aksen Lembut & Soft */}
       <div className='relative overflow-hidden rounded-3xl border border-blue-200/60 bg-gradient-to-br from-blue-50/90 via-sky-50/50 to-white p-6 shadow-xs md:p-8 dark:border-slate-800 dark:from-slate-900/90 dark:via-blue-950/20 dark:to-slate-900'>
         <div className='relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
@@ -359,6 +331,68 @@ export default async function PemenuhanPage() {
           </div>
         )}
       </div>
+    </>
+  );
+}
+
+export default function PemenuhanPage() {
+  return (
+    <div className='mx-auto w-full max-w-7xl min-w-0 space-y-6 p-4 md:p-6'>
+      {/* Breadcrumb & Navigation Bar Sistematis */}
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400'>
+          <Link
+            href='/rebo/overview'
+            className='transition-colors hover:text-blue-600 dark:hover:text-blue-400'
+          >
+            Beranda
+          </Link>
+          <ChevronRight className='h-3.5 w-3.5' />
+          <Link
+            href='/rebo/formRB/area'
+            className='transition-colors hover:text-blue-600 dark:hover:text-blue-400'
+          >
+            Area RB
+          </Link>
+          <ChevronRight className='h-3.5 w-3.5' />
+          <span className='font-semibold text-slate-800 dark:text-slate-200'>
+            Pilar Pemenuhan
+          </span>
+        </div>
+
+        {/* Quick Area Switcher Tabs */}
+        <div className='inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-slate-800 dark:bg-slate-900/60'>
+          <Button
+            size='sm'
+            variant='ghost'
+            className='h-7 bg-white px-3 text-xs font-bold text-blue-700 shadow-2xs dark:bg-slate-800 dark:text-blue-300'
+          >
+            Area 1: Pemenuhan
+          </Button>
+          <Link href='/rebo/formRB/reform'>
+            <Button
+              size='sm'
+              variant='ghost'
+              className='h-7 px-3 text-xs text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300'
+            >
+              Area 2: Reform
+            </Button>
+          </Link>
+          <Link href='/rebo/formRB/area'>
+            <Button
+              size='sm'
+              variant='ghost'
+              className='h-7 px-2.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+            >
+              <LayoutGrid className='h-3.5 w-3.5' />
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <Suspense fallback={<PemenuhanDataSkeleton />}>
+        <PemenuhanContent />
+      </Suspense>
     </div>
   );
 }

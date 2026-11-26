@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getActivePeriode, getAllPeriode } from '@/lib/api/rebo';
 import { getCurrentUserSession } from '@/lib/auth/session';
+import { invalidateReboScoreCaches } from '@/lib/redis/cache';
 import type {
   KanbanBoardData,
   KanbanIndicatorCard,
@@ -44,16 +45,17 @@ export async function getKanbanBoardData(params?: {
     }
 
     if (!currentPeriode) {
-      currentPeriode = (await getActivePeriode()) || {
-        id: 'default-periode-2026',
-        tahun: 2026,
-        nama_periode: 'Evaluasi PMPRB 2026',
-        is_active: true,
-        is_locked: false
-      };
+      currentPeriode = allPeriodes.find((p) => p.is_active) ||
+        (await getActivePeriode()) || {
+          id: 'default-periode-2026',
+          tahun: 2026,
+          nama_periode: 'Evaluasi PMPRB 2026',
+          is_active: true,
+          is_locked: false
+        };
     }
 
-    // 2. Fetch seluruh pertanyaan terstruktur via subpilar & pilar
+    // 2. Fetch seluruh pertanyaan terstruktur, pertanyaan_periode (V2), dan buktiDukung (V1) secara paralel
     let subpilarQuery = supabase.from('subpilar').select(`
         id_subpilar,
         nama_subpilar,
@@ -71,22 +73,22 @@ export async function getKanbanBoardData(params?: {
       subpilarQuery = subpilarQuery.eq('id_pilar', params.pilarId);
     }
 
-    const { data: subpilarData, error: subError } = await subpilarQuery.order(
-      'id_subpilar',
-      { ascending: true }
-    );
+    const [subRes, ppRes, legacyRes] = await Promise.all([
+      subpilarQuery.order('id_subpilar', { ascending: true }),
+      supabase
+        .from('pertanyaan_periode')
+        .select('*, dokumen_bukti (*)')
+        .eq('id_periode', currentPeriode.id),
+      supabase.from('buktiDukung').select('*')
+    ]);
 
+    const { data: subpilarData, error: subError } = subRes;
     if (subError) {
       console.error('[KANBAN-ACTIONS] Error fetching subpilar:', subError);
       throw new Error(`Gagal memuat struktur indikator: ${subError.message}`);
     }
 
-    // 3. Fetch data pertanyaan_periode untuk periode ini (V2)
-    const { data: ppData, error: ppError } = await supabase
-      .from('pertanyaan_periode')
-      .select('*, dokumen_bukti (*)')
-      .eq('id_periode', currentPeriode.id);
-
+    const { data: ppData, error: ppError } = ppRes;
     if (ppError) {
       console.warn(
         '[KANBAN-ACTIONS] Notice querying pertanyaan_periode:',
@@ -99,13 +101,8 @@ export async function getKanbanBoardData(params?: {
       ppMap.set(String(row.id_pertanyaan), row);
     });
 
-    // 4. Fetch fallback data dari buktiDukung (V1)
-    const { data: legacyBuktiData } = await supabase
-      .from('buktiDukung')
-      .select('*');
-
     const legacyMap = new Map<string, any>();
-    (legacyBuktiData || []).forEach((row) => {
+    (legacyRes.data || []).forEach((row) => {
       legacyMap.set(String(row.id_pertanyaan), row);
     });
 
@@ -611,7 +608,13 @@ export async function updateKanbanCardStatusAction(params: {
 
     revalidatePath('/rebo/kanban');
     revalidatePath('/rebo/formRB');
+    revalidatePath('/rebo/formRB/pemenuhan');
     revalidatePath('/rebo/monitoring');
+    revalidatePath('/rebo/overview');
+    revalidatePath('/rebo/leaderboard');
+    revalidatePath('/rebo/command-center');
+
+    invalidateReboScoreCaches(params.idPeriode).catch(() => {});
 
     return {
       success: true,

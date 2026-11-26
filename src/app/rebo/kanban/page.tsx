@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
 import { getKanbanBoardData } from '@/actions/kanban-actions';
 import { getUserProfileAction } from '@/actions/profile-actions';
 import { getCurrentUserSession } from '@/lib/auth/session';
 import KanbanBoardClient from '@/components/rebo/kanban-board-client';
+import { KanbanPageSkeleton } from '@/components/rebo/rebo-skeletons';
 
 export const metadata = {
   title: 'Kanban Tindak Lanjut RB | REBO V2',
@@ -11,7 +13,7 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function KanbanPage() {
+async function KanbanContent() {
   const [result, profileRes, session] = await Promise.all([
     getKanbanBoardData(),
     getUserProfileAction().catch(() => ({ success: false, data: null })),
@@ -34,5 +36,13 @@ export default async function KanbanPage() {
       currentUserProfile={userProfile}
       currentUserId={userId}
     />
+  );
+}
+
+export default function KanbanPage() {
+  return (
+    <Suspense fallback={<KanbanPageSkeleton />}>
+      <KanbanContent />
+    </Suspense>
   );
 }

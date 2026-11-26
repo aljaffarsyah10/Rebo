@@ -2,6 +2,7 @@
 'use server';
 
 import { getLeaderboardPilarAction } from '@/actions/leaderboard-actions';
+import { getCachedOrFetch, CACHE_KEYS } from '@/lib/redis/cache';
 import {
   getPilarContact,
   DEFAULT_PILAR_CONTACTS
@@ -64,67 +65,76 @@ export interface SendBadgeWAActionResult {
 export async function getAchievementBadgesAction(
   pilarId?: string
 ): Promise<BadgesActionResult> {
+  const cacheKey =
+    pilarId && pilarId !== 'ALL'
+      ? `${CACHE_KEYS.BADGES}:${pilarId}`
+      : CACHE_KEYS.BADGES;
+
   try {
-    // 1. Ambil data leaderboard 6 pilar terbaru
-    const leaderboardRes = await getLeaderboardPilarAction();
-    let pilars: PilarLeaderboardItem[] = [];
+    return await getCachedOrFetch(cacheKey, 300, async () => {
+      // 1. Ambil data leaderboard 6 pilar terbaru
+      const leaderboardRes = await getLeaderboardPilarAction();
+      let pilars: PilarLeaderboardItem[] = [];
 
-    if (leaderboardRes.success && leaderboardRes.data?.items?.length > 0) {
-      pilars = leaderboardRes.data.items;
-    } else {
-      pilars = calculateLeaderboardRanks(MOCK_PILAR_LEADERBOARD_RAW);
-    }
-
-    // 2. Evaluasi lencana
-    let badges: AchievementBadge[] = [];
-
-    if (pilarId && pilarId !== 'ALL') {
-      const selectedPilar = pilars.find(
-        (p) => String(p.pilar_id) === String(pilarId)
-      );
-      if (selectedPilar) {
-        badges = evaluatePilarBadges(selectedPilar);
+      if (leaderboardRes.success && leaderboardRes.data?.items?.length > 0) {
+        pilars = leaderboardRes.data.items;
       } else {
-        // Fallback pilar 1
-        badges = evaluatePilarBadges(pilars[0]);
+        pilars = calculateLeaderboardRanks(MOCK_PILAR_LEADERBOARD_RAW);
       }
-    } else {
-      badges = evaluateAllPilarsBadges(pilars);
-    }
 
-    // 3. Ringkasan statistik
-    const allBadgesEvaluated = evaluateAllPilarsBadges(pilars);
-    const unlockedBadges = allBadgesEvaluated.filter((b) => b.unlocked);
+      // 2. Evaluasi lencana
+      let badges: AchievementBadge[] = [];
 
-    const summary = {
-      totalBadges: allBadgesEvaluated.length,
-      totalUnlocked: unlockedBadges.length,
-      totalLocked: allBadgesEvaluated.length - unlockedBadges.length,
-      platinumUnlocked: unlockedBadges.filter((b) => b.tier === 'PLATINUM')
-        .length,
-      goldUnlocked: unlockedBadges.filter((b) => b.tier === 'GOLD').length,
-      silverUnlocked: unlockedBadges.filter((b) => b.tier === 'SILVER').length,
-      bronzeUnlocked: unlockedBadges.filter((b) => b.tier === 'BRONZE').length,
-      pilars: pilars.map((p) => {
-        const pBadges = evaluatePilarBadges(p);
-        return {
-          pilar_id: String(p.pilar_id),
-          pilar_nama: p.pilar_nama,
-          pilar_kode: p.pilar_kode,
-          koordinator_name: p.koordinator_name,
-          unlocked_count: pBadges.filter((b) => b.unlocked).length,
-          total_count: pBadges.length
-        };
-      })
-    };
-
-    return {
-      success: true,
-      data: {
-        badges,
-        summary
+      if (pilarId && pilarId !== 'ALL') {
+        const selectedPilar = pilars.find(
+          (p) => String(p.pilar_id) === String(pilarId)
+        );
+        if (selectedPilar) {
+          badges = evaluatePilarBadges(selectedPilar);
+        } else {
+          // Fallback pilar 1
+          badges = evaluatePilarBadges(pilars[0]);
+        }
+      } else {
+        badges = evaluateAllPilarsBadges(pilars);
       }
-    };
+
+      // 3. Ringkasan statistik
+      const allBadgesEvaluated = evaluateAllPilarsBadges(pilars);
+      const unlockedBadges = allBadgesEvaluated.filter((b) => b.unlocked);
+
+      const summary = {
+        totalBadges: allBadgesEvaluated.length,
+        totalUnlocked: unlockedBadges.length,
+        totalLocked: allBadgesEvaluated.length - unlockedBadges.length,
+        platinumUnlocked: unlockedBadges.filter((b) => b.tier === 'PLATINUM')
+          .length,
+        goldUnlocked: unlockedBadges.filter((b) => b.tier === 'GOLD').length,
+        silverUnlocked: unlockedBadges.filter((b) => b.tier === 'SILVER')
+          .length,
+        bronzeUnlocked: unlockedBadges.filter((b) => b.tier === 'BRONZE')
+          .length,
+        pilars: pilars.map((p) => {
+          const pBadges = evaluatePilarBadges(p);
+          return {
+            pilar_id: String(p.pilar_id),
+            pilar_nama: p.pilar_nama,
+            pilar_kode: p.pilar_kode,
+            koordinator_name: p.koordinator_name,
+            unlocked_count: pBadges.filter((b) => b.unlocked).length,
+            total_count: pBadges.length
+          };
+        })
+      };
+
+      return {
+        success: true,
+        data: {
+          badges,
+          summary
+        }
+      };
+    });
   } catch (err: unknown) {
     const errorMsg =
       err instanceof Error

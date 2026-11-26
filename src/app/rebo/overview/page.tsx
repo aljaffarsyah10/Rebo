@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import Link from 'next/link';
 import { PengumumanBanner } from '@/components/rebo/pengumuman-banner';
 import { LeaderboardSummaryWidget } from '@/components/rebo/leaderboard-summary-widget';
 import { PaperlessSummaryWidget } from '@/components/rebo/paperless-summary-widget';
+import { OverviewWidgetSkeleton } from '@/components/rebo/rebo-skeletons';
 
 export const dynamic = 'force-dynamic';
 
@@ -535,10 +537,14 @@ export default function Overview() {
       </div>
 
       {/* Papan Apresiasi & Klasemen 6 Pilar (Leaderboard Hub) */}
-      <LeaderboardSummaryWidget />
+      <Suspense fallback={<OverviewWidgetSkeleton />}>
+        <LeaderboardSummaryWidget />
+      </Suspense>
 
       {/* Indikator Efisiensi & Dampak Paperless (Green Governance) */}
-      <PaperlessSummaryWidget />
+      <Suspense fallback={<OverviewWidgetSkeleton />}>
+        <PaperlessSummaryWidget />
+      </Suspense>
 
       {/* Fitur Terbaru REBO (Compact Cards dengan Pembeda Khusus Admin) */}
       <div className='space-y-3.5'>
