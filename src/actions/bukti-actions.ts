@@ -22,8 +22,7 @@ import { getVerifikatorContacts } from '@/lib/notifications/contacts';
 // 1. Zod Validation Schemas
 // ==============================================================================
 
-export const GOOGLE_DRIVE_URL_REGEX =
-  /^https:\/\/(drive|docs)\.google\.com\/.+/i;
+const GOOGLE_DRIVE_URL_REGEX = /^https:\/\/(drive|docs)\.google\.com\/.+/i;
 
 const dokumenItemSchema = z.object({
   id: z.string().optional(),
