@@ -58,7 +58,12 @@ export function createWhatsAppDeepLink(phone: string, message: string): string {
  */
 export async function sendWhatsAppMessage(
   payload: WhatsAppNotificationPayload
-): Promise<{ success: boolean; error?: string; isSimulated?: boolean }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  isSimulated?: boolean;
+  messageId?: string;
+}> {
   try {
     let gatewayUrl =
       process.env.WHATSAPP_GATEWAY_URL || process.env.WA_GATEWAY_URL;
@@ -153,7 +158,17 @@ export async function sendWhatsAppMessage(
       return { success: false, error: errorMessage };
     }
 
-    return { success: true };
+    let messageId: string | undefined;
+    try {
+      const responseJson = await response.json().catch(() => null);
+      if (responseJson && (responseJson.messageId || responseJson.id)) {
+        messageId = responseJson.messageId || responseJson.id;
+      }
+    } catch {
+      // response might not be JSON or already consumed
+    }
+
+    return { success: true, messageId };
   } catch (err: any) {
     console.warn('[WA-NOTIFICATION] Gagal mengirim pesan:', err.message);
     return { success: false, error: err.message };

@@ -13,7 +13,10 @@ import type {
   WhatsAppQueuePayload,
   QueueJobStatus
 } from './types';
-import { formatPhoneNumber } from '@/lib/notifications/whatsapp';
+import {
+  formatPhoneNumber,
+  sendWhatsAppMessage
+} from '@/lib/notifications/whatsapp';
 
 /**
  * Konfigurasi Redis Keys terstandarisasi untuk Antrean REBO
@@ -346,4 +349,227 @@ export async function clearDlq(): Promise<boolean> {
     console.warn('[Redis Queue] Error clearing DLQ:', err);
     return false;
   }
+}
+
+/**
+ * Ringkasan hasil pemrosesan satu pekerjaan
+ */
+export interface ProcessedJobSummary {
+  id: string;
+  type?: WhatsAppMessageType;
+  targetPhone?: string;
+  success: boolean;
+  status: QueueJobStatus;
+  attempts: number;
+  messageId?: string;
+  error?: string | null;
+}
+
+/**
+ * Hasil dari pemrosesan batch antrean Redis
+ */
+export interface ProcessBatchResult {
+  processed: number;
+  successful: number;
+  failed: number;
+  promotedDelayed: number;
+  remainingPending: number;
+  jobs: ProcessedJobSummary[];
+}
+
+/**
+ * Mempromosikan pesan dari `wa_queue:delayed` yang sudah jatuh tempo ke `wa_queue:pending`.
+ * Mencari item dengan score <= now (unix timestamp ms).
+ */
+export async function promoteDelayedJobs(): Promise<number> {
+  try {
+    const redis = getRedisClient();
+    const now = Date.now();
+    const dueJobIds = await redis.zrangebyscore(QUEUE_KEYS.DELAYED, 0, now);
+    if (!dueJobIds || dueJobIds.length === 0) return 0;
+
+    let promotedCount = 0;
+    for (const jobId of dueJobIds) {
+      const removed = await redis.zrem(QUEUE_KEYS.DELAYED, jobId);
+      if (removed > 0) {
+        await redis.lpush(QUEUE_KEYS.PENDING, jobId);
+        promotedCount++;
+      }
+    }
+    return promotedCount;
+  } catch (err) {
+    console.error('[Redis Queue] Error promoting delayed jobs:', err);
+    return 0;
+  }
+}
+
+/**
+ * Menghitung jeda waktu backoff secara eksponensial (retry 1: 5s, retry 2: 15s, retry 3: 30s)
+ * untuk mengatasi cold-start Render free-tier (~17.6s) secara otomatis.
+ */
+function getQueueBackoffDelayMs(attempts: number): number {
+  if (attempts === 1) return 5000;
+  if (attempts === 2) return 15000;
+  if (attempts === 3) return 30000;
+  return 60000;
+}
+
+/**
+ * Memproses 1 pekerjaan dari antrean pending (`wa_queue:pending`) via RPOP (FIFO):
+ * 1. Update status pekerjaan ke 'processing'.
+ * 2. Mengirimkan pesan melalui WhatsApp Gateway.
+ * 3. Update status ke 'delivered' jika sukses, atau menjadwalkan ulang ke 'wa_queue:delayed'
+ *    dengan exponential backoff jika gagal (dan ke 'wa_queue:dlq' jika mencapai maxAttempts).
+ */
+export async function processNextJob(): Promise<ProcessedJobSummary | null> {
+  const redis = getRedisClient();
+  const jobId = await redis.rpop(QUEUE_KEYS.PENDING);
+  if (!jobId) return null;
+
+  const job = await getJobStatus(jobId);
+  if (!job) {
+    console.warn(`[Redis Queue] Job [${jobId}] data not found, skipping.`);
+    return null;
+  }
+
+  // 1. Update status ke 'processing'
+  const nowIso = new Date().toISOString();
+  job.status = 'processing';
+  job.processedAt = nowIso;
+  job.updatedAt = nowIso;
+  await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+    ex: JOB_TTL_SECONDS
+  });
+
+  // 2. Kirim pesan melalui WhatsApp Service
+  const sendResult = await sendWhatsAppMessage({
+    phone: job.targetPhone,
+    message: job.message
+  });
+
+  if (sendResult.success) {
+    // 3a. Berhasil terkirim
+    job.status = 'delivered';
+    job.deliveredAt = new Date().toISOString();
+    job.updatedAt = new Date().toISOString();
+    job.error = null;
+    if (sendResult.messageId) {
+      job.metadata = {
+        ...(job.metadata || {}),
+        messageId: sendResult.messageId
+      };
+    }
+    await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+      ex: JOB_TTL_SECONDS
+    });
+
+    return {
+      id: jobId,
+      type: job.type,
+      targetPhone: job.targetPhone,
+      success: true,
+      status: 'delivered',
+      attempts: job.attempts,
+      messageId: sendResult.messageId
+    };
+  }
+
+  // 3b. Gagal terkirim -> evaluasi retry dengan exponential backoff atau DLQ
+  job.attempts = (Number(job.attempts) || 0) + 1;
+  const maxAttempts = Number(job.maxAttempts) || 5;
+
+  if (job.attempts < maxAttempts) {
+    const delayMs = getQueueBackoffDelayMs(job.attempts);
+    const scheduledTime = Date.now() + delayMs;
+
+    job.status = 'pending';
+    job.scheduledAt = new Date(scheduledTime).toISOString();
+    job.updatedAt = new Date().toISOString();
+    job.error = `Attempt ${job.attempts}/${maxAttempts} failed: ${sendResult.error}`;
+
+    await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+      ex: JOB_TTL_SECONDS
+    });
+    await redis.zadd(QUEUE_KEYS.DELAYED, scheduledTime, jobId);
+
+    return {
+      id: jobId,
+      type: job.type,
+      targetPhone: job.targetPhone,
+      success: false,
+      status: 'pending',
+      attempts: job.attempts,
+      error: job.error
+    };
+  }
+
+  // Batas percobaan tercapai -> Pindahkan ke Dead Letter Queue (DLQ)
+  job.status = 'failed';
+  job.updatedAt = new Date().toISOString();
+  job.error = `Max attempts (${maxAttempts}) reached. Last error: ${sendResult.error}`;
+
+  await redis.set(`${QUEUE_KEYS.JOB_PREFIX}${jobId}`, job, {
+    ex: JOB_TTL_SECONDS
+  });
+  await redis.lpush(QUEUE_KEYS.DLQ, jobId);
+
+  return {
+    id: jobId,
+    type: job.type,
+    targetPhone: job.targetPhone,
+    success: false,
+    status: 'failed',
+    attempts: job.attempts,
+    error: job.error
+  };
+}
+
+/**
+ * Memproses sejumlah pesan secara batch (hingga 5-10 pesan) dari antrean Redis.
+ * Cocok dipanggil oleh Route Handler Serverless Vercel Cron.
+ */
+export async function processQueueBatch(options?: {
+  batchSize?: number;
+  pacingMs?: number;
+}): Promise<ProcessBatchResult> {
+  const batchSize = Math.min(Math.max(1, options?.batchSize ?? 5), 10);
+  const pacingMs = options?.pacingMs ?? 1500;
+
+  // 1. Promosikan delayed jobs yang sudah jatuh tempo
+  const promotedDelayed = await promoteDelayedJobs();
+
+  const results: ProcessedJobSummary[] = [];
+  let successful = 0;
+  let failed = 0;
+
+  for (let i = 0; i < batchSize; i++) {
+    const jobResult = await processNextJob();
+    if (!jobResult) {
+      break; // Antrean habis
+    }
+
+    results.push(jobResult);
+    if (jobResult.success) {
+      successful++;
+    } else {
+      failed++;
+    }
+
+    // Jeda anti-spam jika masih ada pesan berikutnya dalam batch
+    if (i < batchSize - 1 && pacingMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, pacingMs));
+    }
+  }
+
+  const redis = getRedisClient();
+  const remainingPending = await redis.llen(QUEUE_KEYS.PENDING);
+
+  return {
+    processed: results.length,
+    successful,
+    failed,
+    promotedDelayed,
+    remainingPending: Number(remainingPending) || 0,
+    jobs: results
+  };
 }

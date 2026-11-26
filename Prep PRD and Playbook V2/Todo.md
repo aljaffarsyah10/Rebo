@@ -351,11 +351,11 @@
     - `wa_job:{id}`: Redis Hash dengan TTL 24 jam untuk pelacakan status pekerjaan (*job tracking*) secara instan oleh UI.
   - [x] *Producer Non-Blocking (`enqueueWhatsAppNotification`):* Fungsi Server Action / library untuk memasukkan pesan ke antrean dalam hitungan milidetik (< 20ms) tanpa memblokir alur utama pengguna.
 
-- [ ] **Background Worker & Auto-Dispatcher (`services/wa-gateway/worker.js` & Route Handler):**
-  - [ ] *Consumer Loop Otomatis:* Bangun script worker otomatis yang mendengarkan `wa_queue:pending` dan langsung meneruskan pengiriman pesan ke WhatsApp Gateway (Baileys socket) tanpa intervensi peramban manusia.
-  - [ ] *Mekanisme Auto-Retry dengan Exponential Backoff:* Jika WhatsApp Gateway sedang cold start (17,6 detik) atau sleep pada Render, pesan secara otomatis dijadwalkan ulang (Retry 1: 5s, Retry 2: 15s, Retry 3: 30s) sehingga pesan tidak pernah hilang dan tidak perlu fallback manual ke `wa.me`.
-  - [ ] *Throttling & Pacing Anti-Spam:* Pasang jeda waktu aman (2-4 detik antar pesan) saat memproses antrean massal agar nomor bot WhatsApp aman dari deteksi spam Meta.
-  - [ ] *Fallback Serverless Processor (`/api/queue/process`):* Sediakan Route Handler terproteksi (`CRON_SECRET`) yang dapat dipicu oleh Vercel Cron atau Supabase Webhook untuk menguras antrean jika worker standalone sedang idle.
+- [x] **Background Worker & Auto-Dispatcher (`services/wa-gateway/worker.js` & Route Handler):**
+  - [x] *Consumer Loop Otomatis:* Bangun script worker otomatis yang mendengarkan `wa_queue:pending` dan langsung meneruskan pengiriman pesan ke WhatsApp Gateway (Baileys socket) tanpa intervensi peramban manusia.
+  - [x] *Mekanisme Auto-Retry dengan Exponential Backoff:* Jika WhatsApp Gateway sedang cold start (17,6 detik) atau sleep pada Render, pesan secara otomatis dijadwalkan ulang (Retry 1: 5s, Retry 2: 15s, Retry 3: 30s) sehingga pesan tidak pernah hilang dan tidak perlu fallback manual ke `wa.me`.
+  - [x] *Throttling & Pacing Anti-Spam:* Pasang jeda waktu aman (2-4 detik antar pesan) saat memproses antrean massal agar nomor bot WhatsApp aman dari deteksi spam Meta.
+  - [x] *Fallback Serverless Processor (`/api/queue/process`):* Sediakan Route Handler terproteksi (`CRON_SECRET`) yang dapat dipicu oleh Vercel Cron atau Supabase Webhook untuk menguras antrean jika worker standalone sedang idle.
 
 - [ ] **Otomasi Total Pengujian Notifikasi WhatsApp (Eliminasi Manual `wa.me`):**
   - [ ] *Refactor `sendTestNotificationToSelfAction` (`src/actions/profile-actions.ts`):*
