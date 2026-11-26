@@ -66,7 +66,7 @@ interface RadarDataPoint {
   gapPersen: number;
 }
 
-// Custom Tooltip component for Radar Chart
+import { cn, safeDivide, safePercentage, safeNumberFormat } from '@/lib/utils';
 function CustomRadarTooltip({ active, payload }: any) {
   if (active && payload && payload.length) {
     const item: RadarDataPoint = payload[0].payload;
@@ -104,10 +104,10 @@ function CustomRadarTooltip({ active, payload }: any) {
             </div>
             <div className='text-right'>
               <span className='font-black text-emerald-700 dark:text-emerald-300'>
-                {item.persenVerifikasi}%
+                {safeNumberFormat(item.persenVerifikasi, 1, '0.0')}%
               </span>
               <span className='ml-1 text-[11px] text-slate-500 dark:text-slate-400'>
-                ({item.verifikasiScore.toFixed(2)} pts)
+                ({safeNumberFormat(item.verifikasiScore)} pts)
               </span>
             </div>
           </div>
@@ -122,10 +122,10 @@ function CustomRadarTooltip({ active, payload }: any) {
             </div>
             <div className='text-right'>
               <span className='font-black text-indigo-700 dark:text-indigo-300'>
-                {item.persenMandiri}%
+                {safeNumberFormat(item.persenMandiri, 1, '0.0')}%
               </span>
               <span className='ml-1 text-[11px] text-slate-500 dark:text-slate-400'>
-                ({item.mandiriScore.toFixed(2)} pts)
+                ({safeNumberFormat(item.mandiriScore)} pts)
               </span>
             </div>
           </div>
@@ -138,7 +138,8 @@ function CustomRadarTooltip({ active, payload }: any) {
                 Gap Belum Verifikasi:
               </span>
               <span className='font-semibold'>
-                +{item.gapPersen.toFixed(1)}% ({item.gapSkor.toFixed(2)} pts)
+                +{safeNumberFormat(item.gapPersen, 1, '0.0')}% (
+                {safeNumberFormat(item.gapSkor)} pts)
               </span>
             </div>
           )}
@@ -173,11 +174,11 @@ export default function RadarCapaianPilar({
 
     const persenMandiri =
       maksimal > 0
-        ? Math.min(100, Math.round((mandiri / maksimal) * 1000) / 10)
+        ? Math.min(100, Math.max(0, safePercentage(mandiri, maksimal, 1)))
         : 0;
     const persenVerifikasi =
       maksimal > 0
-        ? Math.min(100, Math.round((verifikasi / maksimal) * 1000) / 10)
+        ? Math.min(100, Math.max(0, safePercentage(verifikasi, maksimal, 1)))
         : 0;
 
     const gapSkor = Math.max(0, mandiri - verifikasi);
@@ -187,9 +188,9 @@ export default function RadarCapaianPilar({
       pilarKey,
       pilarName: rawName,
       fullName,
-      mandiriScore: mandiri,
-      verifikasiScore: verifikasi,
-      maxScore: maksimal,
+      mandiriScore: Number.isFinite(mandiri) ? mandiri : 0,
+      verifikasiScore: Number.isFinite(verifikasi) ? verifikasi : 0,
+      maxScore: Number.isFinite(maksimal) ? maksimal : 0,
       persenMandiri,
       persenVerifikasi,
       gapSkor,
@@ -202,17 +203,33 @@ export default function RadarCapaianPilar({
   const avgVerifikasi =
     totalPilar > 0
       ? Math.round(
-          (radarData.reduce((acc, curr) => acc + curr.persenVerifikasi, 0) /
-            totalPilar) *
-            10
+          safeDivide(
+            radarData.reduce(
+              (acc, curr) =>
+                acc +
+                (Number.isFinite(curr.persenVerifikasi)
+                  ? curr.persenVerifikasi
+                  : 0),
+              0
+            ),
+            totalPilar,
+            0
+          ) * 10
         ) / 10
       : 0;
   const avgMandiri =
     totalPilar > 0
       ? Math.round(
-          (radarData.reduce((acc, curr) => acc + curr.persenMandiri, 0) /
-            totalPilar) *
-            10
+          safeDivide(
+            radarData.reduce(
+              (acc, curr) =>
+                acc +
+                (Number.isFinite(curr.persenMandiri) ? curr.persenMandiri : 0),
+              0
+            ),
+            totalPilar,
+            0
+          ) * 10
         ) / 10
       : 0;
 

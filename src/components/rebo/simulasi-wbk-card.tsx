@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import type { WBKSimulationResult, QuickWinIndicator } from '@/types/rebo';
 import { TARGET_WBK, TARGET_WBBM } from '@/lib/simulation/wbk-gap-analysis';
+import { safePercentage, safeNumberFormat } from '@/lib/utils';
 
 interface SimulasiWBKCardProps {
   simulation: WBKSimulationResult;
@@ -53,16 +54,16 @@ export default function SimulasiWBKCard({
   // Persentase progres ke target WBK (75) dan WBBM (85)
   const persenKeWBK = Math.min(
     100,
-    Math.round((totalSkorVerifikasi / TARGET_WBK) * 100)
+    Math.max(0, safePercentage(totalSkorVerifikasi, TARGET_WBK))
   );
   const persenKeWBBM = Math.min(
     100,
-    Math.round((totalSkorVerifikasi / TARGET_WBBM) * 100)
+    Math.max(0, safePercentage(totalSkorVerifikasi, TARGET_WBBM))
   );
 
   const persenMandiriKeWBK = Math.min(
     100,
-    Math.round((totalSkorMandiri / TARGET_WBK) * 100)
+    Math.max(0, safePercentage(totalSkorMandiri, TARGET_WBK))
   );
 
   // Ambil top 5 indikator quick-wins
@@ -197,17 +198,17 @@ export default function SimulasiWBKCard({
                 variant='outline'
                 className='border-blue-300 bg-blue-100/60 text-xs font-bold text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300'
               >
-                Ambang Batas: {TARGET_WBK.toFixed(2)}
+                Ambang Batas: {safeNumberFormat(TARGET_WBK)}
               </Badge>
             </div>
 
             <div className='mt-2 flex items-baseline justify-between'>
               <div>
                 <span className='text-2xl font-black text-slate-900 dark:text-slate-100'>
-                  {totalSkorVerifikasi.toFixed(2)}
+                  {safeNumberFormat(totalSkorVerifikasi)}
                 </span>
                 <span className='ml-1 text-xs text-slate-500 dark:text-slate-400'>
-                  / {TARGET_WBK.toFixed(2)} skor riil
+                  / {safeNumberFormat(TARGET_WBK)} skor riil
                 </span>
               </div>
               <span className='text-xs font-bold text-blue-600 dark:text-blue-400'>
@@ -225,17 +226,20 @@ export default function SimulasiWBKCard({
             <div className='mt-2.5 flex items-center justify-between text-xs'>
               {gapToWBK > 0 ? (
                 <span className='font-semibold text-rose-600 dark:text-rose-400'>
-                  Sisa gap: -{gapToWBK.toFixed(2)} poin menuju WBK
+                  Sisa gap: -{safeNumberFormat(gapToWBK)} poin menuju WBK
                 </span>
               ) : (
                 <span className='flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400'>
                   <CheckCircle2 className='h-3.5 w-3.5' />
                   Target WBK Terpenuhi (+
-                  {(totalSkorVerifikasi - TARGET_WBK).toFixed(2)} surplus)
+                  {safeNumberFormat(
+                    Math.max(0, totalSkorVerifikasi - TARGET_WBK)
+                  )}{' '}
+                  surplus)
                 </span>
               )}
               <span className='text-[11px] text-slate-500'>
-                Mandiri: {totalSkorMandiri.toFixed(2)}
+                Mandiri: {safeNumberFormat(totalSkorMandiri)}
               </span>
             </div>
           </div>
@@ -255,17 +259,17 @@ export default function SimulasiWBKCard({
                 variant='outline'
                 className='border-purple-300 bg-purple-100/60 text-xs font-bold text-purple-800 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300'
               >
-                Ambang Batas: {TARGET_WBBM.toFixed(2)}
+                Ambang Batas: {safeNumberFormat(TARGET_WBBM)}
               </Badge>
             </div>
 
             <div className='mt-2 flex items-baseline justify-between'>
               <div>
                 <span className='text-2xl font-black text-slate-900 dark:text-slate-100'>
-                  {totalSkorVerifikasi.toFixed(2)}
+                  {safeNumberFormat(totalSkorVerifikasi)}
                 </span>
                 <span className='ml-1 text-xs text-slate-500 dark:text-slate-400'>
-                  / {TARGET_WBBM.toFixed(2)} skor riil
+                  / {safeNumberFormat(TARGET_WBBM)} skor riil
                 </span>
               </div>
               <span className='text-xs font-bold text-purple-600 dark:text-purple-400'>
@@ -283,17 +287,20 @@ export default function SimulasiWBKCard({
             <div className='mt-2.5 flex items-center justify-between text-xs'>
               {gapToWBBM > 0 ? (
                 <span className='font-semibold text-rose-600 dark:text-rose-400'>
-                  Sisa gap: -{gapToWBBM.toFixed(2)} poin menuju WBBM
+                  Sisa gap: -{safeNumberFormat(gapToWBBM)} poin menuju WBBM
                 </span>
               ) : (
                 <span className='flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400'>
                   <CheckCircle2 className='h-3.5 w-3.5' />
                   Target WBBM Terpenuhi (+
-                  {(totalSkorVerifikasi - TARGET_WBBM).toFixed(2)} surplus)
+                  {safeNumberFormat(
+                    Math.max(0, totalSkorVerifikasi - TARGET_WBBM)
+                  )}{' '}
+                  surplus)
                 </span>
               )}
               <span className='text-[11px] text-slate-500'>
-                Mandiri: {totalSkorMandiri.toFixed(2)}
+                Mandiri: {safeNumberFormat(totalSkorMandiri)}
               </span>
             </div>
           </div>
@@ -308,10 +315,10 @@ export default function SimulasiWBKCard({
             </div>
             <div className='mt-1 flex items-baseline gap-1'>
               <span className='text-xl font-black text-emerald-700 dark:text-emerald-400'>
-                {totalSkorVerifikasi.toFixed(2)}
+                {safeNumberFormat(totalSkorVerifikasi)}
               </span>
               <span className='text-[10px] text-slate-400'>
-                / {totalNilaiMaks.toFixed(2)}
+                / {safeNumberFormat(totalNilaiMaks)}
               </span>
             </div>
             <p className='mt-0.5 text-[10px] text-slate-500'>
@@ -326,10 +333,10 @@ export default function SimulasiWBKCard({
             </div>
             <div className='mt-1 flex items-baseline gap-1'>
               <span className='text-xl font-black text-blue-700 dark:text-blue-400'>
-                {totalSkorMandiri.toFixed(2)}
+                {safeNumberFormat(totalSkorMandiri)}
               </span>
               <span className='text-[10px] text-slate-400'>
-                / {totalNilaiMaks.toFixed(2)}
+                / {safeNumberFormat(totalNilaiMaks)}
               </span>
             </div>
             <p className='mt-0.5 text-[10px] text-slate-500'>
@@ -345,7 +352,7 @@ export default function SimulasiWBKCard({
             <div className='mt-1 text-xl font-black'>
               {gapToWBK > 0 ? (
                 <span className='text-rose-600 dark:text-rose-400'>
-                  -{gapToWBK.toFixed(2)}
+                  -{safeNumberFormat(gapToWBK)}
                 </span>
               ) : (
                 <span className='text-emerald-600 dark:text-emerald-400'>
@@ -368,7 +375,7 @@ export default function SimulasiWBKCard({
             <div className='mt-1 text-xl font-black'>
               {gapToWBBM > 0 ? (
                 <span className='text-rose-600 dark:text-rose-400'>
-                  -{gapToWBBM.toFixed(2)}
+                  -{safeNumberFormat(gapToWBBM)}
                 </span>
               ) : (
                 <span className='text-emerald-600 dark:text-emerald-400'>
@@ -462,12 +469,12 @@ export default function SimulasiWBKCard({
                       <div className='text-right'>
                         <div className='flex items-center justify-end gap-1'>
                           <Badge className='border-emerald-300 bg-emerald-100 text-[11px] font-black text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'>
-                            +{item.potensi_tambahan_skor.toFixed(2)} Poin
+                            +{safeNumberFormat(item.potensi_tambahan_skor)} Poin
                           </Badge>
                         </div>
                         <div className='mt-0.5 text-[10px] text-slate-500'>
-                          Verif: {item.nilai_verifikasi.toFixed(2)} / Maks:{' '}
-                          {item.nilai_maks.toFixed(2)}
+                          Verif: {safeNumberFormat(item.nilai_verifikasi)} /
+                          Maks: {safeNumberFormat(item.nilai_maks)}
                         </div>
                       </div>
 

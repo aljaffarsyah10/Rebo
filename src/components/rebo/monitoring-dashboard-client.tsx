@@ -43,7 +43,7 @@ import {
   Printer,
   Sparkles
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, safePercentage, safeNumberFormat } from '@/lib/utils';
 import { getMonitoringDashboardData } from '@/actions/monitoring-actions';
 import SimulasiWBKCard from '@/components/rebo/simulasi-wbk-card';
 import RadarCapaianPilar from '@/components/rebo/radar-capaian-pilar';
@@ -336,15 +336,15 @@ export default function MonitoringDashboardClient({
           <CardContent>
             <div className='flex items-baseline gap-1'>
               <span className='text-2xl font-black text-amber-700 dark:text-amber-300'>
-                {kpi.totalNilaiVerifikasi.toFixed(2)}
+                {safeNumberFormat(kpi.totalNilaiVerifikasi)}
               </span>
               <span className='text-xs font-semibold text-slate-500 dark:text-slate-400'>
-                / {kpi.totalNilaiMaksimal.toFixed(2)}
+                / {safeNumberFormat(kpi.totalNilaiMaksimal)}
               </span>
             </div>
             <p className='mt-1 text-xs text-slate-600 dark:text-slate-400'>
-              Mandiri: {kpi.totalNilaiMandiri.toFixed(2)} | Hasil:{' '}
-              {kpi.totalSkorPilarHasil.toFixed(2)}/40
+              Mandiri: {safeNumberFormat(kpi.totalNilaiMandiri)} | Hasil:{' '}
+              {safeNumberFormat(kpi.totalSkorPilarHasil)}/40
             </p>
           </CardContent>
         </Card>
@@ -506,17 +506,14 @@ export default function MonitoringDashboardClient({
                           }}
                           formatter={(value: any, name: string) => {
                             if (name === 'skorMandiri')
-                              return [Number(value).toFixed(2), 'Skor Mandiri'];
+                              return [safeNumberFormat(value), 'Skor Mandiri'];
                             if (name === 'skorVerifikasi')
                               return [
-                                Number(value).toFixed(2),
+                                safeNumberFormat(value),
                                 'Skor Verifikasi'
                               ];
                             if (name === 'skorMaksimal')
-                              return [
-                                Number(value).toFixed(2),
-                                'Skor Maksimal'
-                              ];
+                              return [safeNumberFormat(value), 'Skor Maksimal'];
                             return [value, name];
                           }}
                           labelFormatter={(label) => {
@@ -579,7 +576,7 @@ export default function MonitoringDashboardClient({
                           fontSize: '12px'
                         }}
                         formatter={(val: any, name: string) => [
-                          `${val} Indikator (${kpi.totalPertanyaan > 0 ? Math.round((Number(val) / kpi.totalPertanyaan) * 100) : 0}%)`,
+                          `${val} Indikator (${safePercentage(Number(val), kpi.totalPertanyaan)}%)`,
                           name
                         ]}
                       />
@@ -707,17 +704,14 @@ export default function MonitoringDashboardClient({
                           }}
                           formatter={(value: any, name: string) => {
                             if (name === 'skorMandiri')
-                              return [Number(value).toFixed(2), 'Skor Mandiri'];
+                              return [safeNumberFormat(value), 'Skor Mandiri'];
                             if (name === 'skorVerifikasi')
                               return [
-                                Number(value).toFixed(2),
+                                safeNumberFormat(value),
                                 'Skor Verifikasi'
                               ];
                             if (name === 'skorMaksimal')
-                              return [
-                                Number(value).toFixed(2),
-                                'Skor Maksimal'
-                              ];
+                              return [safeNumberFormat(value), 'Skor Maksimal'];
                             return [value, name];
                           }}
                           labelFormatter={(label) => {
@@ -880,22 +874,28 @@ export default function MonitoringDashboardClient({
                             <div className='h-2 w-16 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700'>
                               <div
                                 className='h-full rounded-full bg-emerald-500'
-                                style={{ width: `${pilar.persentaseSelesai}%` }}
+                                style={{
+                                  width: `${Math.min(100, Math.max(0, pilar.persentaseSelesai || 0))}%`
+                                }}
                               />
                             </div>
                             <span className='w-8 text-right text-xs font-bold text-slate-700 dark:text-slate-300'>
-                              {pilar.persentaseSelesai}%
+                              {Math.min(
+                                100,
+                                Math.max(0, pilar.persentaseSelesai || 0)
+                              )}
+                              %
                             </span>
                           </div>
                         </td>
                         <td className='px-3 py-3.5 text-right font-medium text-blue-600 dark:text-blue-400'>
-                          {pilar.nilaiMandiri.toFixed(2)}
+                          {safeNumberFormat(pilar.nilaiMandiri)}
                         </td>
                         <td className='px-3 py-3.5 text-right font-bold text-emerald-600 dark:text-emerald-400'>
-                          {pilar.nilaiVerifikasi.toFixed(2)}
+                          {safeNumberFormat(pilar.nilaiVerifikasi)}
                         </td>
                         <td className='px-3 py-3.5 text-right text-xs text-slate-500 dark:text-slate-400'>
-                          {pilar.nilaiMaksimal.toFixed(2)}
+                          {safeNumberFormat(pilar.nilaiMaksimal)}
                         </td>
                         <td className='py-3.5 pr-4 pl-3 text-center'>
                           <Link href={`/rebo/formRB/${pilar.id_pilar}`}>
@@ -944,17 +944,21 @@ export default function MonitoringDashboardClient({
                             </td>
                             <td className='px-3 py-2.5 text-center'>
                               <span className='font-semibold text-slate-700 dark:text-slate-200'>
-                                {sub.persentaseSelesai}%
+                                {Math.min(
+                                  100,
+                                  Math.max(0, sub.persentaseSelesai || 0)
+                                )}
+                                %
                               </span>
                             </td>
                             <td className='px-3 py-2.5 text-right text-slate-600 dark:text-slate-300'>
-                              {sub.nilaiMandiri.toFixed(2)}
+                              {safeNumberFormat(sub.nilaiMandiri)}
                             </td>
                             <td className='px-3 py-2.5 text-right font-semibold text-emerald-600 dark:text-emerald-400'>
-                              {sub.nilaiVerifikasi.toFixed(2)}
+                              {safeNumberFormat(sub.nilaiVerifikasi)}
                             </td>
                             <td className='px-3 py-2.5 text-right text-slate-400 dark:text-slate-400'>
-                              {sub.nilaiMaksimal.toFixed(2)}
+                              {safeNumberFormat(sub.nilaiMaksimal)}
                             </td>
                             <td className='py-2.5 pr-4 pl-3 text-center'>
                               <span className='text-[10px] text-slate-400 dark:text-slate-400'>

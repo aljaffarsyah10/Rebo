@@ -229,7 +229,15 @@ export async function generateLkeExcelWorkbook(
       row.verifiedAt || '-'
     ]);
 
-    dataRow.height = 26;
+    // Row height dinamis berdasarkan panjang deskripsi agar teks tidak terpotong saat dibuka di Excel
+    const descLength = (row.deskripsi || '').length;
+    let computedHeight = 28;
+    if (descLength > 150) {
+      computedHeight = 52;
+    } else if (descLength > 80) {
+      computedHeight = 40;
+    }
+    dataRow.height = computedHeight;
 
     // Styling sel data
     dataRow.eachCell((cell, colNumber) => {
@@ -346,25 +354,25 @@ export async function generateLkeExcelWorkbook(
     };
   });
 
-  // Column Widths Sheet 1
+  // Column Widths Sheet 1 (Optimized widths with auto-wrapping for description and notes)
   ws1.columns = [
-    { key: 'no', width: 6 },
-    { key: 'area', width: 14 },
-    { key: 'pilar', width: 22 },
-    { key: 'subpilar', width: 24 },
-    { key: 'kode', width: 15 },
-    { key: 'deskripsi', width: 44 },
-    { key: 'kategori', width: 32 },
-    { key: 'maks', width: 14 },
-    { key: 'mandiri', width: 14 },
-    { key: 'verif', width: 14 },
-    { key: 'selisih', width: 14 },
-    { key: 'status', width: 18 },
-    { key: 'gdrive', width: 28 },
-    { key: 'catatan_op', width: 28 },
-    { key: 'catatan_coord', width: 28 },
-    { key: 'verifikator', width: 20 },
-    { key: 'tgl_verif', width: 18 }
+    { key: 'no', width: 7 },
+    { key: 'area', width: 16 },
+    { key: 'pilar', width: 26 },
+    { key: 'subpilar', width: 28 },
+    { key: 'kode', width: 16 },
+    { key: 'deskripsi', width: 55 },
+    { key: 'kategori', width: 36 },
+    { key: 'maks', width: 15 },
+    { key: 'mandiri', width: 15 },
+    { key: 'verif', width: 15 },
+    { key: 'selisih', width: 15 },
+    { key: 'status', width: 20 },
+    { key: 'gdrive', width: 32 },
+    { key: 'catatan_op', width: 35 },
+    { key: 'catatan_coord', width: 35 },
+    { key: 'verifikator', width: 22 },
+    { key: 'tgl_verif', width: 20 }
   ];
 
   // ==========================================================================

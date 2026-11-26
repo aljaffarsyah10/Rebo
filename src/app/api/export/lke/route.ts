@@ -43,7 +43,12 @@ export async function GET(request: NextRequest) {
     // 5. Write to buffer
     const buffer = await workbook.xlsx.writeBuffer();
 
-    const fileName = `Kertas_Kerja_LKE_ZI_BPS_SITARO_${data.periode.tahun}.xlsx`;
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const yyyymmdd = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+    const hhmm = `${pad(now.getHours())}${pad(now.getMinutes())}`;
+    const timestampStr = `${yyyymmdd}_${hhmm}`;
+    const fileName = `LKE_BPS_Sitaro_${data.periode.tahun}_Generated_${timestampStr}.xlsx`;
 
     return new NextResponse(buffer, {
       status: 200,

@@ -295,13 +295,13 @@
   - [x] Berikan visualisasi dan teks placeholder yang ramah pada kolom yang kosong (contoh: *"Bagus! Tidak ada catatan revisi yang tertunda"* pada kolom To Do).
 
 ### 4. Perbaikan Menu Monitoring & Siklus Periode (`/rebo/monitoring` & `/rebo/admin/periode`)
-- [ ] **Penanganan Kasus Nilai Nol / Pembagian Nol (NaN Handling):**
-  - [ ] Pastikan rumus kalkulasi persentase pada komponen diagram dan tabel ringkasan aman dari pembagian nol (`0 / 0`) jika periode baru belum memiliki indikator, sehingga tidak memunculkan teks `NaN%` atau error komputasi.
-- [ ] **Format Hasil Ekspor Excel LKE:**
-  - [ ] Sertakan tahun periode evaluasi dan timestamp pada nama berkas hasil unduhan (contoh: `LKE_BPS_Sitaro_2026_Generated_YYYYMMDD.xlsx`).
-  - [ ] Rapikan lebar kolom, text-wrapping, dan pewarnaan header tabel hasil ekspor agar langsung siap cetak/presentasikan ke tim penilai tanpa perlu format ulang di Microsoft Excel.
-- [ ] **Konsistensi Sinkronisasi Periode Global:**
-  - [ ] Pastikan saat Admin mengubah status periode aktif di `/rebo/admin/periode`, seluruh halaman (Monitoring, Overview, Form RB, dan Kanban) langsung membaca periode tersebut tanpa memerlukan logout-login ulang.
+- [x] **Penanganan Kasus Nilai Nol / Pembagian Nol (NaN Handling):**
+  - [x] Pastikan rumus kalkulasi persentase pada komponen diagram dan tabel ringkasan aman dari pembagian nol (`0 / 0`) jika periode baru belum memiliki indikator, sehingga tidak memunculkan teks `NaN%` atau error komputasi.
+- [x] **Format Hasil Ekspor Excel LKE:**
+  - [x] Sertakan tahun periode evaluasi dan timestamp pada nama berkas hasil unduhan (contoh: `LKE_BPS_Sitaro_2026_Generated_YYYYMMDD.xlsx`).
+  - [x] Rapikan lebar kolom, text-wrapping, dan pewarnaan header tabel hasil ekspor agar langsung siap cetak/presentasikan ke tim penilai tanpa perlu format ulang di Microsoft Excel.
+- [x] **Konsistensi Sinkronisasi Periode Global:**
+  - [x] Pastikan saat Admin mengubah status periode aktif di `/rebo/admin/periode`, seluruh halaman (Monitoring, Overview, Form RB, dan Kanban) langsung membaca periode tersebut tanpa memerlukan logout-login ulang.
 
 ### 5. Perbaikan Menu Informasi RB & Katalog Arsip (`/rebo/informasi` & `/rebo/arsip`)
 - [ ] **Penanganan Broken Link Berkas Arsip:**

@@ -114,11 +114,16 @@ function calculateCutoffStatus(tanggal_cutoff?: string | null): {
 }
 
 function revalidatePeriodePaths() {
-  revalidatePath('/rebo/admin/periode');
   revalidatePath('/rebo/overview');
   revalidatePath('/rebo/monitoring');
-  revalidatePath('/rebo/kanban');
   revalidatePath('/rebo/formRB');
+  revalidatePath('/rebo/formRB/area');
+  revalidatePath('/rebo/formRB/pemenuhan');
+  revalidatePath('/rebo/formRB/reform');
+  revalidatePath('/rebo/pilarHasil');
+  revalidatePath('/rebo/kanban');
+  revalidatePath('/rebo/agenda');
+  revalidatePath('/rebo/admin/periode');
   revalidatePath('/rebo/arsip');
 }
 
