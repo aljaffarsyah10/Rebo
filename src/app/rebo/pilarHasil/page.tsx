@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import ScoreEditor from '@/app/rebo/pilarHasil/score-editor';
 import UraianCollapse from '@/components/rebo/uraian-collapse';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PilarHasilPage() {
   const supabase = await createClient();
 

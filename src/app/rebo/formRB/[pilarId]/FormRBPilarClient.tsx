@@ -267,7 +267,7 @@ export default function FormRBPilarClient({
     : 'Tamu / Tanpa Peran';
 
   return (
-    <div className='container mx-auto max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8'>
+    <div className='container mx-auto w-full max-w-6xl min-w-0 space-y-6 p-4 sm:p-6 lg:p-8'>
       {/* 1. BREADCRUMBS & TOP NAV */}
       <div className='flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400'>
         <div className='flex items-center gap-1.5'>
@@ -598,7 +598,7 @@ export default function FormRBPilarClient({
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className='w-full space-y-6'
+          className='w-full min-w-0 space-y-6'
         >
           {/* Tabs Navigation */}
           <TabsList className='grid h-auto w-full grid-cols-1 gap-1.5 rounded-xl border border-gray-200 bg-gray-100/70 p-1.5 sm:grid-cols-2 lg:grid-cols-4 dark:border-gray-800 dark:bg-gray-900/60'>
@@ -631,15 +631,15 @@ export default function FormRBPilarClient({
             <TabsContent
               key={subpilar.id_subpilar}
               value={String(subpilar.id_subpilar)}
-              className='mt-4 space-y-6 focus-visible:outline-none'
+              className='mt-4 min-w-0 space-y-6 focus-visible:outline-none'
             >
               {/* Subpilar Header Information */}
-              <div className='rounded-2xl border border-gray-200 bg-white p-6 shadow-xs dark:border-gray-800 dark:bg-gray-900'>
-                <div className='flex items-start gap-4'>
+              <div className='w-full max-w-full min-w-0 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs sm:p-6 dark:border-gray-800 dark:bg-gray-900'>
+                <div className='flex min-w-0 items-start gap-4'>
                   <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-lg font-extrabold text-blue-700 shadow-xs dark:bg-blue-950 dark:text-blue-300'>
                     {subpilar.id_subpilar}
                   </div>
-                  <div>
+                  <div className='min-w-0 flex-1'>
                     <h2 className='text-xl font-bold text-gray-900 dark:text-gray-100'>
                       {subpilar.nama_subpilar}
                     </h2>

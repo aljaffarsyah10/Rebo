@@ -29,6 +29,8 @@ import { PengumumanBanner } from '@/components/rebo/pengumuman-banner';
 import { LeaderboardSummaryWidget } from '@/components/rebo/leaderboard-summary-widget';
 import { PaperlessSummaryWidget } from '@/components/rebo/paperless-summary-widget';
 
+export const dynamic = 'force-dynamic';
+
 export default function Overview() {
   const currentTime = new Date().getHours();
   const greeting =

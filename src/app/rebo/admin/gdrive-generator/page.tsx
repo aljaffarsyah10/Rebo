@@ -5,6 +5,8 @@ import { getIndicatorGdriveMapping } from '@/actions/gdrive-actions';
 import GdriveGeneratorClient from './GdriveGeneratorClient';
 import type { PeriodeEvaluasi } from '@/types/rebo';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'GDrive Indicator Folder Generator | REBO V2',
   description:

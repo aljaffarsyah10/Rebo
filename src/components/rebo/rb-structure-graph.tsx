@@ -1586,7 +1586,7 @@ export default function RBStructureGraph({
                       Kriteria & Bobot Penilaian Skor:
                     </div>
 
-                    <div className='overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800'>
+                    <div className='w-full max-w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800'>
                       <table className='w-full text-left text-xs'>
                         <thead className='bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'>
                           <tr>

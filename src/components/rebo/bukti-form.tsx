@@ -1044,8 +1044,8 @@ export default function BuktiForm({
       {/* 1. SECTION: PENILAIAN MANDIRI (SELF-ASSESSMENT) */}
       {pertanyaan.kategoriPenilaian &&
         pertanyaan.kategoriPenilaian.length > 0 && (
-          <div className='rounded-xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-700 dark:bg-gray-800/80'>
-            <div className='mb-3 flex items-center justify-between'>
+          <div className='w-full max-w-full min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-xs sm:p-5 dark:border-gray-700 dark:bg-gray-800/80'>
+            <div className='mb-3 flex flex-wrap items-center justify-between gap-2'>
               <label className='flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100'>
                 <CheckCircle2 className='h-4 w-4 text-blue-600 dark:text-blue-400' />
                 <span>Penilaian Mandiri (Self-Assessment)</span>
@@ -1063,7 +1063,7 @@ export default function BuktiForm({
               pemenuhan bukti dukung di unit kerja:
             </p>
 
-            <div className='space-y-2'>
+            <div className='w-full max-w-full space-y-2 overflow-x-auto'>
               {pertanyaan.kategoriPenilaian.map(
                 (kategori: any, idx: number) => {
                   const isSelected =
@@ -1096,8 +1096,8 @@ export default function BuktiForm({
                         }
                         className='mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500'
                       />
-                      <div className='flex-1'>
-                        <div className='flex items-center justify-between gap-2'>
+                      <div className='min-w-0 flex-1'>
+                        <div className='flex flex-wrap items-center justify-between gap-2'>
                           <span className='text-sm font-semibold text-gray-800 dark:text-gray-200'>
                             Opsi {optionLetter}
                           </span>
@@ -1121,7 +1121,7 @@ export default function BuktiForm({
         )}
 
       {/* 2. SECTION: DOKUMEN BUKTI DUKUNG (MULTI-EVIDENCE) */}
-      <div className='rounded-xl border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-700 dark:bg-gray-800/80'>
+      <div className='w-full max-w-full min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-xs sm:p-5 dark:border-gray-700 dark:bg-gray-800/80'>
         <div className='mb-3 flex flex-wrap items-center justify-between gap-2'>
           <div className='flex items-center gap-2'>
             <Paperclip className='h-4 w-4 text-indigo-600 dark:text-indigo-400' />
@@ -1262,7 +1262,7 @@ export default function BuktiForm({
                         href={doc.file_url}
                         target='_blank'
                         rel='noopener noreferrer'
-                        className='inline-flex max-w-xs items-center gap-1 truncate text-blue-600 hover:underline dark:text-blue-400'
+                        className='inline-flex max-w-full items-center gap-1 truncate text-blue-600 hover:underline sm:max-w-xs dark:text-blue-400'
                       >
                         <span className='truncate'>{doc.file_url}</span>
                         <ExternalLink className='h-3 w-3 shrink-0' />

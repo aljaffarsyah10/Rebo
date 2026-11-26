@@ -252,15 +252,15 @@ function PertanyaanItemComponent({
   return (
     <div
       id={`indikator-${pertanyaan.id_pertanyaan}`}
-      className='relative scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-xs transition-all duration-200 hover:shadow-md dark:border-gray-700/80 dark:bg-gray-900'
+      className='relative w-full max-w-full min-w-0 scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-4 shadow-xs transition-all duration-200 hover:shadow-md sm:p-6 dark:border-gray-700/80 dark:bg-gray-900'
     >
       {/* 1. HEADER INDIKATOR & DUAL-SCORING SUMMARY */}
-      <div className='mb-4 flex flex-col justify-between gap-4 lg:flex-row lg:items-start'>
-        <div className='flex flex-1 items-start gap-3'>
+      <div className='mb-4 flex min-w-0 flex-col justify-between gap-4 lg:flex-row lg:items-start'>
+        <div className='flex min-w-0 flex-1 items-start gap-3'>
           <div className='flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white shadow-xs dark:bg-blue-600'>
             {index + 1}
           </div>
-          <div className='flex-1'>
+          <div className='min-w-0 flex-1'>
             <div className='mb-1.5 flex flex-wrap items-center gap-2'>
               <span className='text-xs font-bold tracking-wider text-blue-700 uppercase dark:text-blue-400'>
                 Indikator {index + 1}
@@ -319,8 +319,8 @@ function PertanyaanItemComponent({
         </div>
 
         {/* DUAL-SCORING COMPARISON CARD & EXPAND TOGGLE */}
-        <div className='flex items-start gap-2 self-start'>
-          <div className='shrink-0 rounded-xl border border-gray-200 bg-gray-50/90 p-3 shadow-2xs dark:border-gray-800 dark:bg-gray-800/80'>
+        <div className='flex max-w-full flex-wrap items-start gap-2 self-start'>
+          <div className='max-w-full shrink-0 overflow-x-auto rounded-xl border border-gray-200 bg-gray-50/90 p-3 shadow-2xs dark:border-gray-800 dark:bg-gray-800/80'>
             <div className='text-2xs flex items-center justify-between gap-3 font-semibold text-gray-500 uppercase dark:text-gray-400'>
               <span>Skor Indikator</span>
               {nilaiMaks !== undefined && <span>Maks: {nilaiMaks}</span>}

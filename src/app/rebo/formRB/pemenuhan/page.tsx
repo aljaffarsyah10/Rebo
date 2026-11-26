@@ -14,6 +14,8 @@ import Link from 'next/link';
 import SkorBoxPilar from '@/components/rebo/skorBox-pilar';
 import ProgressPilar from '@/components/rebo/progress-pilar';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PemenuhanPage() {
   const supabase = await createClient();
 
@@ -122,7 +124,7 @@ export default async function PemenuhanPage() {
   }
 
   return (
-    <div className='mx-auto max-w-7xl space-y-6 p-4 md:p-6'>
+    <div className='mx-auto w-full max-w-7xl min-w-0 space-y-6 p-4 md:p-6'>
       {/* Breadcrumb & Navigation Bar Sistematis */}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div className='flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400'>
@@ -146,7 +148,7 @@ export default async function PemenuhanPage() {
         </div>
 
         {/* Quick Area Switcher Tabs */}
-        <div className='inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-slate-800 dark:bg-slate-900/60'>
+        <div className='inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100/70 p-1 dark:border-slate-800 dark:bg-slate-900/60'>
           <Button
             size='sm'
             variant='ghost'

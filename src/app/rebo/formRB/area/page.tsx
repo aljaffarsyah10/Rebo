@@ -3,6 +3,8 @@ import { ArrowRight, FileText, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AreaPage() {
   const supabase = await createClient();
 

@@ -9,6 +9,8 @@ import { SessionTimeoutGuard } from '@/components/rebo/session-timeout-guard';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Rebo Dashboard',
   description: 'Reformasi Birokrasi dashboard with Next.js'
@@ -26,9 +28,9 @@ export default async function ReboLayout({
     <KBar>
       <SidebarProvider defaultOpen={defaultOpen}>
         <AppSidebar />
-        <SidebarInset className='flex min-h-screen flex-col'>
+        <SidebarInset className='flex min-h-screen min-w-0 flex-col'>
           <Header />
-          <div className='flex-1'>{children}</div>
+          <div className='w-full max-w-full min-w-0 flex-1'>{children}</div>
           <Footer />
           <PWAQuickActions />
           <AccessibilityWidget />

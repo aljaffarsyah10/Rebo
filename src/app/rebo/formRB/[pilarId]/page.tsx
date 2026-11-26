@@ -7,6 +7,8 @@ import {
 } from '@/lib/api/rebo';
 import FormRBPilarClient from './FormRBPilarClient';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata(props: {
   params: Promise<{ pilarId: string }>;
 }) {

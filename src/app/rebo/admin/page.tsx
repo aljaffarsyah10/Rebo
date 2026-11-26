@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { checkRole } from '@/utils/roles';
 import { SearchUsers } from './SearchUsers';
 import { clerkClient } from '@clerk/nextjs/server';
+
+export const dynamic = 'force-dynamic';
 import AdminActions from './AdminActions';
 import {
   Card,
