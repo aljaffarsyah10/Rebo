@@ -99,6 +99,8 @@ async function pingSupabase() {
   }
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function pingWhatsAppGateway() {
   if (!waGatewayUrl) {
     console.log(
@@ -113,62 +115,93 @@ async function pingWhatsAppGateway() {
     healthUrl += '/health';
   }
 
-  const startTime = Date.now();
-  try {
-    console.log(`[KEEP-ALIVE] [WA-GATEWAY] Pinging: ${healthUrl} ...`);
-    const headers = {
-      Accept: 'application/json'
-    };
-    if (waApiKey) {
-      headers.Authorization = `Bearer ${waApiKey}`;
-    }
+  const headers = {
+    Accept: 'application/json'
+  };
+  if (waApiKey) {
+    headers.Authorization = `Bearer ${waApiKey}`;
+  }
 
-    // Gunakan timeout 45 detik untuk mengantisipasi cold start Render Free Tier
-    const response = await fetch(healthUrl, {
-      method: 'GET',
-      headers,
-      signal: AbortSignal.timeout(45000)
-    });
+  const maxAttempts = 2; // 1 initial attempt + 1 retry
+  const retryDelayMs = 3000;
+  const timeoutMs = 45000; // >= 35000ms untuk mengantisipasi cold start Render Free Tier
+  const overallStart = Date.now();
 
-    const latencyMs = Date.now() - startTime;
-    const bodyText = await response.text();
-
-    let parsedData = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const attemptStart = Date.now();
     try {
-      parsedData = JSON.parse(bodyText);
-    } catch {
-      parsedData = bodyText;
-    }
+      console.log(
+        `[KEEP-ALIVE] [WA-GATEWAY] Pinging (attempt ${attempt}/${maxAttempts}): ${healthUrl} ...`
+      );
 
-    if (!response.ok) {
-      console.warn(
-        `[KEEP-ALIVE] [WA-GATEWAY] [WARNING] Status ${response.status} (${latencyMs}ms):`,
-        parsedData
+      const response = await fetch(healthUrl, {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+
+      const latencyMs = Date.now() - attemptStart;
+      const bodyText = await response.text();
+
+      let parsedData = null;
+      try {
+        parsedData = JSON.parse(bodyText);
+      } catch {
+        parsedData = bodyText;
+      }
+
+      if (!response.ok) {
+        const isTransientStatus =
+          response.status === 502 || response.status === 503;
+        if (isTransientStatus && attempt < maxAttempts) {
+          console.warn(
+            `[KEEP-ALIVE] [WA-GATEWAY] [RETRY] Status ${response.status} (${latencyMs}ms). Retrying in ${retryDelayMs / 1000}s...`
+          );
+          await sleep(retryDelayMs);
+          continue;
+        }
+
+        console.warn(
+          `[KEEP-ALIVE] [WA-GATEWAY] [WARNING] Status ${response.status} (${latencyMs}ms):`,
+          parsedData
+        );
+        return {
+          success: false,
+          status: response.status,
+          latencyMs: Date.now() - overallStart,
+          data: parsedData
+        };
+      }
+
+      console.log(
+        `[KEEP-ALIVE] [WA-GATEWAY] [SUCCESS] Latency: ${latencyMs}ms | Response:`,
+        JSON.stringify(parsedData)
+      );
+      return {
+        success: true,
+        status: response.status,
+        latencyMs: Date.now() - overallStart,
+        data: parsedData
+      };
+    } catch (err) {
+      const latencyMs = Date.now() - attemptStart;
+      if (attempt < maxAttempts) {
+        console.warn(
+          `[KEEP-ALIVE] [WA-GATEWAY] [RETRY] Ping error (${latencyMs}ms): ${err.message}. Retrying in ${retryDelayMs / 1000}s...`
+        );
+        await sleep(retryDelayMs);
+        continue;
+      }
+
+      console.error(
+        `[KEEP-ALIVE] [WA-GATEWAY] [FAILED] Ping error (${latencyMs}ms): ${err.message}`
       );
       return {
         success: false,
-        status: response.status,
-        latencyMs,
-        data: parsedData
+        error: err.message,
+        latencyMs: Date.now() - overallStart
       };
     }
-
-    console.log(
-      `[KEEP-ALIVE] [WA-GATEWAY] [SUCCESS] Latency: ${latencyMs}ms | Response:`,
-      JSON.stringify(parsedData)
-    );
-    return {
-      success: true,
-      status: response.status,
-      latencyMs,
-      data: parsedData
-    };
-  } catch (err) {
-    const latencyMs = Date.now() - startTime;
-    console.error(
-      `[KEEP-ALIVE] [WA-GATEWAY] [FAILED] Ping error (${latencyMs}ms): ${err.message}`
-    );
-    return { success: false, error: err.message, latencyMs };
   }
 }
 

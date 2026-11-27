@@ -403,6 +403,27 @@ function setupGracefulShutdown() {
   process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
+/**
+ * Menangani uncaughtException & unhandledRejection agar transient network error
+ * tidak langsung mematikan proses worker secara tiba-tiba.
+ */
+function setupProcessErrorHandlers() {
+  process.on('uncaughtException', (err) => {
+    console.error(
+      '[Worker] Uncaught Exception (ditangani agar worker tetap berjalan):',
+      err?.stack || err?.message || err
+    );
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    console.error(
+      '[Worker] Unhandled Promise Rejection (ditangani agar worker tetap berjalan):',
+      reason?.stack || reason?.message || reason
+    );
+  });
+}
+
+setupProcessErrorHandlers();
 setupGracefulShutdown();
 startWorker().catch((err) => {
   console.error('[Worker] Fatal Worker Crash:', err);
