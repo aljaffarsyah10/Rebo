@@ -157,9 +157,17 @@ export default function KontakManagerClient({
       const res = await getRedisQueueAdminDataAction();
       if (res.success && res.data) {
         setQueueData(res.data);
+      } else if (!silent) {
+        toast.error(res.error || 'Gagal memuat metrik antrean Redis.');
       }
-    } catch {
-      // silent
+    } catch (err: unknown) {
+      if (!silent) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Gagal memuat metrik antrean Redis.';
+        toast.error(message);
+      }
     } finally {
       if (!silent) setIsLoadingQueue(false);
     }
@@ -270,11 +278,13 @@ export default function KontakManagerClient({
           getGatewayStatusAction()
         ]);
 
+        setGatewayStatus(statusRes);
         if (contactRes.success && contactRes.data) {
           setContacts(contactRes.data);
+          toast.success('Data kontak dan status gateway berhasil diperbarui.');
+        } else {
+          toast.error(contactRes.error || 'Gagal memperbarui daftar kontak.');
         }
-        setGatewayStatus(statusRes);
-        toast.success('Data kontak dan status gateway berhasil diperbarui.');
       } catch (err: unknown) {
         const error = err as Error;
         toast.error('Gagal memperbarui data: ' + error.message);

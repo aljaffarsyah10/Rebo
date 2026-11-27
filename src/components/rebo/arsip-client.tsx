@@ -369,15 +369,21 @@ export default function ArsipClient({
   // Segarkan Data dari Server
   const handleRefreshData = () => {
     startTransition(async () => {
-      const res = await getArsipList();
-      if (res.success && res.data) {
-        setItems(res.data);
-        if (res.availableYears && res.availableYears.length > 0) {
-          setYears(res.availableYears);
+      try {
+        const res = await getArsipList();
+        if (res.success && res.data) {
+          setItems(res.data);
+          if (res.availableYears && res.availableYears.length > 0) {
+            setYears(res.availableYears);
+          }
+          toast.success('Daftar arsip resmi berhasil disegarkan.');
+        } else {
+          toast.error(res.error || 'Gagal menyegarkan arsip.');
         }
-        toast.success('Daftar arsip resmi berhasil disegarkan.');
-      } else {
-        toast.error(res.error || 'Gagal menyegarkan arsip.');
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Gagal menyegarkan arsip.';
+        toast.error(message);
       }
     });
   };
@@ -489,34 +495,50 @@ export default function ArsipClient({
       return;
     }
 
-    startTransition(async () => {
-      const payload: CreateArsipInput = {
-        judul_dokumen: formJudul.trim(),
-        kategori: formKategori,
-        tahun: Number(formTahun),
-        file_url: formUrl.trim(),
-        nomor_surat: formNomor.trim() || undefined,
-        keterangan: formKeterangan.trim() || undefined
-      };
+    const parsedTahun = Number(formTahun);
+    if (
+      !Number.isFinite(parsedTahun) ||
+      parsedTahun < 2020 ||
+      parsedTahun > 2035
+    ) {
+      toast.error('Tahun dokumen harus valid antara 2020 dan 2035.');
+      return;
+    }
 
-      const res = await createArsipDokumen(payload);
-      if (res.success && res.data) {
-        toast.success('Dokumen arsip resmi berhasil ditambahkan!');
-        setIsModalOpen(false);
-        // Tambahkan ke in-memory list secara langsung
-        setItems((prev) => [res.data!, ...prev]);
-        if (!years.includes(Number(formTahun))) {
-          setYears((prev) =>
-            [Number(formTahun), ...prev].sort((a, b) => b - a)
-          );
+    startTransition(async () => {
+      try {
+        const payload: CreateArsipInput = {
+          judul_dokumen: formJudul.trim(),
+          kategori: formKategori,
+          tahun: parsedTahun,
+          file_url: formUrl.trim(),
+          nomor_surat: formNomor.trim() || undefined,
+          keterangan: formKeterangan.trim() || undefined
+        };
+
+        const res = await createArsipDokumen(payload);
+        if (res.success && res.data) {
+          toast.success('Dokumen arsip resmi berhasil ditambahkan!');
+          setIsModalOpen(false);
+          // Tambahkan ke in-memory list secara langsung
+          setItems((prev) => [res.data!, ...prev]);
+          if (!years.includes(parsedTahun)) {
+            setYears((prev) => [parsedTahun, ...prev].sort((a, b) => b - a));
+          }
+          // Reset form
+          setFormJudul('');
+          setFormNomor('');
+          setFormUrl('');
+          setFormKeterangan('');
+        } else {
+          toast.error(res.error || 'Gagal menambahkan dokumen arsip.');
         }
-        // Reset form
-        setFormJudul('');
-        setFormNomor('');
-        setFormUrl('');
-        setFormKeterangan('');
-      } else {
-        toast.error(res.error || 'Gagal menambahkan dokumen arsip.');
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Terjadi kesalahan saat menambahkan dokumen arsip.';
+        toast.error(message);
       }
     });
   };
@@ -524,12 +546,20 @@ export default function ArsipClient({
   // Delete Document Handler
   const handleDeleteArsip = (id: string, judul: string) => {
     startTransition(async () => {
-      const res = await deleteArsipDokumen(id);
-      if (res.success) {
-        toast.success(`Arsip "${judul}" berhasil dihapus.`);
-        setItems((prev) => prev.filter((item) => item.id !== id));
-      } else {
-        toast.error(res.error || 'Gagal menghapus dokumen.');
+      try {
+        const res = await deleteArsipDokumen(id);
+        if (res.success) {
+          toast.success(`Arsip "${judul}" berhasil dihapus.`);
+          setItems((prev) => prev.filter((item) => item.id !== id));
+        } else {
+          toast.error(res.error || 'Gagal menghapus dokumen.');
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Terjadi kesalahan saat menghapus dokumen.';
+        toast.error(message);
       }
     });
   };
@@ -721,10 +751,11 @@ export default function ArsipClient({
                             type='number'
                             min={2020}
                             max={2035}
-                            value={formTahun}
-                            onChange={(e) =>
-                              setFormTahun(Number(e.target.value))
-                            }
+                            value={Number.isNaN(formTahun) ? '' : formTahun}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              setFormTahun(raw === '' ? NaN : Number(raw));
+                            }}
                             required
                           />
                         </div>

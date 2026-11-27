@@ -399,8 +399,8 @@
   - [x] *Temuan Pengujian:* Terdapat header bypass hardcoded (`x-screenshot-key: local-docs-capture`) pada proteksi rute `/rebo(.*)` yang dapat melewati login Clerk jika dikirim ke server production.
   - [x] *Rencana Perbaikan:* Hapus bypass tersebut atau batasi ketat hanya aktif ketika `NODE_ENV === 'development'` dan menggunakan secret environment khusus lokal.
 - [ ] **Pemulihan & Stabilisasi WhatsApp Gateway Render (`https://rebo-wa-gateway.onrender.com`):**
-  - [ ] *Temuan Pengujian:* Pengujian `node scripts/keep_alive.js` mencatat endpoint `/health` WA Gateway di Render mengembalikan **`502 Bad Gateway`** (layanan down/gagal boot), dan `services/wa-gateway/index.js` masih memakai `useMultiFileAuthState(AUTH_DIR)` lokal.
-  - [ ] *Rencana Perbaikan:* Periksa log deployment Render untuk mengatasi error 502, dan selesaikan implementasi Supabase Session Store (`wa_auth_session`) agar sesi login WA tidak hilang saat restart.
+  - [x] *Temuan Pengujian:* Pengujian live terbaru (`node scripts/keep_alive.js` pada 2026-11-27) menunjukkan `https://rebo-wa-gateway.onrender.com/health` sudah **AKTIF** dan mengembalikan `{"status":"ok","connected":false}` dalam `23040ms`. Implementasi `supabase-auth.js` dan migrasi `wa_auth_session` sudah siap di kode.
+  - [ ] *Rencana Perbaikan:* Lakukan `git push` ke Render, set environment variable `SUPABASE_URL` & `SUPABASE_SERVICE_ROLE_KEY` pada dashboard Render, lalu lakukan scan QR WhatsApp agar status berubah menjadi `connected: true`.
 - [ ] **Konfigurasi Environment Produksi Redis, Service Role & Cron Secret (`.env.local` & Vercel):**
   - [ ] *Temuan Pengujian:* `REDIS_URL`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, dan `CRON_SECRET` masih kosong di `.env.local`, sehingga `getRedisHealthStatus()` jatuh ke mode `in-memory (mock)` yang tidak persisten di serverless Vercel dan tidak terhubung ke worker standalone.
   - [ ] *Rencana Perbaikan:* Isi kredensial Upstash Redis / Redis TCP, `SUPABASE_SERVICE_ROLE_KEY`, dan `CRON_SECRET` pada environment lokal & Vercel agar antrean Redis, cache skor, dan cron berjalan nyata.

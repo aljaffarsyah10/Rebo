@@ -79,7 +79,8 @@ export interface RevisionSLAInfo {
 export function calculateRevisionSLA(
   verifiedAt?: string | null
 ): RevisionSLAInfo {
-  const baseTime = verifiedAt ? new Date(verifiedAt).getTime() : Date.now();
+  const parsedTime = verifiedAt ? new Date(verifiedAt).getTime() : NaN;
+  const baseTime = Number.isFinite(parsedTime) ? parsedTime : Date.now();
   const deadlineTime = baseTime + 7 * 24 * 60 * 60 * 1000;
   const deadlineDate = new Date(deadlineTime);
   const now = Date.now();
@@ -351,20 +352,26 @@ export default function KanbanBoardClient({
 
   const handleFetch = (overridePilar?: string, overridePeriode?: string) => {
     startTransition(async () => {
-      const pid = overridePeriode || selectedPeriodeId;
-      const pil = overridePilar !== undefined ? overridePilar : selectedPilar;
-      const res = await getKanbanBoardData({
-        periodeId: pid,
-        pilarId: pil,
-        search: searchQuery
-      });
-      if (res.success && res.data) {
-        setData(res.data);
-        if (overridePeriode) setSelectedPeriodeId(overridePeriode);
-        if (overridePilar !== undefined) setSelectedPilar(overridePilar);
-        toast.success('Papan Kanban berhasil diperbarui!');
-      } else {
-        toast.error(res.error || 'Gagal memuat papan Kanban.');
+      try {
+        const pid = overridePeriode || selectedPeriodeId;
+        const pil = overridePilar !== undefined ? overridePilar : selectedPilar;
+        const res = await getKanbanBoardData({
+          periodeId: pid,
+          pilarId: pil,
+          search: searchQuery
+        });
+        if (res.success && res.data) {
+          setData(res.data);
+          if (overridePeriode) setSelectedPeriodeId(overridePeriode);
+          if (overridePilar !== undefined) setSelectedPilar(overridePilar);
+          toast.success('Papan Kanban berhasil diperbarui!');
+        } else {
+          toast.error(res.error || 'Gagal memuat papan Kanban.');
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Gagal memuat papan Kanban.';
+        toast.error(message);
       }
     });
   };
