@@ -419,4 +419,14 @@
 - [x] **Pembersihan Seluruh ESLint Warnings (`pnpm lint:strict`):**
   - [x] *Temuan Pengujian:* `pnpm lint` mencatat banyak warning (`@typescript-eslint/no-unused-vars`, `no-console`, `react-hooks/exhaustive-deps`) di berbagai file seperti `src/actions/*-actions.ts` (`sendWhatsAppMessage` unused), `GdriveGeneratorClient.tsx`, `KontakManagerClient.tsx`, `accessibility-widget.tsx`, `zi-roadmap-timeline.tsx`, dan `src/app/api/*`.
   - [x] *Rencana Perbaikan:* Bersihkan import/variabel tak terpakai, perbaiki dependency `useEffect`, dan ganti `console.log` sisa debugging agar `pnpm lint:strict` (`--max-warnings=0`) lulus 100%.
+- [ ] **Persistensi Database Nyata untuk Menu dengan Store In-Memory (`src/actions/*-actions.ts`):**
+  - [ ] *Temuan Pengujian:* Audit kode server actions menemukan beberapa menu eksisting masih menggunakan array/store in-memory dan data mock (`let ... = [...]` / `DEFAULT_MOCK_*` / `MOCK_*`), yaitu pada `budget-actions.ts` (`/rebo/budget`), `disiplin-actions.ts` (`/rebo/compliance/disiplin`), `lhkpn-actions.ts` (`/rebo/compliance/lhkpn`), `fasilitas-actions.ts` (`/rebo/fasilitas-difabel`), dan `backup-actions.ts` (`/rebo/admin/backup`), serta fallback mock di `leaderboard-actions.ts` & `badge-actions.ts`. Di lingkungan serverless Vercel, perubahan data pada store in-memory akan hilang setiap cold start.
+  - [ ] *Rencana Perbaikan:* Hubungkan seluruh operasi baca/tulis pada menu-menu eksisting tersebut ke tabel Supabase persisten agar perubahan data pengguna tersimpan permanen.
+- [ ] **Penyesuaian Default Server URL Ekstensi Chrome (`extensions/rebo-sync-assistant/popup/popup.js`):**
+  - [ ] *Temuan Pengujian:* Variabel `DEFAULT_SERVER_URL` di ekstensi masih hardcoded ke `http://localhost:3000`, sehingga operator yang memasang ekstensi di luar lingkungan dev lokal harus mengubahnya manual.
+  - [ ] *Rencana Perbaikan:* Ubah default URL mengarah ke domain produksi REBO (misal `https://rebo.sitarokab.bps.go.id`) dan sediakan opsi switch cepat Produksi/Lokal pada popup ekstensi.
+- [ ] **Penyelarasan Format Kode dengan Prettier (`pnpm format:check`):**
+  - [ ] *Temuan Pengujian:* Pemeriksaan `npx prettier --check "src/**/*.{ts,tsx}"` mendeteksi ketidaksesuaian formatting pada **98 file** di direktori `src/`.
+  - [ ] *Rencana Perbaikan:* Jalankan `pnpm format` untuk menyeragamkan format kode di seluruh repositori agar pre-commit hook dan diff tetap bersih.
+
 
