@@ -183,6 +183,9 @@ Meskipun sudah ada portal pengumpulan evaluasi RB dari pusat yaitu **ZIAPP**, **
 | **Ekspor Dokumen** | ExcelJS | Ekspor format resmi Kertas Kerja LKE (.xlsx) standar KemenPAN-RB |
 | **PWA Engine** | next-pwa (Workbox) | Dukungan instalasi aplikasi web dan caching service worker |
 | **Observabilitas** | Sentry Next.js v9 | Error tracking real-time dan monitoring stabilitas produksi |
+| **Antrean & Cache** | Redis (`ioredis` & `@upstash/redis`) | Message queue notifikasi WA otomatis, delayed scheduler, rate limiting, dan cache skor SSR |
+| **Notifikasi WA** | Baileys + Express (`services/wa-gateway`) | Gateway WhatsApp Multi-Device dengan persistent Supabase session store (`wa_auth_session`) |
+| **Ketahanan & SSR** | React `Suspense`, `loading.tsx`, `error.tsx` | Streaming SSR paralel (`Promise.all`), skeleton loading, dan pemulihan error UI yang ramah |
 
 ---
 
@@ -198,9 +201,13 @@ Meskipun sudah ada portal pengumpulan evaluasi RB dari pusat yaitu **ZIAPP**, **
 │   └── /[pilarId]              # Formulir LKE terperinci (Multi-bukti, skor mandiri, verifikasi)
 ├── /pilarHasil                 # Input dan evaluasi Aspek Hasil ZI
 ├── /monitoring                 # Dashboard analitik progress, visualisasi chart, & export Excel
+├── /leaderboard                # Papan peringkat progresivitas & lencana penghargaan antar-pilar
+├── /command-center             # Executive Command Center (mode layar TV / big screen)
+├── /presentation               # Generator slide paparan TPN (.pptx) & analisis tren multi-tahun
 ├── /kanban                     # Papan Kanban tindak lanjut perbaikan indikator LKE
 ├── /arsip                      # Dynamic archive dokumen, SK, dan kertas kerja historis
 ├── /informasi                  # Pusat panduan, regulasi, bagan hierarki interaktif, dan FAQ
+├── /profile                    # Profil pengguna mandiri, nomor WA personal, & preferensi notifikasi
 ├── /dataRB                     # CRUD Master Data LKE (Super Admin)
 │   ├── /pilar                  # Kelola Master Pilar Area Pemenuhan & Reform
 │   ├── /pilar/subpilar         # Kelola Master Subpilar
@@ -208,6 +215,7 @@ Meskipun sudah ada portal pengumpulan evaluasi RB dari pusat yaitu **ZIAPP**, **
 └── /admin                      # Khusus Super Admin
     ├── /periode                # Manajemen siklus tahun evaluasi LKE & duplikasi indikator
     ├── /gdrive-generator       # Generator hierarki Google Drive per indikator
+    ├── /kontak                 # Manajemen PIC pilar, status WA Gateway, & monitor antrean Redis
     ├── /audit-log              # Log rekam jejak mutasi data dan aktivitas sistem
     └── /api/role               # Manajemen assignment role dan pilar pengguna Clerk
 ```
@@ -253,6 +261,7 @@ node scripts/seed_rich_data.js
 Jika ingin menjalankan migrasi melalui **SQL Editor** pada [Supabase Dashboard](https://supabase.com/dashboard):
 - Jalankan file: [supabase/migrations/20261121000000_rebo_v2_schema.sql](supabase/migrations/20261121000000_rebo_v2_schema.sql)
 - Jalankan file: [supabase/migrations/20261121000001_arsip_dokumen.sql](supabase/migrations/20261121000001_arsip_dokumen.sql)
+- Jalankan file: [supabase/migrations/20261126000000_wa_auth_session.sql](supabase/migrations/20261126000000_wa_auth_session.sql) *(untuk penyimpanan sesi WhatsApp Baileys persisten di cloud)*
 
 ---
 
@@ -290,8 +299,8 @@ Jika ingin menjalankan migrasi melalui **SQL Editor** pada [Supabase Dashboard](
    # Cek tipe data TypeScript
    npx tsc --noEmit
 
-   # Cek linter
-   pnpm lint
+   # Cek linter ketat (0 warnings & 0 errors)
+   pnpm lint:strict
 
    # Verifikasi build produksi (opsional)
    pnpm build
@@ -315,6 +324,8 @@ Di dalam direktori `scripts/` tersedia serangkaian skrip otomasi untuk mempermud
 | **Apply V2 Migration** | `node scripts/apply_v2_migration.js` | Menjalankan migrasi DDL pembuatan tabel V2 langsung ke server PostgreSQL Supabase |
 | **Seed Rich Data** | `node scripts/seed_rich_data.js` | Mengisi data peraga realistis dan menyinkronkan data lama ke periode berjalan |
 | **Capture All Screenshots** | `node scripts/capture_all_docs_screenshots.js` | Menangkap tangkapan layar otomatis seluruh modul web secara headless untuk dokumentasi |
+| **Keep-Alive Health Ping** | `node scripts/keep_alive.js` | Menjaga Supabase & WA Gateway Render tetap aktif dengan toleransi cold-start 45 detik dan retry otomatis |
+| **WA Gateway & Worker** | `cd services/wa-gateway && npm start` / `npm run worker` | Menjalankan server Baileys (`/qr`, `/health`, `/send-message`) dan background consumer antrean Redis |
 
 ---
 
@@ -337,28 +348,31 @@ Setelah server berjalan (`http://localhost:3000`), Anda dapat langsung mengakses
 
 ---
 
-## 📲 Layanan Notifikasi WhatsApp (REBO WA Gateway)
+## 📲 Layanan Notifikasi WhatsApp & Antrean Redis (REBO WA Gateway)
 
-Sistem REBO V2 dilengkapi modul notifikasi WhatsApp otomatis gratis tanpa biaya API Meta resmi (menggunakan engine Baileys Multi-Device yang di-host di Render):
+Sistem REBO V2 dilengkapi modul notifikasi WhatsApp otomatis gratis tanpa biaya API Meta resmi (menggunakan engine Baileys Multi-Device di `services/wa-gateway` yang di-host di Render) serta terintegrasi dengan **Redis Message Queue** untuk pengiriman latar belakang tanpa menghambat UI:
 
-### 1. Siapa Nomor Pengirimnya?
+### 1. Siapa Nomor Pengirimnya & Persistensi Sesi
 - **Nomor Pengirim (Bot REBO):** Adalah nomor WhatsApp mana pun (nomor HP kantor BPS Sitaro, nomor cadangan/khusus bot, atau nomor pribadi PIC IT) yang **di-scan pada halaman QR Code** (`https://<service-anda>.onrender.com/qr`).
-- Nomor tersebut bertindak sebagai gateway sentral yang bertugas mengirimkan pesan otomatis keluar ke seluruh tim kerja.
+- **Supabase Session Store (`wa_auth_session`):** Kredensial Baileys disimpan langsung di tabel PostgreSQL Supabase melalui [services/wa-gateway/supabase-auth.js](services/wa-gateway/supabase-auth.js) (dengan fallback ke `auth_info/` lokal), sehingga sesi login tidak hilang saat container Render restart.
 
-### 2. Siapa Nomor Penerimanya & Bagaimana Mekanismenya?
+### 2. Antrean Redis, Background Worker & Ketahanan Cold-Start
+- **Producer Non-Blocking (`src/lib/redis/queue.ts`):** Notifikasi verifikasi, revisi, agenda, notulen, WBS, pengingat deadline (`wa_queue:delayed`), dan uji kirim WA masuk ke antrean Redis (`wa_queue:pending`) dalam hitungan milidetik tanpa membuka popup `wa.me` manual.
+- **Worker & Serverless Fallback:** Diproses oleh `services/wa-gateway/worker.js` maupun endpoint terproteksi `CRON_SECRET` di `/api/queue/process` dengan mekanisme *auto-retry* (Dead Letter Queue `wa_queue:dlq` setelah 5x gagal) dan toleransi *cold-start* Render hingga **25–45 detik**.
+- **Pemantauan di Menu Eksisting:** Admin dapat memantau status gateway, koneksi Redis, statistik antrean, *Retry DLQ*, dan *Purge Completed* langsung di `/rebo/admin/kontak`.
+
+### 3. Siapa Nomor Penerimanya & Bagaimana Mekanismenya?
 - **Tidak bergantung pada akun Clerk:** Clerk hanya digunakan untuk autentikasi login via email (`@bps.go.id` / Google). Nomor WhatsApp penerima tidak disimpan di Clerk.
-- **Dikelola fleksibel di Database Supabase (`public.kontak_pilar`):**
-  - Setiap pilar (Pilar 1 s.d. Pilar 6) dan Tim Verifikator memiliki PIC penanggung jawab.
+- **Dikelola fleksibel di Database Supabase (`public.kontak_pilar` & profil pegawai):**
+  - Setiap pilar (Pilar 1 s.d. Pilar 6) dan Tim Verifikator memiliki PIC penanggung jawab, ditambah dukungan *worker-tracking* ke nomor WhatsApp pribadi pengunggah bukti (`/rebo/profile`).
   - Admin dapat memperbarui nomor WhatsApp penerima kapan saja melalui menu:
     👉 **Admin ➔ Notifikasi & Kontak WA** (`/rebo/admin/kontak`).
-  - Saat ada usulan bukti dukung baru, sistem mengambil nomor kontak Tim Verifikator.
-  - Saat bukti dukung disetujui atau memerlukan revisi, sistem mengambil nomor kontak PIC Pilar terkait untuk dikirimkan pesan peringatan beserta rincian catatannya.
 
 ---
 
 ## ⚙️ Environment Variables
 
-Berikut daftar variabel lingkungan yang dibutuhkan pada `.env.local`:
+Berikut daftar variabel lingkungan yang dibutuhkan pada `.env.local` (lihat [env.example.txt](env.example.txt)):
 
 ```env
 # Clerk Authentication
@@ -374,6 +388,16 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 SUPABASE_SERVICE_ROLE_KEY=
 DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
+
+# Cron & WhatsApp Gateway
+CRON_SECRET=
+WHATSAPP_GATEWAY_URL=https://your-wa-gateway.onrender.com
+WHATSAPP_API_KEY=
+
+# Redis Queue & SSR Cache (Pilih TCP untuk Worker/Lokal dan/atau Upstash REST untuk Vercel)
+REDIS_URL=redis://localhost:6379
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
 
 # Sentry Monitoring (Opsional untuk dev, disarankan untuk production)
 NEXT_PUBLIC_SENTRY_DSN=https://...@sentry.io/...
